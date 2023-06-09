@@ -1,5 +1,5 @@
 package com.telegrambot.app.components;    /*
- *created by WerWolfe on BotCommands
+ *created by WerWolfe on BotCommandsImpl
  */
 
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
