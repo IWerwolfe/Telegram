@@ -1,15 +1,18 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.config.BotConfig;
-import com.telegrambot.app.model.UserActivity;
-import com.telegrambot.app.model.UserStatus;
-import com.telegrambot.app.model.UserType;
-import com.telegrambot.app.repositories.UserActivityRepository;
-import com.telegrambot.app.repositories.UserRepository;
-import com.telegrambot.app.repositories.UserStatusRepository;
+import com.telegrambot.app.model.PersonFields;
+import com.telegrambot.app.model.command.CommandCache;
+import com.telegrambot.app.model.transaction.Transaction;
+import com.telegrambot.app.model.transaction.TransactionType;
+import com.telegrambot.app.model.user.UserActivity;
+import com.telegrambot.app.model.user.UserBD;
+import com.telegrambot.app.model.user.UserStatus;
+import com.telegrambot.app.model.user.UserType;
+import com.telegrambot.app.repositories.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -24,61 +27,54 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class TelegramBotServices extends TelegramLongPollingBot {
 
     private final BotConfig config;
-    private BotCommandsImpl botCommands;
+    private final BotCommandsImpl botCommands;
     private final UserActivityRepository activityRepository;
+    private final CommandCacheRepository commandCacheRepository;
     private final UserRepository userRepository;
     private final UserStatusRepository statusRepository;
-
-    @Autowired
-    public TelegramBotServices(BotConfig config, UserRepository userRepository, UserActivityRepository activityRepository, UserStatusRepository statusRepository) {
-        this.config = config;
-        this.userRepository = userRepository;
-        this.activityRepository = activityRepository;
-        this.statusRepository = statusRepository;
-        this.botCommands = new BotCommandsImpl(this);
-    }
+    private final TransactionRepository transactionRepository;
+    private Update update;
 
     @Override
     public void onUpdateReceived(Update update) {
-        long chatId = 0;
-        String receivedMessage = "";
 
-        com.telegrambot.app.model.User user = null;
+        botCommands.setParent(this);
 
-        if (update.hasMessage()) {
-            chatId = update.getMessage().getChatId();
-            user = getUser(update.getMessage().getFrom());
+        boolean isCommand = true;
+        this.update = update;
 
-            if (update.getMessage().hasContact()) {
-                updateUserProfile(update.getMessage().getContact(), chatId, user);
-            } else {
-                receivedMessage = update.getMessage().getText();
-            }
+        List<CommandCache> commandCache = commandCacheRepository.findByUserBDOrderById(getUser());
+        if (commandCache.size() > 0) {
+            botCommands.botAnswerUtils(commandCache, getReceivedMessage(), getChatId(), getUser());
+            isCommand = false;
+            log.info("The text command processing mode is set");
         }
 
-        if (update.hasCallbackQuery()) {
-            chatId = update.getCallbackQuery().getMessage().getChatId();
-            user = getUser(update.getCallbackQuery().getFrom());
-            receivedMessage = update.getCallbackQuery().getData();
+        if (update.hasMessage() && update.getMessage().hasContact()) {
+            updateUserProfile(update.getMessage().getContact(), getChatId(), getUser());
+            isCommand = false;
         }
 
-        if (!(chatId == 0 && receivedMessage.isEmpty())) {
-            botCommands.botAnswerUtils(receivedMessage, chatId, user);
+        saveTransaction(isCommand);
+
+        if (isCommand) {
+            botCommands.botAnswerUtils(getReceivedMessage(), getChatId(), getUser());
         }
 
-        if (user != null) {
-            updateLastActivity(user);
-        }
+        updateLastActivity(getUser());
+
+
     }
 
-    private void updateUserProfile(Contact contact, long chatId, com.telegrambot.app.model.User user) {
-        user.setPhone(contact.getPhoneNumber());
-        userRepository.save(user);
-        updateUserStatus(user, UserType.USER);
-        botCommands.botAnswerUtils("/afterRegistered", chatId, user);
+    private void updateUserProfile(Contact contact, long chatId, UserBD userBD) {
+        userBD.setPhone(contact.getPhoneNumber());
+        userRepository.save(userBD);
+//        updateUserStatus(userBD, UserType.USER);
+        botCommands.botAnswerUtils("/afterRegistered", chatId, userBD);
     }
 
     @Override
@@ -101,49 +97,121 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         super.onRegister();
     }
 
-    public void sentMassage(SendMessage message) {
+
+    public void sendMassage(SendMessage message) {
         try {
             execute(message);
+            saveTransaction(message);
             log.info("Reply sent to {}", message.getChatId());
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
         }
     }
 
-    private com.telegrambot.app.model.User getUser(User user) {
-        com.telegrambot.app.model.User userBD = null;
-        Optional<com.telegrambot.app.model.User> option = userRepository.findById(user.getId());
+    private TransactionType getTransactionTypeFromMessage() {
+        if (update.hasMessage() && update.getMessage().hasContact()) {
+            return TransactionType.CONTACT;
+        }
+        if (update.hasCallbackQuery()) {
+            return TransactionType.CALLBACK_QUERY;
+        }
+        return TransactionType.MESSAGE;
+    }
+
+    private String getReceivedMessage() {
+        if (update.hasMessage()) {
+            return update.getMessage().getText();
+        }
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getData();
+        }
+        return "";
+    }
+
+    private long getChatId() {
+        if (update.hasMessage()) {
+            return update.getMessage().getChatId();
+        }
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getMessage().getChatId();
+        }
+        return 0;
+    }
+
+    private UserBD getUser() {
+        User user = null;
+        if (update.hasMessage()) {
+            user = update.getMessage().getFrom();
+        }
+        if (update.hasCallbackQuery()) {
+            user = update.getCallbackQuery().getFrom();
+        }
+        return user == null ? null : getUser(user);
+    }
+
+    private UserBD getUser(User user) {
+        UserBD userBD = null;
+        Optional<UserBD> option = userRepository.findById(user.getId());
         if (option.isEmpty()) {
-            userBD = new com.telegrambot.app.model.User();
-            BeanUtils.copyProperties(user, userBD);
-            userRepository.save(userBD);
-            log.info("Create new telegram user {} {}", userBD.getFirstName(), userBD.getUserName());
+            userBD = getUserBD(user);
+            log.info("Create new telegram user {} {}", userBD.getPerson().getFirstName(), userBD.getUserName());
             updateUserStatus(userBD);
         }
         return option.orElse(userBD);
     }
 
-    private void updateLastActivity(com.telegrambot.app.model.User user) {
-        UserActivity activity = activityRepository.findByUser(user);
+    private UserBD getUserBD(User user) {
+        UserBD userBD = new UserBD();
+        BeanUtils.copyProperties(user, userBD);
+        userBD.setPerson(new PersonFields());
+        userBD.getPerson().setLastName(user.getLastName());
+        userBD.getPerson().setFirstName(user.getFirstName());
+        return userRepository.save(userBD);
+    }
+
+    private void saveTransaction(boolean isCommand) {
+        Transaction transaction = new Transaction();
+        transaction.setUserBD(getUser());
+        transaction.setDate(LocalDateTime.now());
+        transaction.setText(getReceivedMessage());
+        transaction.setIdMessage((int) getChatId());
+        transaction.setTransactionType(getTransactionTypeFromMessage());
+        transaction.setCommand(isCommand);
+        transactionRepository.save(transaction);
+    }
+
+    private void saveTransaction(SendMessage sendMessage) {
+        Transaction transaction = new Transaction();
+        transaction.setUserBD(getUser());
+        transaction.setDate(LocalDateTime.now());
+        transaction.setText(sendMessage.getText());
+        transaction.setIdMessage(Integer.valueOf(sendMessage.getChatId()));
+        transaction.setTransactionType(TransactionType.BOT_MESSAGE);
+        transaction.setCommand(false);
+        transactionRepository.save(transaction);
+    }
+
+    private void updateLastActivity(UserBD userBD) {
+        UserActivity activity = activityRepository.findByUserBD(userBD);
         if (activity == null) {
             activity = new UserActivity();
-            activity.setUser(user);
+            activity.setUserBD(userBD);
         }
         activity.setLastActivityDate(LocalDateTime.now());
         activityRepository.save(activity);
     }
 
-    private void updateUserStatus(com.telegrambot.app.model.User user, UserType type) {
+    private void updateUserStatus(UserBD userBD, UserType type) {
         UserStatus status = new UserStatus();
         status.setUserType(type);
-        status.setUser(user);
+        status.setUserBD(userBD);
         status.setLastUpdate(LocalDateTime.now());
         statusRepository.save(status);
-        log.info("Update telegram user {} status on {}", user.getFirstName(), status.getUserType());
+        log.info("Update telegram userBD {} status on {}", userBD.getPerson().getFirstName(), status.getUserType());
     }
 
-    private void updateUserStatus(com.telegrambot.app.model.User user) {
-        updateUserStatus(user, UserType.UNAUTHORIZED);
+    private void updateUserStatus(UserBD userBD) {
+        updateUserStatus(userBD, UserType.UNAUTHORIZED);
     }
 
 }

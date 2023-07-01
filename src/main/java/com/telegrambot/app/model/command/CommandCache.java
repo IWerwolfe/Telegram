@@ -1,0 +1,22 @@
+package com.telegrambot.app.model.command;
+
+import com.telegrambot.app.model.user.UserBD;
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Data
+@Entity(name = "commands_cache")
+public class CommandCache {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String command;
+    private boolean isComplete;
+    private String subCommand;
+    private String result;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private UserBD userBD;
+    private Long countStep;
+}

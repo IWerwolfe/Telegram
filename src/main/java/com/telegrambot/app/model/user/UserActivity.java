@@ -1,4 +1,4 @@
-package com.telegrambot.app.model;
+package com.telegrambot.app.model.user;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -14,6 +14,6 @@ public class UserActivity {
     private Long id;
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserBD userBD;
     private LocalDateTime lastActivityDate;
 }

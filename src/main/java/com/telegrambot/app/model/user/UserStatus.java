@@ -1,5 +1,7 @@
-package com.telegrambot.app.model;
+package com.telegrambot.app.model.user;
 
+import com.telegrambot.app.model.legalentity.Department;
+import com.telegrambot.app.model.legalentity.LegalEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -13,10 +15,15 @@ public class UserStatus {
     private Long id;
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private UserBD userBD;
     @Enumerated(EnumType.STRING)
     private UserType userType;
     private LocalDateTime lastUpdate;
-    private Integer company;
-    private Integer department;
+    @ManyToOne
+    @JoinColumn(name = "Legal_id")
+    private LegalEntity legal;
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+    private String post;
 }

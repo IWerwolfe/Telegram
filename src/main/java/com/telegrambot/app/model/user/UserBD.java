@@ -1,20 +1,19 @@
-package com.telegrambot.app.model;    /*
- *created by WerWolfe on User
+package com.telegrambot.app.model.user;    /*
+ *created by WerWolfe on UserBD
  */
 
+import com.telegrambot.app.model.PersonFields;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Data;
 
 @Data
 @Entity(name = "users")
-public class User {
+public class UserBD {
 
     @Id
     private Long id;
-    private String firstName;
     private Boolean isBot;
-    private String lastName;
     private String userName;
     private String languageCode;
     private Boolean canJoinGroups;
@@ -22,6 +21,10 @@ public class User {
     private Boolean supportInlineQueries;
     private Boolean isPremium;
     private Boolean addedToAttachmentMenu;
-    private String guid;
     private String phone;
+    private Boolean notValid;
+    private Boolean isEmployee;
+    private Boolean isMaster;
+    private PersonFields person;
+//    private List<UserStatus> statuses;
 }
