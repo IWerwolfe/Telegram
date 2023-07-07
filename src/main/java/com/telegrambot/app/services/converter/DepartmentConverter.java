@@ -29,10 +29,10 @@ public class DepartmentConverter extends Request1CConverter {
             entityBD.setName(response.getName());
             entityBD.setGuid(response.getGuid());
             entityBD.setCode(response.getCode());
-            entityBD.setBilling(response.getIsBilling() != null ? response.getIsBilling() : false);
-            entityBD.setExcusableGoods(response.getIsExcusableGoods() != null ? response.getIsExcusableGoods() : false);
-            entityBD.setMarkedGoods(response.getIsMarkedGoods() != null ? response.getIsMarkedGoods() : false);
-            entityBD.setEGAIS(response.getIsEGAIS() != null ? response.getIsEGAIS() : false);
+            entityBD.setBilling(convertToBoolean(response.getIsBilling()));
+            entityBD.setExcusableGoods(convertToBoolean(response.getIsExcusableGoods()));
+            entityBD.setMarkedGoods(convertToBoolean(response.getIsMarkedGoods()));
+            entityBD.setEGAIS(convertToBoolean(response.getIsEGAIS()));
             entityBD.setPartner(getOrCreateEntityPartner(response.getGuidPartner()));
             entityBD.setContract(getOrCreateEntityContract(response.getGuidContract()));
             return (T) entityBD;
@@ -41,10 +41,13 @@ public class DepartmentConverter extends Request1CConverter {
     }
 
     @Override
-    protected <T, R> T getOrCreateEntity(R dto) {
+    public <T, R> T getOrCreateEntity(R dto) {
         if (dto instanceof DepartmentResponse response) {
+            if (response.getGuid() == null || response.getGuid().isEmpty()) {
+                return null;
+            }
             Optional<Department> existingEntity = departmentRepository.findByGuid(response.getGuid());
-            return (T) existingEntity.orElseGet(Department::new);
+            return (T) existingEntity.orElseGet(() -> new Department(response.getGuid()));
         }
         return null;
     }

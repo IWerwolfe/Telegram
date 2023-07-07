@@ -6,9 +6,11 @@ import com.telegrambot.app.model.legalentity.Partner;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Embeddable
 public class DocPartnerData {
     @ManyToOne
@@ -20,4 +22,25 @@ public class DocPartnerData {
     @ManyToOne
     @JoinColumn(name = "contract_id")
     private Contract contract;
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        if (partner != null) {
+            builder.append(partner);
+            builder.append(System.lineSeparator())
+                    .append("Договор: ")
+                    .append(contract == null ? "Основной" : contract.toString());
+
+            if (department != null) {
+                builder.append(System.lineSeparator())
+                        .append(department);
+            }
+
+        } else {
+            builder.append("Контрагент не указан");
+        }
+        return builder.toString();
+    }
 }

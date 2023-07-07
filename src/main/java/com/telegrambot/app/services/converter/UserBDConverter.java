@@ -23,10 +23,14 @@ public class UserBDConverter extends Request1CConverter {
     @Override
     public <T, R> T updateEntity(R dto, T entity) {
         if (dto instanceof UserDataResponse response && entity instanceof UserBD entityBD) {
+            if (entityBD.getPerson() == null) {
+                entityBD.setPerson(new PersonFields());
+            }
+            entityBD.setGuid(response.getGuid());
             entityBD.getPerson().setGender(convertToEnum(response.getGender(), Gender.class));
-            entityBD.setNotValid(response.getNotValid());
-            entityBD.setIsEmployee(response.getIsEmployee());
-            entityBD.setIsMaster(response.getIsMaster());
+            entityBD.setNotValid(convertToBoolean(response.getNotValid()));
+//            entityBD.setIsEmployee(convertToBoolean(response.getIsEmployee()));
+            entityBD.setIsMaster(convertToBoolean(response.getIsMaster()));
             entityBD.getPerson().setBirthday(convertToLocalDateTime(response.getBirthday()));
             updateUserFIO(response.getFio(), entityBD.getPerson());
             return (T) entityBD;
@@ -35,10 +39,10 @@ public class UserBDConverter extends Request1CConverter {
     }
 
     @Override
-    protected <T, R> T getOrCreateEntity(R dto) {
+    public <T, R> T getOrCreateEntity(R dto) {
         if (dto instanceof UserDataResponse response) {
             Optional<UserBD> existingEntity = userRepository.findByPhoneIgnoreCase(response.getPhone());
-            return (T) existingEntity.orElseGet(UserBD::new);
+            return (T) existingEntity.orElseGet(() -> new UserBD(response.getPhone()));
         }
         return null;
     }

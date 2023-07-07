@@ -5,10 +5,14 @@ package com.telegrambot.app.model.user;    /*
 import com.telegrambot.app.model.PersonFields;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity(name = "users")
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserBD {
 
     @Id
@@ -23,8 +27,12 @@ public class UserBD {
     private Boolean addedToAttachmentMenu;
     private String phone;
     private Boolean notValid;
-    private Boolean isEmployee;
     private Boolean isMaster;
     private PersonFields person;
+    private String guid;
 //    private List<UserStatus> statuses;
+
+    public UserBD(String phone) {
+        this.phone = phone;
+    }
 }

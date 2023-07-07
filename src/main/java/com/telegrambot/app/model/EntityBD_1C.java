@@ -1,16 +1,21 @@
 package com.telegrambot.app.model;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+import java.time.format.DateTimeFormatter;
+
+@Getter
+@Setter
 @NoArgsConstructor
 @MappedSuperclass
 public class EntityBD_1C {
+
+    @Transient
+    public DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -18,4 +23,18 @@ public class EntityBD_1C {
     private String guid;
     private String name;
     private Boolean markedForDel;
+
+    @PrePersist
+    private void prePersist() {
+        EntityDefaults.initializeDefaultEntity1C(this);
+    }
+
+    public EntityBD_1C(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name == null ? ("Default " + this.getClass().getSimpleName().toLowerCase() + " " + this.id) : name;
+    }
 }

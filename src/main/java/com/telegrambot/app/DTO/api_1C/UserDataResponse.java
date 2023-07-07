@@ -18,5 +18,6 @@ public class UserDataResponse extends DataResponse {
     private Boolean isMaster;
     private Date birthday;
     private String fio;
+    private String guid;
     private List<UserStatusResponse> statusList;
 }

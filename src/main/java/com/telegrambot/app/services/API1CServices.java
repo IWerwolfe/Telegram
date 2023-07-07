@@ -1,25 +1,28 @@
 package com.telegrambot.app.services;
 
-import com.telegrambot.app.DTO.Task;
-import com.telegrambot.app.DTO.api_1C.CompanyDataResponse;
-import com.telegrambot.app.DTO.api_1C.UserDataResponse;
+import com.telegrambot.app.DTO.api_1C.*;
 import com.telegrambot.app.model.user.UserBD;
-
-import java.util.List;
+import lombok.NonNull;
 
 public interface API1CServices {
 
-    CompanyDataResponse getCompany(String inn, String kpp);
+    DefaultDataResponse getDefaultData();
 
-    CompanyDataResponse getCompany(String inn);
+    CompanyDataResponse getCompanyData(@NonNull String inn, String kpp);
 
-    CompanyDataResponse getCompanyByGuid(String guid);
+    CompanyDataResponse getCompanyData(@NonNull String inn);
 
-    UserDataResponse getUserData(String phone);
+    CompanyDataResponse getCompanyByGuid(@NonNull String guid);
 
-    Task getTask(String id);
+    UserDataResponse getUserData(@NonNull String phone);
 
-    List<Task> getTaskList(String inn);
+    TaskDataResponse getTaskByGuid(@NonNull String guid);
 
-    List<Task> getTaskList(UserBD userBD);
+    TaskDataResponse getTaskByCode(@NonNull String code);
+
+    TaskCreateResponse createTask(@NonNull TaskResponse taskResponse);
+
+    TaskDataListResponse getTaskList(String inn);
+
+    TaskDataListResponse getTaskList(UserBD userBD);
 }

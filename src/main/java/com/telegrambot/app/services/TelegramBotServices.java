@@ -163,9 +163,8 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     private UserBD getUserBD(User user) {
         UserBD userBD = new UserBD();
         BeanUtils.copyProperties(user, userBD);
-        userBD.setPerson(new PersonFields());
-        userBD.getPerson().setLastName(user.getLastName());
-        userBD.getPerson().setFirstName(user.getFirstName());
+        PersonFields person = new PersonFields(user.getFirstName(), user.getLastName());
+        userBD.setPerson(person);
         return userRepository.save(userBD);
     }
 

@@ -1,5 +1,6 @@
 package com.telegrambot.app.DTO.message;
 
+import com.telegrambot.app.model.task.Task;
 import com.telegrambot.app.model.user.UserStatus;
 import lombok.Data;
 
@@ -115,5 +116,19 @@ public abstract class Message {
                 "\t -\"не работает касса\", " + DUAL_SEPARATOR +
                 "Нам очень поможет если вы укажите модель оборудования и/или название установленного у вас програмного обеспечения " +
                 "и что предшествовало проблеме";
+    }
+
+    public static String getMessageExitCommand(String command) {
+        return "Выполнение команды " + command + " успешно завершено";
+    }
+
+    public static String getMessageIncorrectTask() {
+        return "Произошла ошибка при создании обращения, попробуйте пожалуйста немного позже";
+    }
+
+    public static String getSuccessfullyCreatingTask(Task task) {
+        return "Ваше обращение успешно зарегистрировано под номером " +
+                (task.getCode() == null ? task.getId() : task.getCode()) + DUAL_SEPARATOR +
+                "Скоро с вами свяжется наш мастер. Спасибо что обратились к нам";
     }
 }

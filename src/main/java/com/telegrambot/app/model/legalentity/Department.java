@@ -4,10 +4,14 @@ import com.telegrambot.app.model.EntityBD_1C;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity(name = "departments")
+@NoArgsConstructor
 public class Department extends EntityBD_1C {
 
     @ManyToOne
@@ -20,4 +24,13 @@ public class Department extends EntityBD_1C {
     private boolean isExcusableGoods;
     private boolean isMarkedGoods;
     private boolean isEGAIS;
+
+    public Department(String guid) {
+        setGuid(guid);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

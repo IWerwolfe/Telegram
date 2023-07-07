@@ -14,6 +14,7 @@ public class Command {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String command;
+    @Column(columnDefinition = "text")
     private String result;
     @ManyToOne
     @JoinColumn(name = "user_id")

@@ -42,10 +42,13 @@ public class LegalEntityConverter extends Request1CConverter {
     }
 
     @Override
-    protected <T, R> T getOrCreateEntity(R dto) {
+    public <T, R> T getOrCreateEntity(R dto) {
         if (dto instanceof LegalEntityResponse response) {
+            if (response.getGuid() == null || response.getGuid().isEmpty()) {
+                return null;
+            }
             Optional<LegalEntity> existingEntity = legalEntityRepository.findByGuid(response.getGuid());
-            return (T) existingEntity.orElseGet(Partner::new);
+            return (T) existingEntity.orElseGet(() -> new Partner(response.getGuid()));
         }
         return null;
     }

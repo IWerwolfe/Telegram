@@ -14,6 +14,7 @@ public class CommandCache {
     private String command;
     private boolean isComplete;
     private String subCommand;
+    @Column(columnDefinition = "text")
     private String result;
     @ManyToOne
     @JoinColumn(name = "user_id")

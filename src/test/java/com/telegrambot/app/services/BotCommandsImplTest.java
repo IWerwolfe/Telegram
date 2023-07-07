@@ -2,10 +2,7 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.model.user.UserType;
 import com.telegrambot.app.repositories.*;
-import com.telegrambot.app.services.converter.ContractConverter;
-import com.telegrambot.app.services.converter.DepartmentConverter;
-import com.telegrambot.app.services.converter.LegalEntityConverter;
-import com.telegrambot.app.services.converter.UserBDConverter;
+import com.telegrambot.app.services.converter.*;
 import org.junit.Assert;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.Mock;
@@ -47,6 +44,10 @@ public class BotCommandsImplTest {
     private ContractConverter contractConverter;
     @Mock
     private UserBDConverter userConverter;
+    @Mock
+    private TaskRepository taskRepository;
+    @Mock
+    private TaskConverter taskConverter;
 
     private final BotCommandsImpl botCommands;
 
@@ -54,7 +55,23 @@ public class BotCommandsImplTest {
 
     public BotCommandsImplTest() {
         MockitoAnnotations.openMocks(this);
-        this.botCommands = new BotCommandsImpl(userRepository, statusRepository, legalRepository, departmentRepository, contractRepository, commandCacheRepository, commandRepository, api1C, daDataService, legalConverter, departmentConverter, contractConverter, userConverter);
+        this.botCommands = new BotCommandsImpl(
+                taskRepository,
+                userRepository,
+                statusRepository,
+                legalRepository,
+                departmentRepository,
+                contractRepository,
+                commandCacheRepository,
+                commandRepository,
+                api1C,
+                daDataService,
+
+                legalConverter,
+                departmentConverter,
+                contractConverter,
+                userConverter,
+                taskConverter);
     }
 
     @org.junit.jupiter.api.Test

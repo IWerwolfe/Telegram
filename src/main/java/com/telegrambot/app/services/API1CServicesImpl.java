@@ -2,9 +2,7 @@ package com.telegrambot.app.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.telegrambot.app.DTO.DataResponse;
-import com.telegrambot.app.DTO.Task;
-import com.telegrambot.app.DTO.api_1C.CompanyDataResponse;
-import com.telegrambot.app.DTO.api_1C.UserDataResponse;
+import com.telegrambot.app.DTO.api_1C.*;
 import com.telegrambot.app.config.Connector1C;
 import com.telegrambot.app.model.user.UserBD;
 import lombok.NonNull;
@@ -20,7 +18,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -32,7 +29,7 @@ public class API1CServicesImpl implements API1CServices {
     private final Connector1C connector1C;
     private final DaDataService dataService;
 
-    public <T, R> R executePostRequest(T requestBody, Class<R> responseType, String method, String param) {
+    public <T, R> R executeRequest(T requestBody, Class<R> responseType, String method, String param, HttpMethod httpMethod) {
         ByteArrayHttpMessageConverter converter = new ByteArrayHttpMessageConverter();
         converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
 
@@ -40,14 +37,15 @@ public class API1CServicesImpl implements API1CServices {
         restTemplate.getMessageConverters().add(converter);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", connector1C.getToken());
+//        headers.add("Authorization", connector1C.getToken());
+        headers.add("token", connector1C.getToken());
         headers.setBasicAuth(connector1C.getLogin(), connector1C.getPassword());
         HttpEntity<T> requestEntity = new HttpEntity<>(requestBody, headers);
         param = param.isEmpty() ? "" : "?" + param;
 
         try {
             byte[] responseBody = restTemplate.exchange(
-                            connector1C.getUrl() + method + param, HttpMethod.GET, requestEntity, byte[].class)
+                            connector1C.getUrl() + method + param, httpMethod, requestEntity, byte[].class)
                     .getBody();
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(responseBody, responseType);
@@ -57,48 +55,43 @@ public class API1CServicesImpl implements API1CServices {
         }
     }
 
+    public <R> R executeGetRequest(Class<R> responseType, String method, String param) {
+        return executeRequest(null, responseType, method, param, HttpMethod.GET);
+    }
+
     public <T, R> R executePostRequest(T requestBody, Class<R> responseType, String method) {
-        return executePostRequest(requestBody, responseType, method, "");
-    }
-
-    public <R> R executePostRequest(Class<R> responseType, String method, String param) {
-        return executePostRequest(null, responseType, method, param);
-    }
-
-    public <R> R executePostRequest(Class<R> responseType, String method) {
-        return executePostRequest(null, responseType, method, "");
+        return executeRequest(requestBody, responseType, method, "", HttpMethod.POST);
     }
 
     @Override
-    public CompanyDataResponse getCompany(@NonNull String inn, String kpp) {
-        String param = "inn=" + inn + "&kpp=" + kpp;
-        CompanyDataResponse response = executePostRequest(CompanyDataResponse.class, "legal", param);
+    public DefaultDataResponse getDefaultData() {
+        String param = "apiKey=" + connector1C.getToken();
+        DefaultDataResponse response = executeGetRequest(DefaultDataResponse.class, "defaultData", param);
         if (response == null || !response.isResult()) {
-            log.warn(response == null ? "The organization's request was not fulfilled" : response.getError());
+            log.warn(response == null ? "the default data is not received" : response.getError());
         }
         return response;
     }
 
     @Override
-    public CompanyDataResponse getCompany(String inn) {
-        return getCompany(inn, "");
+    public CompanyDataResponse getCompanyData(@NonNull String inn, String kpp) {
+        return getCompany("inn=" + inn + "&kpp=" + kpp);
+    }
+
+    @Override
+    public CompanyDataResponse getCompanyData(@NonNull String inn) {
+        return getCompany("inn=" + inn + "&kpp=");
     }
 
     @Override
     public CompanyDataResponse getCompanyByGuid(@NonNull String guid) {
-        String param = "guid=" + guid;
-        CompanyDataResponse response = executePostRequest(CompanyDataResponse.class, "legal", param);
-        response = createEntityIfNull(response, CompanyDataResponse::new);
-        if (!response.isResult()) {
-            log.warn("The user's request was not executed, the server response: {}", response.getError());
-        }
-        return response;
+        return getCompany("guid=" + guid);
     }
 
     @Override
-    public UserDataResponse getUserData(String phone) {
+    public UserDataResponse getUserData(@NonNull String phone) {
         String param = "phone=" + phone;
-        UserDataResponse response = executePostRequest(UserDataResponse.class, "userdata", param);
+        UserDataResponse response = executeGetRequest(UserDataResponse.class, "userdata", param);
         response = createEntityIfNull(response, UserDataResponse::new);
         if (!response.isResult()) {
             log.warn("The user's request was not executed, the server response: {}", response.getError());
@@ -107,18 +100,50 @@ public class API1CServicesImpl implements API1CServices {
     }
 
     @Override
-    public Task getTask(String id) {
+    public TaskDataResponse getTaskByGuid(@NonNull String guid) {
+        return getTask("guid=" + guid);
+    }
+
+    @Override
+    public TaskDataResponse getTaskByCode(@NonNull String code) {
+        return getTask("code=" + code);
+    }
+
+    @Override
+    public TaskCreateResponse createTask(@NonNull TaskResponse taskResponse) {
+        TaskCreateResponse response = executePostRequest(taskResponse, TaskCreateResponse.class, "task");
+        if (response == null || !response.isResult()) {
+            log.warn(response == null ? "create task error" : response.getError());
+        }
+        return response;
+    }
+
+    @Override
+    public TaskDataListResponse getTaskList(String inn) {
         return null;
     }
 
     @Override
-    public List<Task> getTaskList(String inn) {
+    public TaskDataListResponse getTaskList(UserBD userBD) {
         return null;
     }
 
-    @Override
-    public List<Task> getTaskList(UserBD userBD) {
-        return null;
+    private CompanyDataResponse getCompany(String param) {
+        CompanyDataResponse response = executeGetRequest(CompanyDataResponse.class, "legal", param);
+        response = createEntityIfNull(response, CompanyDataResponse::new);
+        if (!response.isResult()) {
+            log.warn("The user's request was not executed, the server response: {}", response.getError());
+        }
+        return response;
+    }
+
+    private TaskDataResponse getTask(String param) {
+        TaskDataResponse response = executeGetRequest(TaskDataResponse.class, "task", param);
+        response = createEntityIfNull(response, TaskDataResponse::new);
+        if (!response.isResult()) {
+            log.warn("The user's request was not executed, the server response: {}", response.getError());
+        }
+        return response;
     }
 
     private String getAbbreviation(String string) {

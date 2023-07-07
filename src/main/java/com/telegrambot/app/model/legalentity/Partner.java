@@ -3,10 +3,12 @@ package com.telegrambot.app.model.legalentity;
 import com.telegrambot.app.DTO.PartnerType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @Entity
 @DiscriminatorValue("partners")
 @NoArgsConstructor

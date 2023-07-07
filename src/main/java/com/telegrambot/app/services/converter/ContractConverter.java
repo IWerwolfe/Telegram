@@ -28,7 +28,7 @@ public class ContractConverter extends Request1CConverter {
             entityBD.setGuid(response.getGuid());
             entityBD.setCode(response.getCode());
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
-            entityBD.setBilling(response.getIsBilling());
+            entityBD.setBilling(convertToBoolean(response.getIsBilling()));
             entityBD.setStartBilling(convertToLocalDateTime(response.getStartBilling()));
             entityBD.setStopBilling(convertToLocalDateTime(response.getStopBilling()));
             entityBD.setStandardHourlyRate(response.getStandardHourlyRate());
@@ -40,10 +40,13 @@ public class ContractConverter extends Request1CConverter {
     }
 
     @Override
-    protected <T, R> T getOrCreateEntity(R dto) {
+    public <T, R> T getOrCreateEntity(R dto) {
         if (dto instanceof ContractResponse response) {
+            if (response.getGuid() == null || response.getGuid().isEmpty()) {
+                return null;
+            }
             Optional<Contract> existingEntity = contractRepository.findByGuid(response.getGuid());
-            return (T) existingEntity.orElseGet(() -> new Contract());
+            return (T) existingEntity.orElseGet(() -> new Contract(response.getGuid()));
         }
         return null;
     }

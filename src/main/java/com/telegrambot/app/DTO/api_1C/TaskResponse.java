@@ -9,15 +9,23 @@ import java.util.Date;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class ContractResponse extends Entity1C {
+public class TaskResponse extends Entity1C {
+
+    private String description;
+    private String decision;
+    private String guidStatus;
     private String guidPartner;
+    private String guidDepartment;
+    private String guidContract;
+    private String guidManager;
+    private String guidAuthor;
+    private String comment;
     @JsonFormat(pattern = DATE_PATTERN)
-    private Date startBilling;
+    private Date closingDate;
     @JsonFormat(pattern = DATE_PATTERN)
     private Date date;
-    @JsonFormat(pattern = DATE_PATTERN)
-    private Date stopBilling;
-    private Float standardHourlyRate;
+    private String type;
+    private Boolean isOutsourcing;
+    private Boolean highPriority;
     private Boolean isBilling;
-    private String billingTypeString;
 }

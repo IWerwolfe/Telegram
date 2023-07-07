@@ -2,12 +2,14 @@ package com.telegrambot.app.model.legalentity;
 
 import com.telegrambot.app.model.EntityBD_1C;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Entity
 @NoArgsConstructor
@@ -29,5 +31,10 @@ public abstract class LegalEntity extends EntityBD_1C {
 
     public LegalEntity(String guid) {
         setGuid(guid);
+    }
+
+    @Override
+    public String toString() {
+        return getName() + ", ИНН " + inn + (kpp != null ? " КПП " + kpp : "");
     }
 }
