@@ -145,7 +145,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
                 tasks = taskRepository.findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
             }
             if (user.getIsMaster()) {
-                tasks = getTaskListByApi();
+                tasks = getTaskListByApiByUser();
             }
         }
 
@@ -164,9 +164,12 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         }
     }
 
-    private List<Task> getTaskListByApi() {
+    private List<Task> getTaskListByApiByUser() {
+        return createTasks(api1C.getTaskList(user));
+    }
+
+    private List<Task> createTasks(TaskDataListResponse response) {
         List<Task> tasks = new ArrayList<>();
-        TaskDataListResponse response = api1C.getTaskList(user);
         if (!response.isResult()) {
             return tasks;
         }
