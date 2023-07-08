@@ -2,6 +2,7 @@ package com.telegrambot.app.components;    /*
  *created by WerWolfe on Buttons
  */
 
+import com.telegrambot.app.model.task.Task;
 import com.telegrambot.app.model.user.UserType;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -89,6 +90,24 @@ public class Buttons {
         return markupInline;
     }
 
+    public static InlineKeyboardMarkup getInlineMarkupByTask(List<Task> tasks) {
+
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+
+        for (Task task : tasks) {
+            String description = convertCode(task.getCode()) + " > " + convertDescription(task.getDescription());
+            InlineKeyboardButton taskButton = new InlineKeyboardButton(description);
+            taskButton.setCallbackData("getTask:" + task.getCode());
+
+            List<InlineKeyboardButton> rowInline = List.of(taskButton);
+            rowsInLine.add(rowInline);
+        }
+
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        markupInline.setKeyboard(rowsInLine);
+        return markupInline;
+    }
+
     public static ReplyKeyboardMarkup getContact() {
         GET_CONTACT.setRequestContact(true);
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
@@ -98,5 +117,15 @@ public class Buttons {
         row.add(GET_CONTACT);
         keyboardMarkup.setKeyboard(Collections.singletonList(row));
         return keyboardMarkup;
+    }
+
+    public static String convertDescription(String code) {
+        String REGEX = "[^0-9a-zA-Zа-яА-ЯёЁ\\-.,=_*+&:#№@!/(){}\\[\\]]+";
+        return code.replaceAll(REGEX, " ").replaceAll("\s{2,}", " ").trim();
+    }
+
+    public static String convertCode(String code) {
+        String REGEX_CODE = "^0+";
+        return code.replaceAll(REGEX_CODE, "").trim();
     }
 }

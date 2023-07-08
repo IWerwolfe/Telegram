@@ -10,12 +10,14 @@ import com.telegrambot.app.repositories.TaskTypeRepository;
 import com.telegrambot.app.services.converter.TaskStatusConverter;
 import com.telegrambot.app.services.converter.TaskTypeConverter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DefaultDataInitializer implements CommandLineRunner {
@@ -34,12 +36,14 @@ public class DefaultDataInitializer implements CommandLineRunner {
             TaskType.setDefaultType(getDefaultType());
             TaskStatus.setDefaultInitialStatus(getDefaultInitialStatus());
             TaskStatus.setDefaultClosedStatus(getDefaultClosedStatus());
+            log.info("Creating new default data success");
             return;
         }
 
         updateTaskTypes(data.getTaskTypes());
         updateTaskStatuses(data.getTaskStatuses());
         updateDefaultInfo(data);
+        log.info("Loading default data success");
     }
 
     private void updateDefaultInfo(DefaultDataResponse data) {

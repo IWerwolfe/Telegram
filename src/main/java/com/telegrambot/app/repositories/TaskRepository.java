@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskRepository extends CrudRepository<Task, Long> {
+    Optional<Task> findByCodeIgnoreCase(String code);
+
     List<Task> findByCreatorAndStatusNotOrderByDateAsc(UserBD creator, TaskStatus status);
 
     Optional<Task> findByGuid(String guid);

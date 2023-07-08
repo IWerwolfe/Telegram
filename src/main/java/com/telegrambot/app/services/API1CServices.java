@@ -1,7 +1,6 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.api_1C.*;
-import com.telegrambot.app.model.user.UserBD;
 import lombok.NonNull;
 
 public interface API1CServices {
@@ -22,7 +21,9 @@ public interface API1CServices {
 
     TaskCreateResponse createTask(@NonNull TaskResponse taskResponse);
 
-    TaskDataListResponse getTaskList(String inn);
+    TaskDataListResponse getTaskListDataByCompany(String guidPartner);
 
-    TaskDataListResponse getTaskList(UserBD userBD);
+    TaskDataListResponse getTaskListDataByUser(String guidUser);
+
+    TaskDataListResponse getTaskListDataByDepartment(String guidDepartment);
 }

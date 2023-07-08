@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.telegrambot.app.DTO.DataResponse;
 import com.telegrambot.app.DTO.api_1C.*;
 import com.telegrambot.app.config.Connector1C;
-import com.telegrambot.app.model.user.UserBD;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -119,13 +118,18 @@ public class API1CServicesImpl implements API1CServices {
     }
 
     @Override
-    public TaskDataListResponse getTaskList(String inn) {
-        return null;
+    public TaskDataListResponse getTaskListDataByCompany(String guidPartner) {
+        return getTaskList("guidPartner=" + guidPartner);
     }
 
     @Override
-    public TaskDataListResponse getTaskList(UserBD userBD) {
-        return null;
+    public TaskDataListResponse getTaskListDataByUser(String guidUser) {
+        return getTaskList("guidUser=" + guidUser);
+    }
+
+    @Override
+    public TaskDataListResponse getTaskListDataByDepartment(String guidDepartment) {
+        return getTaskList("guidDepartment=" + guidDepartment);
     }
 
     private CompanyDataResponse getCompany(String param) {
@@ -140,6 +144,15 @@ public class API1CServicesImpl implements API1CServices {
     private TaskDataResponse getTask(String param) {
         TaskDataResponse response = executeGetRequest(TaskDataResponse.class, "task", param);
         response = createEntityIfNull(response, TaskDataResponse::new);
+        if (!response.isResult()) {
+            log.warn("The user's request was not executed, the server response: {}", response.getError());
+        }
+        return response;
+    }
+
+    private TaskDataListResponse getTaskList(String param) {
+        TaskDataListResponse response = executeGetRequest(TaskDataListResponse.class, "task", param);
+        response = createEntityIfNull(response, TaskDataListResponse::new);
         if (!response.isResult()) {
             log.warn("The user's request was not executed, the server response: {}", response.getError());
         }

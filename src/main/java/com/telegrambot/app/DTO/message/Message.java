@@ -131,4 +131,12 @@ public abstract class Message {
                 (task.getCode() == null ? task.getId() : task.getCode()) + DUAL_SEPARATOR +
                 "Скоро с вами свяжется наш мастер. Спасибо что обратились к нам";
     }
+
+    public static String getMessageSearchErrors() {
+        return "Активных задач по вашему запросу не найдено";
+    }
+
+    public static String getMessageSearchGrouping(String sortName, int count) {
+        return count + " задач: " + (sortName == null ? "" : sortName);
+    }
 }

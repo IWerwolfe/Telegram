@@ -26,8 +26,8 @@ public class UserBD {
     private Boolean isPremium;
     private Boolean addedToAttachmentMenu;
     private String phone;
-    private Boolean notValid;
-    private Boolean isMaster;
+    private Boolean notValid = false;
+    private Boolean isMaster = false;
     private PersonFields person;
     private String guid;
 //    private List<UserStatus> statuses;

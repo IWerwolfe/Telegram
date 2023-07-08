@@ -2,11 +2,13 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.DepartmentResponse;
 import com.telegrambot.app.DTO.LegalListData;
+import com.telegrambot.app.DTO.SortingTaskType;
 import com.telegrambot.app.DTO.SubCommandInfo;
 import com.telegrambot.app.DTO.api_1C.*;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
 import com.telegrambot.app.components.Buttons;
+import com.telegrambot.app.model.EntityBD_1C;
 import com.telegrambot.app.model.command.Command;
 import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.command.CommandStatus;
@@ -31,9 +33,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -87,11 +87,28 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             case "/get_task" -> getTask();
             case "/need_help" -> createAssistance();
             case "/exit" -> exit();
-            default -> sendDefault(receivedMessage);
+            default -> {
+                if (receivedMessage.matches("getTask.*")) {
+                    getDescriptionTask(receivedMessage);
+                    return;
+                }
+                sendDefault(receivedMessage);
+            }
         }
         if (!commandCacheList.isEmpty()) {
             commandCacheRepository.saveAll(commandCacheList);
         }
+    }
+
+    private void getDescriptionTask(String receivedMessage) {
+        String taskCode = receivedMessage.replaceAll("getTask:", "");
+        taskCode = "0".repeat(9 - taskCode.length()) + taskCode;
+        Optional<Task> optional = taskRepository.findByCodeIgnoreCase(taskCode);
+        if (optional.isEmpty()) {
+            sendMessage("Task not found");
+            return;
+        }
+        sendMessage(optional.get().toString(true));
     }
 
     private void createAssistance() {
@@ -134,38 +151,52 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private void getTask() {
-        if (isStart(Message.getMessageStartGetPhone(), "/get_task", "get_task")) return;
-        CommandCache command = getCommandCache();
 
         List<UserStatus> statuses = statusRepository.findByUserBDOrderByLastUpdateDesc(user);
+        List<Task> tasks = new ArrayList<>();
+        SortingTaskType sortingType = SortingTaskType.DEPARTMENT;
+
         if (statuses.size() == 1) {
             UserStatus status = statuses.get(0);
-            List<Task> tasks;
             if (status.getUserType() == UserType.UNAUTHORIZED) {
                 tasks = taskRepository.findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
             }
             if (user.getIsMaster()) {
                 tasks = getTaskListByApiByUser();
+                sortingType = SortingTaskType.PARTNER;
             }
         }
 
-        if (command.getSubCommand().equals("getPhone")) {
-            if (!text.matches(REGEX_PHONE)) {
-                sendMessage(Message.getMessageUnCorrectGetPhone());
-                return;
-            }
-            UserDataResponse userDataResponse = api1C.getUserData(text);
-            if (userDataResponse == null || !userDataResponse.isResult()) {
-                sendMessage(Message.getMessageNonFindPhone());
-                return;
-            }
-            sendMessage(toStringNonNullFields(userDataResponse));
-            subCommandEnd();
+        if (statuses.size() == 0) {
+            sendMessage(Message.getMessageSearchErrors());
+            return;
+        }
+
+        Map<String, List<Task>> sortedTask = getSortedTask(tasks, sortingType);
+
+        for (String sortName : sortedTask.keySet()) {
+            List<Task> taskList = sortedTask.get(sortName);
+            String message = Message.getMessageSearchGrouping(sortName, taskList.size());
+            ReplyKeyboard keyboard = Buttons.getInlineMarkupByTask(taskList);
+            sendMessage(message, keyboard);
         }
     }
 
+    private Map<String, List<Task>> getSortedTask(List<Task> tasks, SortingTaskType type) {
+        return tasks.stream()
+                .collect(Collectors.groupingBy(task -> switch (type) {
+                    case STATUS -> getNameEntity(task.getStatus());
+                    case PARTNER -> getNameEntity(task.getPartnerData().getPartner());
+                    default -> getNameEntity(task.getPartnerData().getDepartment());
+                }));
+    }
+
+    private String getNameEntity(EntityBD_1C entity) {
+        return entity == null ? "" : entity.getName();
+    }
+
     private List<Task> getTaskListByApiByUser() {
-        return createTasks(api1C.getTaskList(user));
+        return createTasks(api1C.getTaskListDataByUser(user.getGuid()));
     }
 
     private List<Task> createTasks(TaskDataListResponse response) {
@@ -496,10 +527,6 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
                 .append(getResultSubCommandFromCache("getPhone"))
                 .append(" (").append(getResultSubCommandFromCache("getUserName")).append(")");
         return description.toString();
-    }
-
-    private LocalDateTime convertLongToLocalDateTime(long longDate) {
-        return longDate == 0L ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(longDate), ZoneId.systemDefault());
     }
 
     private void sendMessage(String message) {
