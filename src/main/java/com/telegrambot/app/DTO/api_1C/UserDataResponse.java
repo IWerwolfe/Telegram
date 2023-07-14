@@ -20,4 +20,5 @@ public class UserDataResponse extends DataResponse {
     private String fio;
     private String guid;
     private List<UserStatusResponse> statusList;
+    //TODO добавить информацию о задачах
 }

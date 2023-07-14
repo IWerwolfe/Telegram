@@ -26,4 +26,6 @@ public interface API1CServices {
     TaskDataListResponse getTaskListDataByUser(String guidUser);
 
     TaskDataListResponse getTaskListDataByDepartment(String guidDepartment);
+
+    TaskDataListResponse getTaskListDataByManager(String guid);
 }

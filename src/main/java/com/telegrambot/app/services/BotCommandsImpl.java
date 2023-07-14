@@ -1,9 +1,6 @@
 package com.telegrambot.app.services;
 
-import com.telegrambot.app.DTO.DepartmentResponse;
-import com.telegrambot.app.DTO.LegalListData;
-import com.telegrambot.app.DTO.SortingTaskType;
-import com.telegrambot.app.DTO.SubCommandInfo;
+import com.telegrambot.app.DTO.*;
 import com.telegrambot.app.DTO.api_1C.*;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
@@ -12,11 +9,11 @@ import com.telegrambot.app.model.EntityBD_1C;
 import com.telegrambot.app.model.command.Command;
 import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.command.CommandStatus;
+import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
 import com.telegrambot.app.model.legalentity.LegalEntity;
 import com.telegrambot.app.model.legalentity.Partner;
-import com.telegrambot.app.model.task.DocPartnerData;
 import com.telegrambot.app.model.task.Task;
 import com.telegrambot.app.model.task.TaskStatus;
 import com.telegrambot.app.model.task.TaskType;
@@ -76,6 +73,10 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         this.chatId = chatId;
         this.user = userBD;
 
+        String[] param = receivedMessage.split(":");
+        receivedMessage = param.length > 0 ? param[0] : receivedMessage;
+        text = param.length > 1 && text == null ? param[1] : text;
+
         switch (receivedMessage) {
             case "/start" -> startBot();
             case "/help" -> sendHelpText();
@@ -86,51 +87,139 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             case "/getByInn" -> getByInn();
             case "/get_task" -> getTask();
             case "/need_help" -> createAssistance();
+            case "getTask" -> getDescriptionTask();
+            case "descriptor" -> editDescriptionTask();
+            case "comment" -> editCommentTask();
+            case "cancel" -> editCancelTask();
+//            case "/need_help" -> createAssistance();
             case "/exit" -> exit();
-            default -> {
-                if (receivedMessage.matches("getTask.*")) {
-                    getDescriptionTask(receivedMessage);
-                    return;
-                }
-                sendDefault(receivedMessage);
-            }
+            default -> sendDefault(receivedMessage);
         }
         if (!commandCacheList.isEmpty()) {
             commandCacheRepository.saveAll(commandCacheList);
         }
+        text = null;
     }
 
-    private void getDescriptionTask(String receivedMessage) {
-        String taskCode = receivedMessage.replaceAll("getTask:", "");
-        taskCode = "0".repeat(9 - taskCode.length()) + taskCode;
-        Optional<Task> optional = taskRepository.findByCodeIgnoreCase(taskCode);
+    private void editDescriptionTask() {
+        editTask(Message.getEditTextTask("описание"), "descriptor", this::editDescriptionTask);
+    }
+
+    private void editCommentTask() {
+        editTask(Message.getEditTextTask("комментарий"), "comment", this::editCommentTask);
+    }
+
+    private void editCancelTask() {
+        editTask(Message.getWhenCancelTask(), "cancel", this::editCancelTask);
+    }
+
+    private void editTask(String message, String nameCommand, Runnable parent) {
+        CommandCache command = getCommandCache("", nameCommand + ":", "code");
+        String subCommand = "edit" + nameCommand;
+        switch (command.getSubCommand()) {
+            case "code" -> {
+                completeSubCommand(command, subCommand, getTaskCode());
+                runHandler(parent);
+            }
+            case "editTask" -> subCommandEditTask(parent);
+            case "end" -> subCommandEnd();
+            default -> {
+                if (command.getSubCommand().equals(subCommand)) {
+                    SubCommandInfo info = new SubCommandInfo(message,
+                            Message.errorWhenEditTask(),
+                            parent,
+                            "editTask");
+                    subCommandGetTextInfo(command, info);
+                }
+            }
+        }
+    }
+
+    private void subCommandEditTask(Runnable parent) {
+        if (commandCacheList.isEmpty()) {
+            exit(Message.getIncorrectTask());
+            return;
+        }
+
+        Optional<Task> optional = taskRepository.findByCodeIgnoreCase(getResultSubCommandFromCache("code"));
+        if (optional.isEmpty()) {
+            exit(Message.getIncorrectTask());
+            return;
+        }
+        Task task = optional.get();
+        String prefix = "Дополнено " + LocalDateTime.now().format(EntityBD_1C.FORMATTER_DATE) + " -> ";
+        task.setDescription(getResultFromSubCommand("editDescriptor", task.getDescription(), prefix));
+        task.setComment(getResultFromSubCommand("editComment", task.getComment(), prefix));
+        task.setDecision(getResultFromSubCommand("editDecision", task.getDecision(), prefix));
+        String message = "";
+        message = getResultSubCommandFromCache("editCancel");
+        if (!message.isEmpty()) {
+            closingTask(task, message, false, "Закрыто пользователем:");
+        }
+        message = getResultSubCommandFromCache("closed");
+        if (!message.isEmpty()) {
+            closingTask(task, message, true);
+        }
+        taskRepository.save(task);
+        sendMessage(Message.getSuccessfullyCreatingTask(task));
+        completeSubCommand(getCommandCache(), "end");
+        runHandler(parent);
+    }
+
+    private String getResultFromSubCommand(String nameSubCommand, String field, String prefix) {
+        String message = getResultSubCommandFromCache(nameSubCommand);
+        if (message.isEmpty()) {
+            return field;
+        }
+        return field == null || field.isEmpty() ? message : prefix + SEPARATOR + message;
+    }
+
+    private void closingTask(Task task, String message, boolean successfully) {
+        task.setStatus(TaskStatus.getDefaultClosedStatus());
+        task.setClosingDate(LocalDateTime.now());
+        task.setSuccessfully(successfully);
+        String decision = task.getDecision();
+        task.setDecision(decision == null || decision.isEmpty() ? message : message + SEPARATOR + decision);
+    }
+
+    private void closingTask(Task task, String message, boolean successfully, String prefix) {
+        message = prefix.isEmpty() ? message : prefix + SEPARATOR + message;
+        closingTask(task, message, successfully);
+    }
+
+    private void getDescriptionTask() {
+        Optional<Task> optional = taskRepository.findByCodeIgnoreCase(text);
         if (optional.isEmpty()) {
             sendMessage("Task not found");
             return;
         }
-        sendMessage(optional.get().toString(true));
+        sendMessage(optional.get().toString(true), Buttons.getInlineMarkupEditTask(optional.get()));
+    }
+
+    private String getTaskCode() {
+        return "0".repeat(9 - text.length()) + text;
     }
 
     private void createAssistance() {
-        String message = Message.getMessageStartCreateAssistance(user.getPerson().getFirstName());
+        String message = Message.getStartCreateAssistance(user.getPerson().getFirstName());
         CommandCache command = getCommandCache(message, "/need_help", "getTopic");
         switch (command.getSubCommand()) {
             case "getTopic" -> {
-                SubCommandInfo info = new SubCommandInfo(Message.getMessageStartTopic(),
+                SubCommandInfo info = new SubCommandInfo(Message.getStartTopic(),
                         this::createAssistance,
                         "getDescription");
                 subCommandGetTextInfo(command, info);
             }
             case "getDescription" -> {
-                SubCommandInfo info = new SubCommandInfo(Message.getMessageStartDescription(),
-                        Message.getMessageErrorDescription(),
+                SubCommandInfo info = new SubCommandInfo(Message.getStartDescription(),
+                        Message.getErrorDescription(),
                         this::createAssistance,
                         "getPhone");
                 subCommandGetTextInfo(command, info);
             }
             case "getPhone" -> {
-                SubCommandInfo info = new SubCommandInfo(Message.getMessageStartGetPhone(),
-                        Message.getMessageUnCorrectGetPhone(),
+                SubCommandInfo info = new SubCommandInfo(Message.getStartGetPhone(),
+                        Message.getUnCorrectGetPhone(),
                         this::createAssistance,
                         "getUserName",
                         REGEX_PHONE
@@ -138,8 +227,8 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
                 subCommandGetTextInfo(command, info);
             }
             case "getUserName" -> {
-                SubCommandInfo info = new SubCommandInfo(Message.getMessageStartName(),
-                        Message.getMessageErrorName(),
+                SubCommandInfo info = new SubCommandInfo(Message.getStartName(),
+                        Message.getErrorName(),
                         this::createAssistance,
                         "createTask");
                 subCommandGetTextInfo(command, info);
@@ -151,51 +240,80 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private void getTask() {
-
         List<UserStatus> statuses = statusRepository.findByUserBDOrderByLastUpdateDesc(user);
-        List<Task> tasks = new ArrayList<>();
-        SortingTaskType sortingType = SortingTaskType.DEPARTMENT;
-
-        if (statuses.size() == 1) {
-            UserStatus status = statuses.get(0);
-            if (status.getUserType() == UserType.UNAUTHORIZED) {
-                tasks = taskRepository.findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
-            }
-            if (user.getIsMaster()) {
-                tasks = getTaskListByApiByUser();
-                sortingType = SortingTaskType.PARTNER;
-            }
-        }
-
-        if (statuses.size() == 0) {
-            sendMessage(Message.getMessageSearchErrors());
-            return;
-        }
-
-        Map<String, List<Task>> sortedTask = getSortedTask(tasks, sortingType);
-
-        for (String sortName : sortedTask.keySet()) {
-            List<Task> taskList = sortedTask.get(sortName);
-            String message = Message.getMessageSearchGrouping(sortName, taskList.size());
-            ReplyKeyboard keyboard = Buttons.getInlineMarkupByTask(taskList);
-            sendMessage(message, keyboard);
+        switch (statuses.size()) {
+            case 0 -> sendMessage(Message.getSearchErrors());
+            case 1 -> sendTaskList(getSortedTask(getTaskListToSend(statuses.get(0))));
+            default -> statuses.forEach(s -> {
+                TaskListToSend taskListToSend = getTaskListToSend(s);
+                sendMessage(Message.getSearch(getNameEntity(s.getLegal()), taskListToSend.getTasks().size()));
+                sendTaskList(getSortedTask(taskListToSend));
+            });
         }
     }
 
-    private Map<String, List<Task>> getSortedTask(List<Task> tasks, SortingTaskType type) {
-        return tasks.stream()
-                .collect(Collectors.groupingBy(task -> switch (type) {
+    private void sendTaskList(Map<String, List<Task>> sortedTask) {
+        sortedTask.keySet().forEach(sortName -> {
+            List<Task> taskList = sortedTask.get(sortName);
+            String message = Message.getSearchGrouping(sortName, taskList.size());
+            ReplyKeyboard keyboard = Buttons.getInlineMarkupByTasks(taskList);
+            sendMessage(message, keyboard);
+        });
+    }
+
+    private Map<String, List<Task>> getSortedTask(TaskListToSend taskListToSend) {
+        return taskListToSend.getTasks().stream()
+                .collect(Collectors.groupingBy(task -> switch (taskListToSend.getSorting()) {
                     case STATUS -> getNameEntity(task.getStatus());
                     case PARTNER -> getNameEntity(task.getPartnerData().getPartner());
                     default -> getNameEntity(task.getPartnerData().getDepartment());
                 }));
     }
 
+    private TaskListToSend getTaskListToSend(UserStatus status) {
+        List<Task> tasks = new ArrayList<>();
+        SortingTaskType sortingType = SortingTaskType.DEPARTMENT;
+        switch (status.getUserType()) {
+            case UNAUTHORIZED, USER -> {
+                if (TaskStatus.getDefaultClosedStatus() != null) {
+                    tasks = taskRepository.findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
+                }
+            }
+            case ADMINISTRATOR -> tasks = status.getDepartment() == null ?
+                    getTaskListByApiByCompany(status.getLegal().getGuid()) :
+                    getTaskListByApiByDepartment(status.getDepartment().getGuid());
+            case DIRECTOR -> tasks = getTaskListByApiByCompany(status.getLegal().getGuid());
+            default -> {
+                if (user.getIsMaster()) {
+                    tasks = getTaskListByApiByManager();
+                    sortingType = SortingTaskType.PARTNER;
+                }
+            }
+        }
+        return new TaskListToSend(sortingType, tasks);
+    }
+
     private String getNameEntity(EntityBD_1C entity) {
         return entity == null ? "" : entity.getName();
     }
 
+    private List<Task> getTaskListByApiByManager() {
+        //TODO исправить на запрос из БД
+        return createTasks(api1C.getTaskListDataByManager(user.getGuid()));
+    }
+
+    private List<Task> getTaskListByApiByCompany(String guidCompany) {
+        //TODO исправить на запрос из БД
+        return createTasks(api1C.getTaskListDataByCompany(guidCompany));
+    }
+
+    private List<Task> getTaskListByApiByDepartment(String guidDepartment) {
+        //TODO исправить на запрос из БД
+        return createTasks(api1C.getTaskListDataByDepartment(guidDepartment));
+    }
+
     private List<Task> getTaskListByApiByUser() {
+        //TODO исправить на запрос из БД
         return createTasks(api1C.getTaskListDataByUser(user.getGuid()));
     }
 
@@ -213,7 +331,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
 
     private void subCommandCreateTask() {
         if (commandCacheList.size() == 0) {
-            exit(Message.getMessageIncorrectTask());
+            exit(Message.getIncorrectTask());
             return;
         }
         Task task = new Task();
@@ -243,7 +361,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
 
     private String getResultSubCommandFromCache(String subCommand) {
         Optional<String> result = commandCacheList.stream()
-                .filter(command -> command.getSubCommand().equals(subCommand))
+                .filter(command -> command.getSubCommand().equalsIgnoreCase(subCommand))
                 .map(CommandCache::getResult)
                 .findFirst();
 
@@ -255,7 +373,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         this.text = text;
 
         if (text.equals("/exit")) {
-            exit(Message.getMessageExitCommand(getCommandCache().getCommand()));
+            exit(Message.getExitCommand(getCommandCache().getCommand()));
         }
         botAnswerUtils(getCommandCache().getCommand(), chatId, userBD);
         if (!commandCacheList.isEmpty()) {
@@ -265,17 +383,17 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
 
     private void getUserByPhone() {
 
-        if (isStart(Message.getMessageStartGetPhone(), "/getUserByPhone", "getPhone")) return;
+        if (isStart(Message.getStartGetPhone(), "/getUserByPhone", "getPhone")) return;
         CommandCache command = getCommandCache();
 
         if (command.getSubCommand().equals("getPhone")) {
             if (!text.matches(REGEX_PHONE)) {
-                sendMessage(Message.getMessageUnCorrectGetPhone());
+                sendMessage(Message.getUnCorrectGetPhone());
                 return;
             }
             UserDataResponse userDataResponse = api1C.getUserData(text);
             if (userDataResponse == null || !userDataResponse.isResult()) {
-                sendMessage(Message.getMessageNonFindPhone());
+                sendMessage(Message.getNonFindPhone());
                 return;
             }
             sendMessage(toStringNonNullFields(userDataResponse));
@@ -285,17 +403,17 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
 
     private void getByInn() {
 
-        if (isStart(Message.getMessageStartINN(), "/getByInn", "getByInn")) return;
+        if (isStart(Message.getStartINN(), "/getByInn", "getByInn")) return;
         CommandCache command = getCommandCache();
 
         if (command.getSubCommand().equals("getByInn")) {
             if (!text.matches(REGEX_INN)) {
-                sendMessage(Message.getMessageUnCorrectINN());
+                sendMessage(Message.getUnCorrectINN());
                 return;
             }
             DaDataParty daDataParty = daDataService.getCompanyDataByINN(text);
             if (daDataParty == null) {
-                sendMessage(Message.getMessageUnCorrectINN());
+                sendMessage(Message.getUnCorrectINN());
                 return;
             }
             sendMessage(toStringNonNullFields(daDataParty, true));
@@ -318,17 +436,17 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         UserDataResponse userDataResponse = api1C.getUserData(user.getPhone());
         if (userDataResponse.isResult()) {
             List<UserStatus> statusList = updateUserAfterRequestAPI(userDataResponse);
-            sendMessage(Message.getMessageAfterSendingPhone(user.getPerson().getFirstName(), statusList),
+            sendMessage(Message.getAfterSendingPhone(user.getPerson().getFirstName(), statusList),
                     Buttons.inlineMarkupDefault(statusList.get(0).getUserType()));
             return;
         }
         addNeSubCommand("/registrationSurvey", "getInn");
-        sendMessage(Message.getMessageBeforeSurvey());
+        sendMessage(Message.getBeforeSurvey());
         registrationSurvey();
     }
 
     private void getContact() {
-        sendMessage(Message.getMessageBeforeSendingPhone(), Buttons.getContact());
+        sendMessage(Message.getBeforeSendingPhone(), Buttons.getContact());
     }
 
     private void startBot() {
@@ -403,18 +521,18 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private void subCommandGetInn(CommandCache command) {
-        if (isStart(command, Message.getMessageStartINN())) return;
+        if (isStart(command, Message.getStartINN())) return;
         if (text.matches(REGEX_INN)) {
             createUserStatus(getPartnerByAPI(), "Удаленный пользователь");
             completeSubCommand(command, "getUserName");
             registrationSurvey();
             return;
         }
-        sendMessage(Message.getMessageUnCorrectINN());
+        sendMessage(Message.getUnCorrectINN());
     }
 
     private void subCommandGetUserName(CommandCache command) {
-        if (isStart(command, Message.getMessageStartUserName())) return;
+        if (isStart(command, Message.getStartUserName())) return;
         if (text.matches(REGEX_FIO)) {
             UserBDConverter.updateUserFIO(text, user.getPerson());
             userRepository.save(user);
@@ -422,11 +540,11 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             registrationSurvey();
             return;
         }
-        sendMessage(Message.getMessageUnCorrectUserName());
+        sendMessage(Message.getUnCorrectUserName());
     }
 
     private void subCommandGetPost(CommandCache command) {
-        if (isStart(command, Message.getMessageStartPost())) return;
+        if (isStart(command, Message.getStartPost())) return;
         UserStatus status = statusRepository.findFirstByUserBDOrderByLastUpdateDesc(user);
         if (status != null) {
             status.setPost(text);
@@ -479,10 +597,10 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         return partner;
     }
 
-    private DocPartnerData getPartnerDateByAPI(String text) {
+    private PartnerData getPartnerDateByAPI(String text) {
         CompanyDataResponse response = text.matches(REGEX_INN) ? api1C.getCompanyData(text) : api1C.getCompanyByGuid(text);
         LegalListData data = createDataByCompanyDataResponse(response);
-        DocPartnerData partnerData = new DocPartnerData();
+        PartnerData partnerData = new PartnerData();
 
         if (data.getLegals().isEmpty()) {
             Partner partner = createLegalByInnFromDaData();
@@ -570,7 +688,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         return isStart(command, message);
     }
 
-    private void completeSubCommand(CommandCache command, String subCommand) {
+    private void completeSubCommand(CommandCache command, String subCommand, String result) {
 
         CommandCache commandCache = new CommandCache();
         commandCache.setSubCommand(subCommand);
@@ -580,7 +698,11 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         commandCacheList.add(commandCache);
 
         command.setComplete(true);
-        command.setResult(text);
+        command.setResult(result);
+    }
+
+    private void completeSubCommand(CommandCache command, String subCommand) {
+        completeSubCommand(command, subCommand, text);
     }
 
     private SendMessage createMessage(String text, ReplyKeyboard keyboard) {
@@ -611,6 +733,8 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
 
         userConverter.updateEntity(userData, user);
         userRepository.save(user);
+
+        //TODO Добавить обработку задач
 
         List<UserStatus> userStatuses = new ArrayList<>();
         if (userData.getStatusList() == null || userData.getStatusList().isEmpty()) return userStatuses;

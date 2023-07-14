@@ -1,6 +1,7 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api_1C.TaskResponse;
+import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
 import com.telegrambot.app.model.legalentity.LegalEntity;
@@ -86,8 +87,8 @@ public class TaskConverter extends Request1CConverter {
         return taskResponse;
     }
 
-    private DocPartnerData getPartnerData(TaskResponse taskResponse) {
-        DocPartnerData partnerData = new DocPartnerData();
+    private PartnerData getPartnerData(TaskResponse taskResponse) {
+        PartnerData partnerData = new PartnerData();
         partnerData.setPartner(getOrCreateEntityPartner(taskResponse.getGuidPartner()));
         partnerData.setContract(getOrCreateEntityContract(taskResponse.getGuidContract()));
         partnerData.setDepartment(getOrCreateEntityDepartment(taskResponse.getGuidDepartment()));

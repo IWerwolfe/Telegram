@@ -2,6 +2,7 @@ package com.telegrambot.app.model.task;
 
 import com.telegrambot.app.model.EntityDefaults;
 import com.telegrambot.app.model.EntityDocBD_1C;
+import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.user.UserBD;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -21,7 +22,7 @@ public class Task extends EntityDocBD_1C {
     private String decision;
     @ManyToOne
     private TaskStatus status;
-    private DocPartnerData partnerData;
+    private PartnerData partnerData;
     private LocalDateTime closingDate;
     @ManyToOne
     @JoinColumn(name = "type_id")
@@ -30,6 +31,7 @@ public class Task extends EntityDocBD_1C {
     @ManyToOne
     @JoinColumn(name = "create_id")
     private UserBD creator;
+    private Boolean successfully;
 
     public Task(String guid) {
         this();
@@ -53,16 +55,34 @@ public class Task extends EntityDocBD_1C {
                     .append(getType())
                     .append(separator)
                     .append("Статус: ")
-                    .append(status)
-                    .append(dualSeparator)
+                    .append(status);
+            if (getAmount() != null && getAmount() > 0) {
+                builder.append("Сумма: ")
+                        .append(getAmount())
+                        .append(" р.");
+            }
+            builder.append(dualSeparator)
                     .append(partnerData)
                     .append(dualSeparator)
-                    .append(getManager() == null ? "не назначен" : getManager())
-                    .append(properties).append(dualSeparator)
-                    .append(description).append(dualSeparator);
-
+                    .append(getManager() == null ? "не назначен" : getManager());
+            if (properties != null) {
+                builder.append(separator)
+                        .append(properties);
+            }
+            builder.append(dualSeparator)
+                    .append(description)
+                    .append(dualSeparator);
+            if (decision != null && !decision.isEmpty()) {
+                builder.append("Решение: ")
+                        .append(separator)
+                        .append(decision)
+                        .append(dualSeparator);
+            }
             if (getComment() != null && !getComment().isEmpty()) {
-                builder.append(dualSeparator).append("Примечание: ").append(separator).append(getComment());
+                builder.append("Примечание: ")
+                        .append(separator)
+                        .append(getComment())
+                        .append(dualSeparator);
             }
             return builder.toString();
         }

@@ -26,6 +26,11 @@ public class TaskStatus extends EntityBD_1C {
         setGuid(guid);
     }
 
+    public TaskStatus(String guid, String name) {
+        setGuid(guid);
+        setName(name);
+    }
+
     public static TaskStatus getDefaultClosedStatus() {
         return defaultClosedStatus;
     }

@@ -1,18 +1,20 @@
-package com.telegrambot.app.model;
+package com.telegrambot.app.model.documents.docdata;
 
 import com.telegrambot.app.DTO.Gender;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Embeddable
 @NoArgsConstructor
-public class PersonFields {
+public class PersonData {
 
     private String firstName;
     private String lastName;
@@ -21,7 +23,7 @@ public class PersonFields {
     private Gender gender;
     private LocalDateTime birthday;
 
-    public PersonFields(String firstName, String lastName) {
+    public PersonData(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
     }

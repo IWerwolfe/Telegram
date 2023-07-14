@@ -128,6 +128,11 @@ public class API1CServicesImpl implements API1CServices {
     }
 
     @Override
+    public TaskDataListResponse getTaskListDataByManager(String guidUser) {
+        return getTaskList("guidManager=" + guidUser);
+    }
+
+    @Override
     public TaskDataListResponse getTaskListDataByDepartment(String guidDepartment) {
         return getTaskList("guidDepartment=" + guidDepartment);
     }

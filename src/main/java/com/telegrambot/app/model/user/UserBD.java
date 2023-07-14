@@ -2,7 +2,7 @@ package com.telegrambot.app.model.user;    /*
  *created by WerWolfe on UserBD
  */
 
-import com.telegrambot.app.model.PersonFields;
+import com.telegrambot.app.model.documents.docdata.PersonData;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -28,7 +28,7 @@ public class UserBD {
     private String phone;
     private Boolean notValid = false;
     private Boolean isMaster = false;
-    private PersonFields person;
+    private PersonData person;
     private String guid;
 //    private List<UserStatus> statuses;
 

@@ -1,8 +1,8 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.config.BotConfig;
-import com.telegrambot.app.model.PersonFields;
 import com.telegrambot.app.model.command.CommandCache;
+import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.transaction.Transaction;
 import com.telegrambot.app.model.transaction.TransactionType;
 import com.telegrambot.app.model.user.UserActivity;
@@ -163,7 +163,7 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     private UserBD getUserBD(User user) {
         UserBD userBD = new UserBD();
         BeanUtils.copyProperties(user, userBD);
-        PersonFields person = new PersonFields(user.getFirstName(), user.getLastName());
+        PersonData person = new PersonData(user.getFirstName(), user.getLastName());
         userBD.setPerson(person);
         return userRepository.save(userBD);
     }

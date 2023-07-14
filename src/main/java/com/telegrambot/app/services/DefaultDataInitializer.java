@@ -5,6 +5,7 @@ import com.telegrambot.app.DTO.api_1C.TaskStatusResponse;
 import com.telegrambot.app.DTO.api_1C.TaskTypeResponse;
 import com.telegrambot.app.model.task.TaskStatus;
 import com.telegrambot.app.model.task.TaskType;
+import com.telegrambot.app.repositories.TaskRepository;
 import com.telegrambot.app.repositories.TaskStatusRepository;
 import com.telegrambot.app.repositories.TaskTypeRepository;
 import com.telegrambot.app.services.converter.TaskStatusConverter;
@@ -21,6 +22,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class DefaultDataInitializer implements CommandLineRunner {
+    private final TaskRepository taskRepository;
 
     private final API1CServicesImpl api1C;
     private final TaskTypeRepository typeRepository;
@@ -28,14 +30,18 @@ public class DefaultDataInitializer implements CommandLineRunner {
     private final TaskStatusConverter statusConverter;
     private final TaskStatusRepository statusRepository;
 
+    private final String DEFAULT_NAME_CLOSED = "Завершена";
+    private final String DEFAULT_NAME_INIT = "Ожидает обработки";
+    private final String DEFAULT_NAME_TYPE = "ОбращениеЧерезЧатБот";
+
     @Override
     public void run(String... args) throws Exception {
 
         DefaultDataResponse data = api1C.getDefaultData();
         if (data == null || !data.isResult()) {
             TaskType.setDefaultType(getDefaultType());
-            TaskStatus.setDefaultInitialStatus(getDefaultInitialStatus());
-            TaskStatus.setDefaultClosedStatus(getDefaultClosedStatus());
+            TaskStatus.setDefaultInitialStatus(getDefaultByName(DEFAULT_NAME_INIT));
+            TaskStatus.setDefaultClosedStatus(getDefaultByName(DEFAULT_NAME_CLOSED));
             log.info("Creating new default data success");
             return;
         }
@@ -53,24 +59,22 @@ public class DefaultDataInitializer implements CommandLineRunner {
         TaskType.setDefaultType(taskType);
 
         Optional<TaskStatus> statusOptional = statusRepository.findByGuid(data.getGuidDefaultInitialStatus());
-        TaskStatus taskStatus = statusOptional.orElseGet(this::getDefaultInitialStatus);
+        TaskStatus taskStatus = statusOptional.orElseGet(() -> getDefaultByName(DEFAULT_NAME_INIT));
         TaskStatus.setDefaultInitialStatus(taskStatus);
 
         statusOptional = statusRepository.findByGuid(data.getGuidDefaultClosedStatus());
-        taskStatus = statusOptional.orElseGet(this::getDefaultClosedStatus);
+        taskStatus = statusOptional.orElseGet(() -> getDefaultByName(DEFAULT_NAME_CLOSED));
         TaskStatus.setDefaultClosedStatus(taskStatus);
     }
 
-    private TaskStatus getDefaultClosedStatus() {
-        return statusRepository.save(new TaskStatus("Закрыта"));
-    }
-
-    private TaskStatus getDefaultInitialStatus() {
-        return statusRepository.save(new TaskStatus("Ожидает обработки"));
+    private TaskStatus getDefaultByName(String name) {
+        Optional<TaskStatus> optional = statusRepository.findByNameIgnoreCase(name);
+        return optional.orElseGet(() -> statusRepository.save(new TaskStatus(null, name)));
     }
 
     private TaskType getDefaultType() {
-        return typeRepository.save(new TaskType("Обращение"));
+        Optional<TaskType> optional = typeRepository.findByNameIgnoreCase(DEFAULT_NAME_TYPE);
+        return optional.orElseGet(() -> typeRepository.save(new TaskType(DEFAULT_NAME_TYPE)));
     }
 
 

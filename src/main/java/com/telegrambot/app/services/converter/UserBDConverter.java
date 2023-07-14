@@ -2,7 +2,7 @@ package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.Gender;
 import com.telegrambot.app.DTO.api_1C.UserDataResponse;
-import com.telegrambot.app.model.PersonFields;
+import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class UserBDConverter extends Request1CConverter {
     public <T, R> T updateEntity(R dto, T entity) {
         if (dto instanceof UserDataResponse response && entity instanceof UserBD entityBD) {
             if (entityBD.getPerson() == null) {
-                entityBD.setPerson(new PersonFields());
+                entityBD.setPerson(new PersonData());
             }
             entityBD.setGuid(response.getGuid());
             entityBD.getPerson().setGender(convertToEnum(response.getGender(), Gender.class));
@@ -47,7 +47,7 @@ public class UserBDConverter extends Request1CConverter {
         return null;
     }
 
-    public static void updateUserFIO(String fio, PersonFields personFields) {
+    public static void updateUserFIO(String fio, PersonData personFields) {
         if (fio == null || fio.isEmpty()) {
             return;
         }

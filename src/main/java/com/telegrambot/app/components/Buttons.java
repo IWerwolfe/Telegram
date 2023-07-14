@@ -3,6 +3,7 @@ package com.telegrambot.app.components;    /*
  */
 
 import com.telegrambot.app.model.task.Task;
+import com.telegrambot.app.model.task.TaskStatus;
 import com.telegrambot.app.model.user.UserType;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -13,15 +14,19 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public class Buttons {
+
+    private static final int SIZE_INLINE_BUTTON = 64;
     private static final InlineKeyboardButton START_BUTTON = new InlineKeyboardButton("Start");
     private static final InlineKeyboardButton HELP_BUTTON = new InlineKeyboardButton("Справка");
     private static final InlineKeyboardButton NEED_HELP = new InlineKeyboardButton("Нужна помощь");
     private static final InlineKeyboardButton BUY = new InlineKeyboardButton("Купить");
-    private static final InlineKeyboardButton CLOSE_TASK = new InlineKeyboardButton("Закрыть задачу");
-    private static final InlineKeyboardButton EDIT_TASK = new InlineKeyboardButton("Редактировать задачу");
-    private static final InlineKeyboardButton PAY_TASK = new InlineKeyboardButton("Оплатить задачу");
+    private static final InlineKeyboardButton CANCEL_TASK = new InlineKeyboardButton("Отменить");
+    private static final InlineKeyboardButton CLOSE_TASK = new InlineKeyboardButton("Закрыть");
+    private static final InlineKeyboardButton EDIT_TASK = new InlineKeyboardButton("Редактировать");
+    private static final InlineKeyboardButton PAY_TASK = new InlineKeyboardButton("Оплатить");
     private static final InlineKeyboardButton EDIT_COMMENT_TASK = new InlineKeyboardButton("Редактировать комментарий");
     private static final InlineKeyboardButton EDIT_DESCRIPTION_TASK = new InlineKeyboardButton("Редактировать описание");
     private static final InlineKeyboardButton GET_TASKS = new InlineKeyboardButton("Посмотреть задачи");
@@ -61,9 +66,10 @@ public class Buttons {
             default -> {
                 BUY.setCallbackData("/buy");
                 NEED_HELP.setCallbackData("/need_help");
+                GET_TASKS.setCallbackData("/get_task");
                 SEND_CONTACT.setCallbackData("/send_contact");
                 List<InlineKeyboardButton> row1Line = List.of(BUY, NEED_HELP);
-                List<InlineKeyboardButton> row2Line = List.of(SEND_CONTACT);
+                List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, SEND_CONTACT);
                 rows.add(row1Line);
                 rows.add(row2Line);
             }
@@ -71,7 +77,6 @@ public class Buttons {
 
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         markupInline.setKeyboard(rows);
-
         return markupInline;
     }
 
@@ -86,19 +91,46 @@ public class Buttons {
 
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         markupInline.setKeyboard(rowsInLine);
-
         return markupInline;
     }
 
-    public static InlineKeyboardMarkup getInlineMarkupByTask(List<Task> tasks) {
+    public static InlineKeyboardMarkup getInlineMarkupEditTask(Task task) {
+
+        PAY_TASK.setCallbackData("pay:" + task.getCode());
+        PAY_TASK.setPay(true);
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        boolean isPay = task.getAmount() != null && task.getAmount() > 0;
+
+        if (Objects.equals(task.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId())) {
+            if (isPay) {
+                List<InlineKeyboardButton> rowLine = List.of(PAY_TASK);
+                rows = List.of(rowLine);
+            }
+        } else {
+            CANCEL_TASK.setCallbackData("cancel:" + task.getCode());
+            EDIT_COMMENT_TASK.setCallbackData("comment:" + task.getCode());
+            EDIT_DESCRIPTION_TASK.setCallbackData("descriptor:" + task.getCode());
+
+            List<InlineKeyboardButton> row1Line = List.of(EDIT_DESCRIPTION_TASK);
+            List<InlineKeyboardButton> row2Line = List.of(EDIT_COMMENT_TASK);
+            List<InlineKeyboardButton> row3Line = isPay ? List.of(CANCEL_TASK, PAY_TASK) : List.of(CANCEL_TASK);
+            rows.add(row1Line);
+            rows.add(row2Line);
+            rows.add(row3Line);
+        }
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        markupInline.setKeyboard(rows);
+        return markupInline;
+    }
+
+    public static InlineKeyboardMarkup getInlineMarkupByTasks(List<Task> tasks) {
 
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
 
         for (Task task : tasks) {
-            String description = convertCode(task.getCode()) + " > " + convertDescription(task.getDescription());
-            InlineKeyboardButton taskButton = new InlineKeyboardButton(description);
+            InlineKeyboardButton taskButton = new InlineKeyboardButton(getDescriptorToInline(task));
             taskButton.setCallbackData("getTask:" + task.getCode());
-
             List<InlineKeyboardButton> rowInline = List.of(taskButton);
             rowsInLine.add(rowInline);
         }
@@ -119,6 +151,13 @@ public class Buttons {
         return keyboardMarkup;
     }
 
+    public static String getDescriptorToInline(Task task) {
+        String description = convertCode(task.getCode()) + " > " + convertDescription(task.getDescription());
+        return description.length() > SIZE_INLINE_BUTTON ?
+                description.substring(0, SIZE_INLINE_BUTTON - 18) :
+                String.format("%-" + SIZE_INLINE_BUTTON + "s", description);
+    }
+
     public static String convertDescription(String code) {
         String REGEX = "[^0-9a-zA-Zа-яА-ЯёЁ\\-.,=_*+&:#№@!/(){}\\[\\]]+";
         return code.replaceAll(REGEX, " ").replaceAll("\s{2,}", " ").trim();
@@ -127,5 +166,17 @@ public class Buttons {
     public static String convertCode(String code) {
         String REGEX_CODE = "^0+";
         return code.replaceAll(REGEX_CODE, "").trim();
+    }
+
+    private static InlineKeyboardButton getButtonInline(String descriptor, String command) {
+        InlineKeyboardButton button = new InlineKeyboardButton(descriptor);
+        button.setCallbackData(command);
+        return button;
+    }
+
+    private static InlineKeyboardButton getButtonInline(String descriptor, String command, String code) {
+        InlineKeyboardButton button = new InlineKeyboardButton(descriptor);
+        button.setCallbackData(command + ":" + code);
+        return button;
     }
 }

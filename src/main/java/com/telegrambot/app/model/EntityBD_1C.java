@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 public class EntityBD_1C {
 
     @Transient
-    public DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    public static DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

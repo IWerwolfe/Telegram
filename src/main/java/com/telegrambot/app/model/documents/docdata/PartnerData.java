@@ -1,4 +1,4 @@
-package com.telegrambot.app.model.task;
+package com.telegrambot.app.model.documents.docdata;
 
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Embeddable
-public class DocPartnerData {
+public class PartnerData {
     @ManyToOne
     @JoinColumn(name = "partner_id")
     private Partner partner;

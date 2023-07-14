@@ -1,7 +1,8 @@
 package com.telegrambot.app.model;
 
+import com.telegrambot.app.model.documents.docdata.PartnerData;
+import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.legalentity.Contract;
-import com.telegrambot.app.model.task.DocPartnerData;
 import com.telegrambot.app.model.task.Properties;
 import com.telegrambot.app.model.task.Task;
 import com.telegrambot.app.model.user.UserBD;
@@ -19,12 +20,12 @@ public class EntityDefaults {
     }
 
     public static void initializeDefaultTask(Task entity) {
-        entity.setPartnerData(new DocPartnerData());
+        entity.setPartnerData(new PartnerData());
         entity.setProperties(new Properties());
     }
 
     public static void initializeDefaultPersonalFields(UserBD entity) {
-        entity.setPerson(new PersonFields());
+        entity.setPerson(new PersonData());
     }
 
     public static void initializeDefaultContract(Contract entity) {

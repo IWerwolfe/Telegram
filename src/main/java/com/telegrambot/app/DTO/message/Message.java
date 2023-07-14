@@ -20,7 +20,7 @@ public abstract class Message {
                 "Доверьтесь нам, и ваш бизнес станет еще успешнее!";
     }
 
-    public static String getMessageBeforeSendingPhone() {
+    public static String getBeforeSendingPhone() {
         return "Для получения персонализированной поддержки и доступа к информации, пожалуйста, нажмите на кнопку ниже. " + DUAL_SEPARATOR +
                 "Мы гарантируем конфиденциальность и безопасность ваших данных. " + DUAL_SEPARATOR +
                 "После отправки номера телефона, наша система проведет поиск информации и произведет регистрацию. " +
@@ -28,7 +28,7 @@ public abstract class Message {
                 DUAL_SEPARATOR + "Мы ценим ваше доверие и стремимся обеспечить наивысший уровень сервиса.";
     }
 
-    public static String getMessageBeforeSurvey() {
+    public static String getBeforeSurvey() {
         return "У нас не удалось найти информацию, соответствующую вашему номеру телефона в базе данных. " + DUAL_SEPARATOR +
                 "Пожалуйста, укажите актуальную информацию, чтобы зарегистрироваться и получить доступ к нашим услугам";
     }
@@ -37,40 +37,40 @@ public abstract class Message {
         return "ИНН введен корректно";
     }
 
-    public static String getMessageUnCorrectINN() {
+    public static String getUnCorrectINN() {
         return "ИНН некорректен. Ваш ИНН можно узнать с любого чека с кассы. " +
                 "Если нет возможности посмотреть отложите регистрацию, для этого нажмите /exit";
     }
 
-    public static String getMessageStartINN() {
+    public static String getStartINN() {
         return "Укажите ИНН вашей организации";
     }
 
-    public static String getMessageStartGetPhone() {
+    public static String getStartGetPhone() {
         return "Укажите номер телефона в формате 79998887766";
     }
 
-    public static String getMessageUnCorrectGetPhone() {
+    public static String getUnCorrectGetPhone() {
         return "Телефон указан некорректно, требуется указать в следующем формате: 79998887766";
     }
 
-    public static String getMessageNonFindPhone() {
+    public static String getNonFindPhone() {
         return "Ваш телефон не найден";
     }
 
-    public static String getMessageStartUserName() {
+    public static String getStartUserName() {
         return "Укажите ваше полное ФИО";
     }
 
-    public static String getMessageStartPost() {
+    public static String getStartPost() {
         return "Укажите вашу должность";
     }
 
-    public static String getMessageUnCorrectUserName() {
+    public static String getUnCorrectUserName() {
         return "Ваше ФИО указано некорректно";
     }
 
-    public static String getMessageAfterSendingPhone(String name, List<UserStatus> userStatus) {
+    public static String getAfterSendingPhone(String name, List<UserStatus> userStatus) {
         StringBuilder message = new StringBuilder();
         message.append(name).append(", мы нашли и обновили информацию для следующих организаций: ");
         for (UserStatus status : userStatus) {
@@ -87,28 +87,28 @@ public abstract class Message {
         return name + ", мы не смогли обработать вашу команду, приносим свои извинения";
     }
 
-    public static String getMessageStartTopic() {
+    public static String getStartTopic() {
         return "Введите тему вашего обращения.";
     }
 
-    public static String getMessageStartDescription() {
+    public static String getStartDescription() {
         return "Введите текст вашего обращения или подробное описание проблемы. " +
                 "Укажите все важные детали, чтобы мы могли более точно понять ситуацию и предложить соответствующие решения.";
     }
 
-    public static String getMessageErrorDescription() {
+    public static String getErrorDescription() {
         return "Сообщение не корректно";
     }
 
-    public static String getMessageStartName() {
+    public static String getStartName() {
         return "Как к вам можно обращаться?";
     }
 
-    public static String getMessageErrorName() {
+    public static String getErrorName() {
         return "Ваше имя указано некорректно, пожалуйста укажите ваше имя на русском языке";
     }
 
-    public static String getMessageStartCreateAssistance(String name) {
+    public static String getStartCreateAssistance(String name) {
         return name + ", спасибо что обратились к нам. Мы зададим вам несколько вопросов чтобы уточнить все детали." + DUAL_SEPARATOR +
                 "Постарайтесь точно описать проблему, избегая общих формулировок типа: " + DUAL_SEPARATOR +
                 "\t -\"Не включается\"" + SEPARATOR +
@@ -118,11 +118,11 @@ public abstract class Message {
                 "и что предшествовало проблеме";
     }
 
-    public static String getMessageExitCommand(String command) {
+    public static String getExitCommand(String command) {
         return "Выполнение команды " + command + " успешно завершено";
     }
 
-    public static String getMessageIncorrectTask() {
+    public static String getIncorrectTask() {
         return "Произошла ошибка при создании обращения, попробуйте пожалуйста немного позже";
     }
 
@@ -132,11 +132,28 @@ public abstract class Message {
                 "Скоро с вами свяжется наш мастер. Спасибо что обратились к нам";
     }
 
-    public static String getMessageSearchErrors() {
+    public static String getSearchErrors() {
         return "Активных задач по вашему запросу не найдено";
     }
 
-    public static String getMessageSearchGrouping(String sortName, int count) {
+    public static String getSearchGrouping(String sortName, int count) {
         return count + " задач: " + (sortName == null ? "" : sortName);
+    }
+
+    public static String getSearch(String nameCompany, int count) {
+        return "На " + nameCompany + " зарегистрировано " + count + " задач: ";
+    }
+
+    public static String errorWhenEditTask() {
+        return "Введенный вами параметр и\\или текст некорректен, попробуйте еще раз. " +
+                "Для выхода нажмите /exit";
+    }
+
+    public static String getEditTextTask(String nameFields) {
+        return "Укажите что нужно добавить в " + nameFields;
+    }
+
+    public static String getWhenCancelTask() {
+        return "Укажите причину отмены задачи";
     }
 }
