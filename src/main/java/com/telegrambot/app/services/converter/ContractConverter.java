@@ -2,6 +2,7 @@ package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.BillingType;
 import com.telegrambot.app.DTO.api_1C.ContractResponse;
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.LegalEntity;
 import com.telegrambot.app.model.legalentity.Partner;
@@ -25,8 +26,7 @@ public class ContractConverter extends Request1CConverter {
     public <T, R> T updateEntity(R dto, T entity) {
         if (dto instanceof ContractResponse response && entity instanceof Contract entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setGuid(response.getGuid());
-            entityBD.setCode(response.getCode());
+            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setBilling(convertToBoolean(response.getIsBilling()));
             entityBD.setStartBilling(convertToLocalDateTime(response.getStartBilling()));
@@ -45,14 +45,14 @@ public class ContractConverter extends Request1CConverter {
             if (response.getGuid() == null || response.getGuid().isEmpty()) {
                 return null;
             }
-            Optional<Contract> existingEntity = contractRepository.findByGuid(response.getGuid());
+            Optional<Contract> existingEntity = contractRepository.findBySyncDataNotNullAndSyncData_Guid(response.getGuid());
             return (T) existingEntity.orElseGet(() -> new Contract(response.getGuid()));
         }
         return null;
     }
 
     protected Partner getOrCreateEntity(String guid) {
-        Optional<LegalEntity> existingEntity = partnerRepository.findByGuid(guid);
+        Optional<LegalEntity> existingEntity = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return (Partner) existingEntity.orElseGet(() -> partnerRepository.save(new Partner(guid)));
     }
 }

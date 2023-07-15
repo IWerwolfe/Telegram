@@ -1,8 +1,8 @@
 package com.telegrambot.app.model.task;
 
 import com.telegrambot.app.model.EnumBD1C;
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@DiscriminatorValue("task_types")
+@Table(name = "task_types")
 public class TaskType extends EnumBD1C {
 
     @Transient

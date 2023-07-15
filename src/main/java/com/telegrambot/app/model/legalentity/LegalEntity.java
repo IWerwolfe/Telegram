@@ -1,6 +1,7 @@
 package com.telegrambot.app.model.legalentity;
 
-import com.telegrambot.app.model.EntityBD_1C;
+import com.telegrambot.app.model.documents.docdata.SyncData;
+import com.telegrambot.app.model.reference.Reference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,8 +14,8 @@ import java.time.LocalDateTime;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Entity
 @NoArgsConstructor
-@DiscriminatorColumn(name = "legal_entity_type")
-public abstract class LegalEntity extends EntityBD_1C {
+@DiscriminatorColumn(name = "legal_type")
+public abstract class LegalEntity extends Reference {
 
     private String inn;
     private String kpp;
@@ -30,7 +31,7 @@ public abstract class LegalEntity extends EntityBD_1C {
     private Contract defaultContract;
 
     public LegalEntity(String guid) {
-        setGuid(guid);
+        this.setSyncData(new SyncData(guid));
     }
 
     @Override

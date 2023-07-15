@@ -2,8 +2,9 @@ package com.telegrambot.app.components;    /*
  *created by WerWolfe on Buttons
  */
 
-import com.telegrambot.app.model.task.Task;
-import com.telegrambot.app.model.task.TaskStatus;
+import com.telegrambot.app.model.FormOfPayment;
+import com.telegrambot.app.model.documents.doc.service.Task;
+import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.model.user.UserType;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -11,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +35,7 @@ public class Buttons {
     private static final InlineKeyboardButton GET_BALANCE = new InlineKeyboardButton("Проверить баланс");
     private static final InlineKeyboardButton CREATE_TASK = new InlineKeyboardButton("Создать задачу");
     private static final InlineKeyboardButton SEND_CONTACT = new InlineKeyboardButton("Зарегистрироваться");
+    private static final InlineKeyboardButton SET_BALANCE = new InlineKeyboardButton("Пополнить баланс");
     private static final KeyboardButton GET_CONTACT = new KeyboardButton("Отправить номер телефона");
 
     public static InlineKeyboardMarkup inlineMarkupDefault(UserType userType) {
@@ -46,10 +49,13 @@ public class Buttons {
                 GET_BALANCE.setCallbackData("/get_balance");
                 CREATE_TASK.setCallbackData("/create_task");
                 BUY.setCallbackData("/buy");
+                SET_BALANCE.setCallbackData("/setBalance");
                 List<InlineKeyboardButton> row1Line = List.of(BUY, CREATE_TASK);
                 List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, GET_BALANCE);
+                List<InlineKeyboardButton> row3Line = List.of(SET_BALANCE);
                 rows.add(row1Line);
                 rows.add(row2Line);
+                rows.add(row3Line);
             }
             case ADMINISTRATOR -> {
             }
@@ -80,6 +86,20 @@ public class Buttons {
         return markupInline;
     }
 
+    public static InlineKeyboardMarkup getInlineByEnumFormOfPay(String command) {
+
+        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
+
+        for (FormOfPayment field : FormOfPayment.values()) {
+            InlineKeyboardButton taskButton = new InlineKeyboardButton(field.getLabel());
+            taskButton.setCallbackData(command + ":" + field.name());
+            List<InlineKeyboardButton> rowInline = List.of(taskButton);
+            rowsInLine.add(rowInline);
+        }
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        markupInline.setKeyboard(rowsInLine);
+        return markupInline;
+    }
 
     public static InlineKeyboardMarkup inlineMarkup() {
         START_BUTTON.setCallbackData("/start");
@@ -96,11 +116,11 @@ public class Buttons {
 
     public static InlineKeyboardMarkup getInlineMarkupEditTask(Task task) {
 
-        PAY_TASK.setCallbackData("pay:" + task.getCode());
+        PAY_TASK.setCallbackData("pay:" + task.getId());
         PAY_TASK.setPay(true);
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        boolean isPay = task.getAmount() != null && task.getAmount() > 0;
+        boolean isPay = task.getTotalAmount() != null && task.getTotalAmount().compareTo(BigDecimal.valueOf(0)) > 0;
 
         if (Objects.equals(task.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId())) {
             if (isPay) {
@@ -108,9 +128,9 @@ public class Buttons {
                 rows = List.of(rowLine);
             }
         } else {
-            CANCEL_TASK.setCallbackData("cancel:" + task.getCode());
-            EDIT_COMMENT_TASK.setCallbackData("comment:" + task.getCode());
-            EDIT_DESCRIPTION_TASK.setCallbackData("descriptor:" + task.getCode());
+            CANCEL_TASK.setCallbackData("cancel:" + task.getId());
+            EDIT_COMMENT_TASK.setCallbackData("comment:" + task.getId());
+            EDIT_DESCRIPTION_TASK.setCallbackData("descriptor:" + task.getId());
 
             List<InlineKeyboardButton> row1Line = List.of(EDIT_DESCRIPTION_TASK);
             List<InlineKeyboardButton> row2Line = List.of(EDIT_COMMENT_TASK);
@@ -130,7 +150,7 @@ public class Buttons {
 
         for (Task task : tasks) {
             InlineKeyboardButton taskButton = new InlineKeyboardButton(getDescriptorToInline(task));
-            taskButton.setCallbackData("getTask:" + task.getCode());
+            taskButton.setCallbackData("getTask:" + task.getId());
             List<InlineKeyboardButton> rowInline = List.of(taskButton);
             rowsInLine.add(rowInline);
         }
@@ -152,7 +172,7 @@ public class Buttons {
     }
 
     public static String getDescriptorToInline(Task task) {
-        String description = convertCode(task.getCode()) + " > " + convertDescription(task.getDescription());
+        String description = convertCode(task.getCodeEntity()) + " > " + convertDescription(task.getDescription());
         return description.length() > SIZE_INLINE_BUTTON ?
                 description.substring(0, SIZE_INLINE_BUTTON - 18) :
                 String.format("%-" + SIZE_INLINE_BUTTON + "s", description);

@@ -1,23 +1,23 @@
 package com.telegrambot.app.model.legalentity;
 
 import com.telegrambot.app.DTO.BillingType;
-import com.telegrambot.app.model.EntityBD_1C;
 import com.telegrambot.app.model.EntityDefaults;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
+import com.telegrambot.app.model.documents.docdata.SyncData;
+import com.telegrambot.app.model.reference.Reference;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@Entity(name = "contracts")
-public class Contract extends EntityBD_1C {
+@Entity
+@Table(name = "contracts")
+public class Contract extends Reference {
 
     private LocalDateTime date;
     private boolean isBilling;
@@ -39,7 +39,7 @@ public class Contract extends EntityBD_1C {
     }
 
     public Contract(String guid) {
-        setGuid(guid);
+        this.setSyncData(new SyncData(guid));
     }
 
     @Override
@@ -47,7 +47,7 @@ public class Contract extends EntityBD_1C {
         StringBuilder builder = new StringBuilder();
         builder.append(getName());
         if (getDate() != null) {
-            builder.append(" от ").append(getDate().format(FORMATTER_DATE));
+            builder.append(" от ").append(getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
         }
         return builder.toString();
     }

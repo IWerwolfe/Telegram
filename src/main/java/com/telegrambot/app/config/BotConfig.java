@@ -17,6 +17,6 @@ public class BotConfig {
     String token;
     @Value("${bot.chatId}")
     String chatId;
-    @Value("${bot.chatId}")
-    String Payment;
+    @Value("${bot.payment}")
+    String payment;
 }

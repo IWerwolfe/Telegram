@@ -1,6 +1,6 @@
 package com.telegrambot.app.DTO;
 
-import com.telegrambot.app.model.task.Task;
+import com.telegrambot.app.model.documents.doc.service.Task;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

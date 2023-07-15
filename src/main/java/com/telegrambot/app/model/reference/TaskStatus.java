@@ -1,8 +1,8 @@
-package com.telegrambot.app.model.task;
+package com.telegrambot.app.model.reference;
 
-import com.telegrambot.app.model.EntityBD_1C;
-import jakarta.persistence.DiscriminatorValue;
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,9 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @NoArgsConstructor
 @Entity
-@DiscriminatorValue("task_statuses")
+@Table(name = "task_statuses")
 @Slf4j
-public class TaskStatus extends EntityBD_1C {
+public class TaskStatus extends Reference {
 
     @Transient
     private static TaskStatus defaultClosedStatus;
@@ -23,11 +23,11 @@ public class TaskStatus extends EntityBD_1C {
     private static TaskStatus defaultInitialStatus;
 
     public TaskStatus(String guid) {
-        setGuid(guid);
+        this.setSyncData(new SyncData(guid));
     }
 
     public TaskStatus(String guid, String name) {
-        setGuid(guid);
+        this(guid);
         setName(name);
     }
 

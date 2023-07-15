@@ -15,10 +15,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.AnswerPreCheckoutQuery;
+import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethodBoolean;
+import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethodMessage;
+import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.payments.PreCheckoutQuery;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
@@ -46,6 +51,17 @@ public class TelegramBotServices extends TelegramLongPollingBot {
 
         boolean isCommand = true;
         this.update = update;
+
+        if (update.hasPreCheckoutQuery() && update.getPreCheckoutQuery().getId() != null) {
+            PreCheckoutQuery checkoutQuery = update.getPreCheckoutQuery();
+            AnswerPreCheckoutQuery query = new AnswerPreCheckoutQuery(checkoutQuery.getId(), true);
+            sendMassage(query);
+            return;
+        }
+
+        if (update.hasMessage() && update.getMessage().hasSuccessfulPayment()) {
+            //TODO дописать преобразование в текст
+        }
 
         List<CommandCache> commandCache = commandCacheRepository.findByUserBDOrderById(getUser());
         if (commandCache.size() > 0) {
@@ -98,11 +114,24 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     }
 
 
-    public void sendMassage(SendMessage message) {
+    public void sendMassage(BotApiMethodMessage message) {
         try {
             execute(message);
-            saveTransaction(message);
-            log.info("Reply sent to {}", message.getChatId());
+            if (message instanceof SendMessage send) {
+                saveTransaction(send);
+            }
+            if (message instanceof SendInvoice invoice) {
+                saveTransaction(invoice.getTitle(), Integer.parseInt(invoice.getChatId()));
+            }
+        } catch (TelegramApiException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    public void sendMassage(BotApiMethodBoolean message) {
+        try {
+            execute(message);
+            saveTransaction("Подтверждение оплаты", (int) getChatId());
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
         }
@@ -180,11 +209,15 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     }
 
     private void saveTransaction(SendMessage sendMessage) {
+        saveTransaction(sendMessage.getText(), Integer.parseInt(sendMessage.getChatId()));
+    }
+
+    private void saveTransaction(String text, int chatId) {
         Transaction transaction = new Transaction();
         transaction.setUserBD(getUser());
         transaction.setDate(LocalDateTime.now());
-        transaction.setText(sendMessage.getText());
-        transaction.setIdMessage(Integer.valueOf(sendMessage.getChatId()));
+        transaction.setText(text);
+        transaction.setIdMessage(chatId);
         transaction.setTransactionType(TransactionType.BOT_MESSAGE);
         transaction.setCommand(false);
         transactionRepository.save(transaction);

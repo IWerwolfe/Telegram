@@ -1,6 +1,6 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.model.EntityBD_1C;
+import com.telegrambot.app.model.Entity;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -43,11 +43,11 @@ public abstract class Request1CConverter {
         return longDate == 0L ? null : LocalDateTime.ofInstant(Instant.ofEpochMilli(longDate), ZoneId.systemDefault());
     }
 
-    public static String convertToGuid(EntityBD_1C entity) {
-        if (entity == null) {
+    public static String convertToGuid(Entity entity) {
+        if (entity == null || entity.getSyncData() == null) {
             return "";
         }
-        return entity.getGuid();
+        return entity.getSyncData().getGuid();
     }
 
     public static Boolean convertToBoolean(Boolean field) {

@@ -1,6 +1,6 @@
 package com.telegrambot.app.DTO.message;
 
-import com.telegrambot.app.model.task.Task;
+import com.telegrambot.app.model.documents.doc.service.Task;
 import com.telegrambot.app.model.user.UserStatus;
 import lombok.Data;
 
@@ -128,7 +128,7 @@ public abstract class Message {
 
     public static String getSuccessfullyCreatingTask(Task task) {
         return "Ваше обращение успешно зарегистрировано под номером " +
-                (task.getCode() == null ? task.getId() : task.getCode()) + DUAL_SEPARATOR +
+                task.getCodeEntity() + DUAL_SEPARATOR +
                 "Скоро с вами свяжется наш мастер. Спасибо что обратились к нам";
     }
 
@@ -155,5 +155,13 @@ public abstract class Message {
 
     public static String getWhenCancelTask() {
         return "Укажите причину отмены задачи";
+    }
+
+    public static String getFormOfPayment() {
+        return "Выберите форму оплаты из списка";
+    }
+
+    public static String getInputSum() {
+        return "Введите сумму для внесения на баланс";
     }
 }

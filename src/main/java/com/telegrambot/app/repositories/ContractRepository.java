@@ -8,9 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ContractRepository extends CrudRepository<Contract, Long> {
-    List<Contract> findByPartnerOrderByCodeAsc(Partner partner);
+    List<Contract> findByPartnerOrderByIdAsc(Partner partner);
 
-    List<Contract> findByPartner_GuidOrderByCodeAsc(String guid);
-
-    Optional<Contract> findByGuid(String guid);
+    Optional<Contract> findBySyncDataNotNullAndSyncData_Guid(String guid);
 }

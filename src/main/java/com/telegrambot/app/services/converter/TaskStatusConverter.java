@@ -1,7 +1,8 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api_1C.TaskStatusResponse;
-import com.telegrambot.app.model.task.TaskStatus;
+import com.telegrambot.app.model.documents.docdata.SyncData;
+import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.repositories.TaskStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,7 @@ public class TaskStatusConverter extends Request1CConverter {
     public <T, R> T updateEntity(R dto, T entity) {
         if (dto instanceof TaskStatusResponse response && entity instanceof TaskStatus entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setGuid(response.getGuid());
-            entityBD.setCode(response.getCode());
+            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
             return (T) entity;
         }
         return null;
@@ -32,7 +32,7 @@ public class TaskStatusConverter extends Request1CConverter {
             if (response.getGuid() == null || response.getGuid().isEmpty()) {
                 return null;
             }
-            Optional<TaskStatus> existingEntity = statusRepository.findByGuid(response.getGuid());
+            Optional<TaskStatus> existingEntity = statusRepository.findBySyncDataNotNullAndSyncData_Guid(response.getGuid());
             return (T) existingEntity.orElseGet(() -> new TaskStatus(response.getGuid()));
         }
         return null;

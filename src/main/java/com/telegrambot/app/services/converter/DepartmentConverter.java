@@ -1,6 +1,7 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.DepartmentResponse;
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
 import com.telegrambot.app.model.legalentity.LegalEntity;
@@ -27,8 +28,7 @@ public class DepartmentConverter extends Request1CConverter {
     public <T, R> T updateEntity(R dto, T entity) {
         if (dto instanceof DepartmentResponse response && entity instanceof Department entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setGuid(response.getGuid());
-            entityBD.setCode(response.getCode());
+            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
             entityBD.setBilling(convertToBoolean(response.getIsBilling()));
             entityBD.setExcusableGoods(convertToBoolean(response.getIsExcusableGoods()));
             entityBD.setMarkedGoods(convertToBoolean(response.getIsMarkedGoods()));
@@ -46,19 +46,19 @@ public class DepartmentConverter extends Request1CConverter {
             if (response.getGuid() == null || response.getGuid().isEmpty()) {
                 return null;
             }
-            Optional<Department> existingEntity = departmentRepository.findByGuid(response.getGuid());
+            Optional<Department> existingEntity = departmentRepository.findBySyncDataNotNullAndSyncData_Guid(response.getGuid());
             return (T) existingEntity.orElseGet(() -> new Department(response.getGuid()));
         }
         return null;
     }
 
     protected Partner getOrCreateEntityPartner(String guid) {
-        Optional<LegalEntity> existingEntity = partnerRepository.findByGuid(guid);
+        Optional<LegalEntity> existingEntity = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return (Partner) existingEntity.orElseGet(() -> partnerRepository.save(new Partner(guid)));
     }
 
     protected Contract getOrCreateEntityContract(String guid) {
-        Optional<Contract> existingEntity = contractRepository.findByGuid(guid);
+        Optional<Contract> existingEntity = contractRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return existingEntity.orElseGet(() -> contractRepository.save(new Contract(guid)));
     }
 }

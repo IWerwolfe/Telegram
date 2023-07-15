@@ -6,7 +6,6 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
 public interface DepartmentRepository extends CrudRepository<Department, Long> {
-    Optional<Department> findByGuidIgnoreCase(String guid);
 
-    Optional<Department> findByGuid(String guid);
+    Optional<Department> findBySyncDataNotNullAndSyncData_Guid(String guid);
 }

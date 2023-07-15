@@ -5,12 +5,14 @@ package com.telegrambot.app.model.user;    /*
 import com.telegrambot.app.model.documents.docdata.PersonData;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Entity(name = "users")
+@Entity
+@Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserBD {

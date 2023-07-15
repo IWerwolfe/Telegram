@@ -4,6 +4,7 @@ import com.telegrambot.app.DTO.Gender;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,8 +17,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class PersonData {
 
+    @JoinColumn(name = "first_name")
     private String firstName;
+    @JoinColumn(name = "last_name")
     private String lastName;
+    @JoinColumn(name = "father_name")
     private String fatherName;
     @Enumerated(EnumType.STRING)
     private Gender gender;

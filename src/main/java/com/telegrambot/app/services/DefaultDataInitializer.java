@@ -3,7 +3,7 @@ package com.telegrambot.app.services;
 import com.telegrambot.app.DTO.api_1C.DefaultDataResponse;
 import com.telegrambot.app.DTO.api_1C.TaskStatusResponse;
 import com.telegrambot.app.DTO.api_1C.TaskTypeResponse;
-import com.telegrambot.app.model.task.TaskStatus;
+import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.model.task.TaskType;
 import com.telegrambot.app.repositories.TaskRepository;
 import com.telegrambot.app.repositories.TaskStatusRepository;
@@ -58,11 +58,11 @@ public class DefaultDataInitializer implements CommandLineRunner {
         TaskType taskType = typeOptional.orElseGet(this::getDefaultType);
         TaskType.setDefaultType(taskType);
 
-        Optional<TaskStatus> statusOptional = statusRepository.findByGuid(data.getGuidDefaultInitialStatus());
+        Optional<TaskStatus> statusOptional = statusRepository.findBySyncDataNotNullAndSyncData_Guid(data.getGuidDefaultInitialStatus());
         TaskStatus taskStatus = statusOptional.orElseGet(() -> getDefaultByName(DEFAULT_NAME_INIT));
         TaskStatus.setDefaultInitialStatus(taskStatus);
 
-        statusOptional = statusRepository.findByGuid(data.getGuidDefaultClosedStatus());
+        statusOptional = statusRepository.findBySyncDataNotNullAndSyncData_Guid(data.getGuidDefaultClosedStatus());
         taskStatus = statusOptional.orElseGet(() -> getDefaultByName(DEFAULT_NAME_CLOSED));
         TaskStatus.setDefaultClosedStatus(taskStatus);
     }

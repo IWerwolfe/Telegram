@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
-@Entity(name = "commands_cache")
+@Entity
+@Table(name = "commands_cache")
 public class CommandCache {
 
     @Id

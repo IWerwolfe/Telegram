@@ -1,12 +1,17 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api_1C.TaskResponse;
+import com.telegrambot.app.model.documents.doc.service.Task;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
 import com.telegrambot.app.model.legalentity.LegalEntity;
 import com.telegrambot.app.model.legalentity.Partner;
-import com.telegrambot.app.model.task.*;
+import com.telegrambot.app.model.reference.Manager;
+import com.telegrambot.app.model.reference.TaskStatus;
+import com.telegrambot.app.model.task.Properties;
+import com.telegrambot.app.model.task.TaskType;
 import com.telegrambot.app.repositories.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +34,8 @@ public class TaskConverter extends Request1CConverter {
     @Override
     public <T, R> T updateEntity(R dto, T entity) {
         if (dto instanceof TaskResponse response && entity instanceof Task entityBD) {
-            entityBD.setName(response.getName());
-            entityBD.setGuid(response.getGuid());
-            entityBD.setCode(response.getCode());
+//            entityBD.setName(response.getName());
+            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setComment(response.getComment());
             entityBD.setAuthor(response.getGuidAuthor()); //TODO заменить потом на сущность
@@ -56,7 +60,7 @@ public class TaskConverter extends Request1CConverter {
             if (response.getGuid() == null || response.getGuid().isEmpty()) {
                 return null;
             }
-            Optional<Task> existingEntity = taskRepository.findByGuid(response.getGuid());
+            Optional<Task> existingEntity = taskRepository.findBySyncDataNotNullAndSyncData_Guid(response.getGuid());
             return (T) existingEntity.orElseGet(() -> new Task(response.getGuid()));
         }
         return null;
@@ -64,9 +68,9 @@ public class TaskConverter extends Request1CConverter {
 
     public TaskResponse convertTaskToTaskResponse(Task task) {
         TaskResponse taskResponse = new TaskResponse();
-        taskResponse.setName(task.getName());
+//        taskResponse.setName(task.getName());
         taskResponse.setGuid(convertToGuid(task));
-        taskResponse.setCode(task.getCode());
+//        taskResponse.setCode(task.getCode());
         taskResponse.setDate(convertToDate(task.getDate()));
         taskResponse.setComment(task.getComment());
         taskResponse.setGuidAuthor(task.getAuthor()); //TODO заменить потом на сущность
@@ -104,12 +108,12 @@ public class TaskConverter extends Request1CConverter {
     }
 
     protected Partner getOrCreateEntityPartner(String guid) {
-        Optional<LegalEntity> existingEntity = partnerRepository.findByGuid(guid);
+        Optional<LegalEntity> existingEntity = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return (Partner) existingEntity.orElseGet(() -> partnerRepository.save(new Partner(guid)));
     }
 
     protected Manager getOrCreateEntityManager(String guid) {
-        Optional<Manager> existingEntity = managerRepository.findByGuid(guid);
+        Optional<Manager> existingEntity = managerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return existingEntity.orElseGet(() -> managerRepository.save(new Manager(guid)));
     }
 
@@ -119,17 +123,17 @@ public class TaskConverter extends Request1CConverter {
     }
 
     protected Department getOrCreateEntityDepartment(String guid) {
-        Optional<Department> existingEntity = departmentRepository.findByGuid(guid);
+        Optional<Department> existingEntity = departmentRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return existingEntity.orElseGet(() -> departmentRepository.save(new Department(guid)));
     }
 
     protected Contract getOrCreateEntityContract(String guid) {
-        Optional<Contract> existingEntity = contractRepository.findByGuid(guid);
+        Optional<Contract> existingEntity = contractRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return existingEntity.orElseGet(() -> contractRepository.save(new Contract(guid)));
     }
 
     protected TaskStatus getOrCreateEntityStatus(String guid) {
-        Optional<TaskStatus> existingEntity = taskStatusRepository.findByGuid(guid);
+        Optional<TaskStatus> existingEntity = taskStatusRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         return existingEntity.orElseGet(() -> taskStatusRepository.save(new TaskStatus(guid)));
     }
 }

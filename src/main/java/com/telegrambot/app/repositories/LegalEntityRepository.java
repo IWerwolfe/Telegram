@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface LegalEntityRepository extends CrudRepository<LegalEntity, Long> {
     Optional<LegalEntity> findByInnIgnoreCaseAndKppIgnoreCase(String inn, String kpp);
 
-    Optional<LegalEntity> findByGuid(String guid);
+    Optional<LegalEntity> findBySyncDataNotNullAndSyncData_Guid(String guid);
 }
