@@ -1,10 +1,9 @@
 package com.telegrambot.app.repositories;
 
-import com.telegrambot.app.model.task.TaskType;
-import org.springframework.data.repository.CrudRepository;
+import com.telegrambot.app.DTO.types.TaskType;
 
 import java.util.Optional;
 
-public interface TaskTypeRepository extends CrudRepository<TaskType, Long> {
+public interface TaskTypeRepository extends EntityRepository<TaskType> {
     Optional<TaskType> findByNameIgnoreCase(String name);
 }

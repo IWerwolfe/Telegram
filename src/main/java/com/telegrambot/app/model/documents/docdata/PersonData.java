@@ -1,6 +1,6 @@
 package com.telegrambot.app.model.documents.docdata;
 
-import com.telegrambot.app.DTO.Gender;
+import com.telegrambot.app.DTO.types.Gender;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

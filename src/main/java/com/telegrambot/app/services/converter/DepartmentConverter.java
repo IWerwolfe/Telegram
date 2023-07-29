@@ -1,31 +1,31 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.DepartmentResponse;
+import com.telegrambot.app.DTO.api_1C.DepartmentResponse;
+import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.documents.docdata.SyncData;
-import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.model.legalentity.LegalEntity;
-import com.telegrambot.app.model.legalentity.Partner;
-import com.telegrambot.app.repositories.ContractRepository;
 import com.telegrambot.app.repositories.DepartmentRepository;
-import com.telegrambot.app.repositories.LegalEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DepartmentConverter extends Request1CConverter {
+public class DepartmentConverter extends Converter1C {
 
     private final DepartmentRepository departmentRepository;
-    private final LegalEntityRepository partnerRepository;
-    private final ContractRepository contractRepository;
+    private final ContractConverter contractConverter;
+    private final LegalEntityConverter legalConverter;
 
     @Override
-    public <T, R> T updateEntity(R dto, T entity) {
+    public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+        return null;
+    }
+
+    @Override
+    public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof DepartmentResponse response && entity instanceof Department entityBD) {
             entityBD.setName(response.getName());
             entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
@@ -33,33 +33,21 @@ public class DepartmentConverter extends Request1CConverter {
             entityBD.setExcusableGoods(convertToBoolean(response.getIsExcusableGoods()));
             entityBD.setMarkedGoods(convertToBoolean(response.getIsMarkedGoods()));
             entityBD.setEGAIS(convertToBoolean(response.getIsEGAIS()));
-            entityBD.setPartner(getOrCreateEntityPartner(response.getGuidPartner()));
-            entityBD.setContract(getOrCreateEntityContract(response.getGuidContract()));
+            entityBD.setPartner(legalConverter.getOrCreateEntity(response.getGuidPartner(), true));
+            entityBD.setContract(contractConverter.getOrCreateEntity(response.getGuidContract(), true));
             return (T) entityBD;
         }
         return null;
     }
 
     @Override
-    public <T, R> T getOrCreateEntity(R dto) {
-        if (dto instanceof DepartmentResponse response) {
-            if (response.getGuid() == null || response.getGuid().isEmpty()) {
-                return null;
-            }
-            Optional<Department> existingEntity = departmentRepository.findBySyncDataNotNullAndSyncData_Guid(response.getGuid());
-            return (T) existingEntity.orElseGet(() -> new Department(response.getGuid()));
-        }
-        return null;
+    public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
+        return (T) Converter1C.getOrCreateEntity(dto, departmentRepository, Department.class);
     }
 
-    protected Partner getOrCreateEntityPartner(String guid) {
-        Optional<LegalEntity> existingEntity = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
-        return (Partner) existingEntity.orElseGet(() -> partnerRepository.save(new Partner(guid)));
-    }
-
-    protected Contract getOrCreateEntityContract(String guid) {
-        Optional<Contract> existingEntity = contractRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
-        return existingEntity.orElseGet(() -> contractRepository.save(new Contract(guid)));
+    @Override
+    public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
+        return (T) Converter1C.getOrCreateEntity(guid, departmentRepository, Department.class, isSaved);
     }
 }
 

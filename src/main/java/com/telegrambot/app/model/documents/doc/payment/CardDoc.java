@@ -4,12 +4,13 @@ import com.telegrambot.app.model.documents.docdata.CardData;
 import com.telegrambot.app.model.documents.docdata.FiscalData;
 import com.telegrambot.app.model.documents.doctype.PayDoc;
 import com.telegrambot.app.model.reference.BankAccount;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -31,8 +32,7 @@ public class CardDoc extends PayDoc {
     private Long commissionPercentage;
     @JoinColumn(name = "reference_number")
     private String referenceNumber;
-    @Column(precision = 8, scale = 3)
-    private BigDecimal commission;
+    private Integer commission;
     @JoinColumn(name = "card_data")
     private CardData cardData;
 

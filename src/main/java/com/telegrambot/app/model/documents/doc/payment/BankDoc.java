@@ -3,12 +3,13 @@ package com.telegrambot.app.model.documents.doc.payment;
 import com.telegrambot.app.model.documents.docdata.IncomingData;
 import com.telegrambot.app.model.documents.doctype.PayDoc;
 import com.telegrambot.app.model.reference.BankAccount;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -29,8 +30,7 @@ public class BankDoc extends PayDoc {
     private IncomingData incomingData;
     @JoinColumn(name = "payment_purpose")
     private String paymentPurpose;
-    @Column(precision = 8, scale = 3)
-    private BigDecimal commission;
+    private Integer commission;
     @JoinColumn(name = "decoding_filling_option")
     private String decodingFillingOption;
 

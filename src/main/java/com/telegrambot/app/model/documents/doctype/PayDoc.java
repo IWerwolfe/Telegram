@@ -1,6 +1,6 @@
 package com.telegrambot.app.model.documents.doctype;
 
-import com.telegrambot.app.model.PaymentType;
+import com.telegrambot.app.DTO.types.PaymentType;
 import com.telegrambot.app.model.reference.CashDesk;
 import com.telegrambot.app.model.reference.CashFlowItem;
 import jakarta.persistence.JoinColumn;
@@ -23,4 +23,8 @@ public abstract class PayDoc extends Document {
     @JoinColumn(name = "payment_type")
     private PaymentType paymentType;
 
+    @Override
+    public Integer getTransactionAmount() {
+        return getTotalAmount() * (getPaymentType() == PaymentType.INCOMING ? 1 : -1);
+    }
 }

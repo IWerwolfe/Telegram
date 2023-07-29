@@ -17,7 +17,7 @@ public abstract class Entity {
     private SyncData syncData;
     private String author;
     @Column(name = "marked_for_del")
-    private Boolean markedForDel;
+    private Boolean markedForDel = false;
 
     @PrePersist
     private void prePersist() {
@@ -28,5 +28,10 @@ public abstract class Entity {
         return this.getSyncData() == null || this.getSyncData().getCode() == null || this.getSyncData().getCode().isEmpty() ?
                 String.valueOf(this.getId()) :
                 this.getSyncData().getCode();
+    }
+
+    public String getGuidEntity() {
+        return this.getSyncData() == null ? null :
+                this.getSyncData().getGuid();
     }
 }

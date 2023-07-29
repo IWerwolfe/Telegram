@@ -1,8 +1,6 @@
 package com.telegrambot.app.DTO.api_1C;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.telegrambot.app.DTO.DataResponse;
-import com.telegrambot.app.DTO.DepartmentResponse;
 import lombok.Data;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.telegrambot.app.model.legalentity;
 
-import com.telegrambot.app.DTO.PartnerType;
+import com.telegrambot.app.DTO.types.PartnerType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import lombok.Getter;

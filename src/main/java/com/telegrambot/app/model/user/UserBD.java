@@ -3,9 +3,7 @@ package com.telegrambot.app.model.user;    /*
  */
 
 import com.telegrambot.app.model.documents.docdata.PersonData;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,9 +13,10 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserBD {
+public class UserBD extends com.telegrambot.app.model.Entity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Boolean isBot;
     private String userName;
@@ -31,7 +30,7 @@ public class UserBD {
     private Boolean notValid = false;
     private Boolean isMaster = false;
     private PersonData person;
-    private String guid;
+//    private String guid;
 //    private List<UserStatus> statuses;
 
     public UserBD(String phone) {

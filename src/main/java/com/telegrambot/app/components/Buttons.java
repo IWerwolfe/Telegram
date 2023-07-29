@@ -2,7 +2,7 @@ package com.telegrambot.app.components;    /*
  *created by WerWolfe on Buttons
  */
 
-import com.telegrambot.app.model.FormOfPayment;
+import com.telegrambot.app.DTO.types.FormOfPayment;
 import com.telegrambot.app.model.documents.doc.service.Task;
 import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.model.user.UserType;
@@ -12,7 +12,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,8 +34,20 @@ public class Buttons {
     private static final InlineKeyboardButton GET_BALANCE = new InlineKeyboardButton("Проверить баланс");
     private static final InlineKeyboardButton CREATE_TASK = new InlineKeyboardButton("Создать задачу");
     private static final InlineKeyboardButton SEND_CONTACT = new InlineKeyboardButton("Зарегистрироваться");
-    private static final InlineKeyboardButton SET_BALANCE = new InlineKeyboardButton("Пополнить баланс");
+    private static final InlineKeyboardButton ADD_BALANCE = new InlineKeyboardButton("Пополнить баланс");
     private static final KeyboardButton GET_CONTACT = new KeyboardButton("Отправить номер телефона");
+
+    public static void init() {
+        GET_TASKS.setCallbackData("/get_task");
+        GET_BALANCE.setCallbackData("/get_balance");
+        CREATE_TASK.setCallbackData("/create_task");
+        BUY.setCallbackData("/buy");
+        ADD_BALANCE.setCallbackData("/add_balance");
+        NEED_HELP.setCallbackData("/need_help");
+        SEND_CONTACT.setCallbackData("/send_contact");
+        START_BUTTON.setCallbackData("/start");
+        HELP_BUTTON.setCallbackData("/help");
+    }
 
     public static InlineKeyboardMarkup inlineMarkupDefault(UserType userType) {
 
@@ -45,14 +56,9 @@ public class Buttons {
         switch (userType) {
 
             case USER -> {
-                GET_TASKS.setCallbackData("/get_task");
-                GET_BALANCE.setCallbackData("/get_balance");
-                CREATE_TASK.setCallbackData("/create_task");
-                BUY.setCallbackData("/buy");
-                SET_BALANCE.setCallbackData("/setBalance");
                 List<InlineKeyboardButton> row1Line = List.of(BUY, CREATE_TASK);
                 List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, GET_BALANCE);
-                List<InlineKeyboardButton> row3Line = List.of(SET_BALANCE);
+                List<InlineKeyboardButton> row3Line = List.of(ADD_BALANCE);
                 rows.add(row1Line);
                 rows.add(row2Line);
                 rows.add(row3Line);
@@ -60,24 +66,18 @@ public class Buttons {
             case ADMINISTRATOR -> {
             }
             case DIRECTOR -> {
-                GET_TASKS.setCallbackData("/get_task");
-                GET_BALANCE.setCallbackData("/get_balance");
-                CREATE_TASK.setCallbackData("/create_task");
-                BUY.setCallbackData("/buy");
                 List<InlineKeyboardButton> row1Line = List.of(BUY, CREATE_TASK);
                 List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, GET_BALANCE);
                 rows.add(row1Line);
                 rows.add(row2Line);
             }
             default -> {
-                BUY.setCallbackData("/buy");
-                NEED_HELP.setCallbackData("/need_help");
-                GET_TASKS.setCallbackData("/get_task");
-                SEND_CONTACT.setCallbackData("/send_contact");
                 List<InlineKeyboardButton> row1Line = List.of(BUY, NEED_HELP);
                 List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, SEND_CONTACT);
+                List<InlineKeyboardButton> row3Line = List.of(ADD_BALANCE, GET_BALANCE);
                 rows.add(row1Line);
                 rows.add(row2Line);
+                rows.add(row3Line);
             }
         }
 
@@ -102,10 +102,6 @@ public class Buttons {
     }
 
     public static InlineKeyboardMarkup inlineMarkup() {
-        START_BUTTON.setCallbackData("/start");
-        HELP_BUTTON.setCallbackData("/help");
-        SEND_CONTACT.setCallbackData("/send_contact");
-
         List<InlineKeyboardButton> rowInline = List.of(START_BUTTON, HELP_BUTTON, SEND_CONTACT);
         List<List<InlineKeyboardButton>> rowsInLine = List.of(rowInline);
 
@@ -120,7 +116,7 @@ public class Buttons {
         PAY_TASK.setPay(true);
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        boolean isPay = task.getTotalAmount() != null && task.getTotalAmount().compareTo(BigDecimal.valueOf(0)) > 0;
+        boolean isPay = task.getTotalAmount() != null && task.getTotalAmount() > 0;
 
         if (Objects.equals(task.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId())) {
             if (isPay) {

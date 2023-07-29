@@ -9,4 +9,8 @@ import lombok.Setter;
 @MappedSuperclass
 public abstract class SalesDoc extends Document {
 
+    @Override
+    public Integer getTransactionAmount() {
+        return -getTotalAmount();
+    }
 }

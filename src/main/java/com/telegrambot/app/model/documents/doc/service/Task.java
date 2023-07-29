@@ -1,17 +1,15 @@
 package com.telegrambot.app.model.documents.doc.service;
 
+import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.model.EntityDefaults;
+import com.telegrambot.app.model.documents.docdata.PropertyData;
 import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.documents.doctype.SalesDoc;
 import com.telegrambot.app.model.reference.TaskStatus;
-import com.telegrambot.app.model.task.Properties;
-import com.telegrambot.app.model.task.TaskType;
-import com.telegrambot.app.model.user.UserBD;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -30,10 +28,7 @@ public class Task extends SalesDoc {
     @ManyToOne
     @JoinColumn(name = "type_id")
     private TaskType type;
-    private Properties properties;
-    @ManyToOne
-    @JoinColumn(name = "create_id")
-    private UserBD creator;
+    private PropertyData properties;
     private Boolean successfully;
 
     public Task(String guid) {
@@ -59,9 +54,10 @@ public class Task extends SalesDoc {
                     .append(separator)
                     .append("Статус: ")
                     .append(status);
-            if (getTotalAmount() != null && getTotalAmount().compareTo(BigDecimal.valueOf(0)) > 0) {
-                builder.append("Сумма: ")
-                        .append(getTotalAmount())
+            if (getTotalAmount() != null && getTotalAmount() > 0) {
+                builder.append(separator)
+                        .append("Сумма: ")
+                        .append(getPresentTotalAmount())
                         .append(" р.");
             }
             builder.append(dualSeparator)

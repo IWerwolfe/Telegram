@@ -1,13 +1,15 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.api_1C.DefaultDataResponse;
-import com.telegrambot.app.DTO.api_1C.TaskStatusResponse;
-import com.telegrambot.app.DTO.api_1C.TaskTypeResponse;
+import com.telegrambot.app.DTO.api_1C.taskResponse.TaskStatusResponse;
+import com.telegrambot.app.DTO.api_1C.taskResponse.TaskTypeResponse;
+import com.telegrambot.app.DTO.types.TaskType;
+import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.model.reference.TaskStatus;
-import com.telegrambot.app.model.task.TaskType;
 import com.telegrambot.app.repositories.TaskRepository;
 import com.telegrambot.app.repositories.TaskStatusRepository;
 import com.telegrambot.app.repositories.TaskTypeRepository;
+import com.telegrambot.app.services.api.API1CServicesImpl;
 import com.telegrambot.app.services.converter.TaskStatusConverter;
 import com.telegrambot.app.services.converter.TaskTypeConverter;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
+        Buttons.init();
         DefaultDataResponse data = api1C.getDefaultData();
         if (data == null || !data.isResult()) {
             TaskType.setDefaultType(getDefaultType());

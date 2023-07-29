@@ -1,6 +1,6 @@
 package com.telegrambot.app.model.legalentity;
 
-import com.telegrambot.app.DTO.BillingType;
+import com.telegrambot.app.DTO.types.BillingType;
 import com.telegrambot.app.model.EntityDefaults;
 import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.Reference;

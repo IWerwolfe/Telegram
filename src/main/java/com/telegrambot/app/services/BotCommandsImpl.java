@@ -1,16 +1,27 @@
 package com.telegrambot.app.services;
 
-import com.telegrambot.app.DTO.Currency;
-import com.telegrambot.app.DTO.*;
+import com.telegrambot.app.DTO.SubCommandInfo;
+import com.telegrambot.app.DTO.TaskListToSend;
 import com.telegrambot.app.DTO.api_1C.*;
+import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataListResponse;
+import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
+import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
+import com.telegrambot.app.DTO.types.Currency;
+import com.telegrambot.app.DTO.types.PaymentType;
+import com.telegrambot.app.DTO.types.SortingTaskType;
+import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.config.BotConfig;
 import com.telegrambot.app.model.Entity;
+import com.telegrambot.app.model.EntitySavedEvent;
+import com.telegrambot.app.model.balance.LegalBalance;
+import com.telegrambot.app.model.balance.UserBalance;
 import com.telegrambot.app.model.command.Command;
 import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.command.CommandStatus;
+import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.doc.service.Task;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.documents.docdata.SyncData;
@@ -18,24 +29,25 @@ import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
 import com.telegrambot.app.model.legalentity.LegalEntity;
 import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.Manager;
 import com.telegrambot.app.model.reference.Reference;
 import com.telegrambot.app.model.reference.TaskStatus;
-import com.telegrambot.app.model.task.TaskType;
 import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.model.user.UserStatus;
 import com.telegrambot.app.model.user.UserType;
 import com.telegrambot.app.repositories.*;
+import com.telegrambot.app.services.api.API1CServicesImpl;
+import com.telegrambot.app.services.api.DaDataService;
 import com.telegrambot.app.services.converter.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -44,8 +56,11 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class BotCommandsImpl implements com.telegrambot.app.components.BotCommands {
+public class BotCommandsImpl implements BotCommands {
+    private final LegalBalanceRepository legalBalanceRepository;
+    private final UserBalanceRepository userBalanceRepository;
 
+    private final CardDocRepository cardDocRepository;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final UserStatusRepository statusRepository;
@@ -57,11 +72,14 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     private final API1CServicesImpl api1C;
     private final DaDataService daDataService;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     private final LegalEntityConverter legalConverter;
     private final DepartmentConverter departmentConverter;
     private final ContractConverter contractConverter;
     private final UserBDConverter userConverter;
     private final TaskConverter taskConverter;
+    private final ToStringServices toStringServices;
 
     private final BotConfig bot;
 
@@ -77,9 +95,32 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     private UserBD user;
 
     public void botAnswerUtils(String receivedMessage, long chatId, UserBD userBD) {
-
         this.chatId = chatId;
         this.user = userBD;
+        botAnswerUtils(receivedMessage);
+    }
+
+    public void botAnswerUtils(List<CommandCache> commandCacheList, String text, long chatId, UserBD userBD) {
+        this.commandCacheList = commandCacheList;
+        this.text = text;
+        this.user = userBD;
+        this.chatId = chatId;
+
+        if (text != null && text.equals("/exit")) {
+            exit(Message.getExitCommand(getCommandCache().getCommand()));
+        } else {
+            botAnswerUtils(getCommandCache().getCommand());
+        }
+        if (!commandCacheList.isEmpty()) {
+            commandCacheRepository.saveAll(commandCacheList);
+        }
+    }
+
+    public void botAnswerUtils(String receivedMessage) {
+
+        if (receivedMessage == null) {
+            return;
+        }
 
         String[] param = receivedMessage.split(":");
         receivedMessage = param.length > 0 ? param[0] : receivedMessage;
@@ -99,7 +140,9 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             case "descriptor" -> editDescriptionTask();
             case "comment" -> editCommentTask();
             case "cancel" -> editCancelTask();
-            case "/setBalance" -> setBalance();
+            case "/add_balance" -> addBalance();
+            case "/get_balance" -> getBalance();
+            case "pay" -> payTask();
 //            case "/need_help" -> createAssistance();
             case "/exit" -> exit();
             default -> sendDefault(receivedMessage);
@@ -110,47 +153,129 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         text = null;
     }
 
-    private void setBalance() {
-        CommandCache command = getCommandCache("", "/setBalance", "getFormOfPayment");
+    private void getBalance() {
+        List<LegalBalance> balances = getBalances();
+        if (balances == null || balances.isEmpty()) {
+            sendMessage(Message.getBalanceUser(getBalanceByUser()));
+            return;
+        }
+        StringBuilder text = new StringBuilder();
+        for (LegalBalance balance : balances) {
+            text.append(Message.getBalanceLegal(balance.getLegal(), balance.getAmount()))
+                    .append(SEPARATOR);
+        }
+        sendMessage(text.toString());
+    }
+
+    private List<LegalBalance> getBalances() {
+        List<UserStatus> status = statusRepository.findByUserBDAndLegalNotNull(user);
+        if (!status.isEmpty()) {
+            List<LegalEntity> legals = getLegalByUserStatus(status);
+            return legalBalanceRepository.findByLegalInOrderByLegal_NameAsc(legals);
+        }
+        return null;
+    }
+
+    private List<LegalEntity> getLegalByUserStatus(List<UserStatus> userStatuses) {
+        List<LegalEntity> legals = new ArrayList<>();
+        userStatuses.forEach(s -> legals.add(s.getLegal()));
+        return legals;
+    }
+
+    private int getBalanceByUser() {
+        Optional<UserBalance> optional = userBalanceRepository.findByUser(user);
+        return optional.isEmpty() ? 0 : optional.get().getAmount();
+    }
+
+    private void addPayment(CommandCache command, Runnable parentRun, String title, String explanation) {
         switch (command.getSubCommand()) {
             case "getFormOfPayment" -> {
-//                if (text == null || text.isEmpty()) {
-//                    sendMessage(Message.getFormOfPayment(), Buttons.getInlineByEnumFormOfPay("/setBalance"));
-//                }
                 SubCommandInfo info = new SubCommandInfo(Message.getFormOfPayment(),
-                        Message.getErrorDescription(),
-                        this::setBalance,
-                        "getSum",
-                        null,
-                        Buttons.getInlineByEnumFormOfPay("/setBalance"));
-                subCommandGetTextInfo(command, info);
-            }
-            case "getSum" -> {
-                SubCommandInfo info = new SubCommandInfo(Message.getInputSum(),
-                        Message.getErrorDescription(),
-                        this::setBalance,
+                        Message.errorWhenEditTask(),
+                        parentRun,
                         "getPay",
-                        "[0-9]{3,}");
+                        null,
+                        Buttons.getInlineByEnumFormOfPay(command.getCommand()));
                 subCommandGetTextInfo(command, info);
             }
             case "getPay" -> {
-                SendInvoice invoice = new SendInvoice();
-                invoice.setChatId(chatId);
-                invoice.setTitle("Внесение денег на баланс");
-                invoice.setCurrency(Currency.RUB.name());
-                invoice.setPayload("U:" + user.getGuid());
-                invoice.setProviderToken(bot.getPayment());
-                invoice.setDescription("Для продолжения следуйте подсказкам системы");
-                int sum = 100 * Integer.parseInt(getResultSubCommandFromCache("getSum"));
-                LabeledPrice labeledPrice = new LabeledPrice("Внесение денег на баланс", sum);
-                invoice.setPrices(List.of(labeledPrice));
+                SendInvoice invoice = getSendInvoice(title, explanation);
                 parent.sendMassage(invoice);
                 completeSubCommand(command, "createPayDoc");
             }
-            case "createPayDoc" -> subCommandCreateTask();
+            case "createPayDoc" -> subCommandCreatePayDoc();
             case "end" -> subCommandEnd();
             default -> sendDefault("");
         }
+    }
+
+    private void payTask() {
+        CommandCache command = getCommandCache("", "pay", "getSum");
+        if (command.getSubCommand().equalsIgnoreCase("getSum")) {
+            Optional<Task> optional = taskRepository.findById(Long.valueOf(text));
+            if (optional.isEmpty()) {
+                exit("Task not found");
+                return;
+            }
+            addNewSubCommand("pay", "taskCode", text);
+            completeSubCommand(command, "getFormOfPayment", String.valueOf(optional.get().getTotalAmount()));
+            command = getCommandCache();
+        }
+        addPayment(command, this::payTask, "Оплата здачи", getResultSubCommandFromCache("taskCode"));
+    }
+
+    private void addBalance() {
+        CommandCache command = getCommandCache("", "/add_balance", "getSum");
+        if (command.getSubCommand().equalsIgnoreCase("getSum")) {
+            SubCommandInfo info = new SubCommandInfo(Message.getInputSum(),
+                    Message.errorWhenEditTask(),
+                    this::addBalance,
+                    "getFormOfPayment",
+                    "[0-9]{3,}",
+                    this::convertSumTo);
+            subCommandGetTextInfo(command, info);
+            return;
+        }
+        addPayment(command, this::addBalance, "Внесение денег на баланс", "id: " + user.getId());
+    }
+
+    private SendInvoice getSendInvoice(String title, String explanation) {
+        SendInvoice invoice = new SendInvoice();
+        invoice.setChatId(chatId);
+        invoice.setTitle(title);
+        invoice.setCurrency(Currency.RUB.name());
+        invoice.setPayload("U:" + user.getGuidEntity());
+        invoice.setProviderToken(bot.getPayment());
+        invoice.setDescription("Для продолжения следуйте подсказкам системы");
+        int sum = Integer.parseInt(getResultSubCommandFromCache("getSum"));
+        LabeledPrice labeledPrice = new LabeledPrice(title + " " + explanation, sum);
+        invoice.setPrices(List.of(labeledPrice));
+        return invoice;
+    }
+
+    private void subCommandCreatePayDoc() {
+        if (commandCacheList.size() == 0 || text == null) {
+            exit(Message.getDefaultMessageError(user.getUserName()));
+            return;
+        }
+
+        String[] strings = text.split(";");
+        String ref = strings.length > 1 ? strings[1] : null;
+
+        CardDoc cardDoc = new CardDoc();
+        cardDoc.setTotalAmount(Integer.valueOf(getResultSubCommandFromCache("getSum")));
+        cardDoc.setReferenceNumber(ref);
+        cardDoc.setAuthor(user.getGuidEntity());
+        cardDoc.setCreator(user);
+        cardDoc.setPaymentType(PaymentType.INCOMING);
+        cardDocRepository.save(cardDoc);
+        eventPublisher.publishEvent(new EntitySavedEvent(cardDoc));
+
+//        api1C.createCardDoc() //TODO написать обмен с 1С
+
+        sendMessage(Message.getSuccessfullyCreatingCardDoc(cardDoc));
+        completeSubCommand(getCommandCache(), "end");
+        addBalance();
     }
 
     private void editDescriptionTask() {
@@ -319,11 +444,15 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
 
     private Map<String, List<Task>> getSortedTask(TaskListToSend taskListToSend) {
         return taskListToSend.getTasks().stream()
-                .collect(Collectors.groupingBy(task -> switch (taskListToSend.getSorting()) {
-                    case STATUS -> getNameEntity(task.getStatus());
-                    case PARTNER -> getNameEntity(task.getPartnerData().getPartner());
-                    default -> getNameEntity(task.getPartnerData().getDepartment());
-                }));
+                .collect(Collectors.groupingBy(task -> getStringSorting(taskListToSend, task)));
+    }
+
+    private String getStringSorting(TaskListToSend taskListToSend, Task task) {
+        return switch (taskListToSend.getSorting()) {
+            case STATUS -> getNameEntity(task.getStatus());
+            case PARTNER -> getNameEntity(task.getPartnerData().getPartner());
+            default -> getNameEntity(task.getPartnerData().getDepartment());
+        };
     }
 
     private TaskListToSend getTaskListToSend(UserStatus status) {
@@ -332,17 +461,18 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         switch (status.getUserType()) {
             case UNAUTHORIZED, USER -> {
                 if (TaskStatus.getDefaultClosedStatus() != null) {
-                    tasks = taskRepository.findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
+                    tasks = getTaskListByApiByUser();
                 }
             }
             case ADMINISTRATOR -> tasks = status.getDepartment() == null ?
-                    getTaskListByApiByCompany(Request1CConverter.convertToGuid(status.getLegal())) :
-                    getTaskListByApiByDepartment(Request1CConverter.convertToGuid(status.getDepartment()));
-            case DIRECTOR -> tasks = getTaskListByApiByCompany(Request1CConverter.convertToGuid(status.getLegal()));
+                    getTaskListByApiByCompany(status.getLegal()) :
+                    getTaskListByApiByDepartment(status.getDepartment());
+            case DIRECTOR -> tasks = getTaskListByApiByCompany(status.getLegal());
             default -> {
                 if (user.getIsMaster()) {
-                    tasks = getTaskListByApiByManager();
-                    sortingType = SortingTaskType.PARTNER;
+                    //TODO Написать связь Manager и UserBD
+//                    tasks = getTaskListByApiByManager();
+//                    sortingType = SortingTaskType.PARTNER;
                 }
             }
         }
@@ -350,33 +480,47 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private String getNameEntity(Entity entity) {
-        if (entity instanceof Reference ref) {
-            return ref.getName();
-        }
         if (entity == null) {
-            return "";
+            return "-";
+        }
+        if (entity instanceof Reference ref) {
+            return ref.toString();
         }
         return entity.getClass().getSimpleName();
     }
 
-    private List<Task> getTaskListByApiByManager() {
-        //TODO исправить на запрос из БД
-        return createTasks(api1C.getTaskListDataByManager(user.getGuid()));
+    private List<Task> getTaskListByApiByManager(Manager manager) {
+        TaskDataListResponse response = api1C.getTaskListDataByManager(user.getGuidEntity());
+        if (response == null || !response.isResult()) {
+            return taskRepository.findByManagerAndStatusNotOrderByDateAsc(manager, TaskStatus.getDefaultClosedStatus());
+        }
+        return createTasks(response);
     }
 
-    private List<Task> getTaskListByApiByCompany(String guidCompany) {
-        //TODO исправить на запрос из БД
-        return createTasks(api1C.getTaskListDataByCompany(guidCompany));
+    private List<Task> getTaskListByApiByCompany(LegalEntity legal) {
+        TaskDataListResponse response = api1C.getTaskListDataByCompany(Converter1C.convertToGuid(legal));
+        if (response == null || !response.isResult()) {
+            return taskRepository.findByPartnerDataNotNullAndPartnerData_PartnerAndStatusNotOrderByDateAsc((Partner) legal,
+                    TaskStatus.getDefaultClosedStatus());
+        }
+        return createTasks(response);
     }
 
-    private List<Task> getTaskListByApiByDepartment(String guidDepartment) {
-        //TODO исправить на запрос из БД
-        return createTasks(api1C.getTaskListDataByDepartment(guidDepartment));
+    private List<Task> getTaskListByApiByDepartment(Department department) {
+        TaskDataListResponse response = api1C.getTaskListDataByDepartment(Converter1C.convertToGuid(department));
+        if (response == null || !response.isResult()) {
+            return taskRepository.findByPartnerDataNotNullAndPartnerData_DepartmentAndStatusNotOrderByDateAsc(department,
+                    TaskStatus.getDefaultClosedStatus());
+        }
+        return createTasks(response);
     }
 
     private List<Task> getTaskListByApiByUser() {
-        //TODO исправить на запрос из БД
-        return createTasks(api1C.getTaskListDataByUser(user.getGuid()));
+        TaskDataListResponse response = api1C.getTaskListDataByUser(user.getGuidEntity());
+        if (response == null || !response.isResult()) {
+            return taskRepository.findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
+        }
+        return createTasks(response);
     }
 
     private List<Task> createTasks(TaskDataListResponse response) {
@@ -398,7 +542,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         }
         Task task = new Task();
         task.setCreator(user);
-        task.setAuthor(user.getGuid());
+        task.setAuthor(user.getGuidEntity());
         task.setStatus(TaskStatus.getDefaultInitialStatus());
         UserDataResponse userData = api1C.getUserData(getResultSubCommandFromCache("getPhone"));
         if (userData != null && userData.getStatusList() != null && userData.getStatusList().size() >= 1) {
@@ -407,12 +551,13 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         task.setDescription(getDescriptionBySubCommand());
         task.setType(TaskType.getDefaultType());
 
-        TaskCreateResponse createResponse = api1C.createTask(taskConverter.convertTaskToTaskResponse(task));
+        SyncDataResponse createResponse = api1C.createTask(taskConverter.convertToResponse(task));
         if (createResponse != null && createResponse.isResult()) {
             task.setSyncData(new SyncData(createResponse.getGuid(), createResponse.getCode()));
         }
 
         taskRepository.save(task);
+        eventPublisher.publishEvent(new EntitySavedEvent(task));
         sendMessage(Message.getSuccessfullyCreatingTask(task));
 //        sendToWorkGroup(task.toString());
 
@@ -427,19 +572,6 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
                 .findFirst();
 
         return result.orElse("");
-    }
-
-    public void botAnswerUtils(List<CommandCache> commandCacheList, String text, long chatId, UserBD userBD) {
-        this.commandCacheList = commandCacheList;
-        this.text = text;
-
-        if (text != null && text.equals("/exit")) {
-            exit(Message.getExitCommand(getCommandCache().getCommand()));
-        }
-        botAnswerUtils(getCommandCache().getCommand(), chatId, userBD);
-        if (!commandCacheList.isEmpty()) {
-            commandCacheRepository.saveAll(commandCacheList);
-        }
     }
 
     private void getUserByPhone() {
@@ -457,7 +589,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
                 sendMessage(Message.getNonFindPhone());
                 return;
             }
-            sendMessage(toStringNonNullFields(userDataResponse));
+            sendMessage(toStringServices.toStringNonNullFields(userDataResponse));
             subCommandEnd();
         }
     }
@@ -477,7 +609,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
                 sendMessage(Message.getUnCorrectINN());
                 return;
             }
-            sendMessage(toStringNonNullFields(daDataParty, true));
+            sendMessage(toStringServices.toStringNonNullFields(daDataParty, true));
             subCommandEnd();
         }
     }
@@ -501,7 +633,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
                     Buttons.inlineMarkupDefault(statusList.get(0).getUserType()));
             return;
         }
-        addNeSubCommand("/registrationSurvey", "getInn");
+        addNewSubCommand("/registrationSurvey", "getInn");
         sendMessage(Message.getBeforeSurvey());
         registrationSurvey();
     }
@@ -524,14 +656,14 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private void sendHelpText() {
-        sendMessage(com.telegrambot.app.components.BotCommands.HELP_TEXT);
+        sendMessage(BotCommands.HELP_TEXT);
     }
 
     private void sendDefault(String receivedMessage) {
         if (receivedMessage.matches(REGEX_INN)) {
             CompanyDataResponse response = api1C.getCompanyData(receivedMessage);
             LegalListData data = createDataByCompanyDataResponse(response);
-            sendMessage(toStringNonNullFields(data));
+            sendMessage(toStringServices.toStringNonNullFields(data));
             return;
         }
         if (receivedMessage.matches(REGEX_PHONE)) {
@@ -541,9 +673,9 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             Optional<UserBD> optional = userRepository.findByPhone(receivedMessage);
             if (optional.isPresent()) {
                 List<UserStatus> statusList = statusRepository.findByUserBDOrderByLastUpdateDesc(optional.get());
-                String string = toStringNonNullFields(optional.get()) +
+                String string = toStringServices.toStringNonNullFields(optional.get()) +
                         SEPARATOR + SEPARATOR + "Statuses: " +
-                        toStringIterableNonNull(statusList, false);
+                        toStringServices.toStringIterableNonNull(statusList, false);
                 sendMessage(string);
                 return;
             }
@@ -553,7 +685,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             if (taskResponse != null && taskResponse.isResult()) {
                 Task task = taskConverter.convertToEntity(taskResponse.getTask());
                 taskRepository.save(task);
-                sendMessage(task.toString(true));
+                sendMessage(task.toString(true), Buttons.getInlineMarkupEditTask(task));
                 return;
             }
         }
@@ -561,13 +693,16 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private void exit() {
-        commandCacheList = commandCacheRepository.findByUserBDOrderById(user);
+        commandCacheList = commandCacheList.isEmpty() ?
+                commandCacheRepository.findByUserBDOrderById(user) :
+                commandCacheList;
         subCommandEnd(CommandStatus.INTERRUPTED_BY_USER);
     }
 
     private void exit(String message) {
+        UserStatus status = statusRepository.findFirstByUserBDOrderByLastUpdateDesc(user);
+        sendMessage(message, Buttons.inlineMarkupDefault(status == null ? UserType.UNAUTHORIZED : status.getUserType()));
         exit();
-        sendMessage(message, Buttons.inlineMarkupDefault(statusRepository.findFirstByUserBDOrderByLastUpdateDesc(user).getUserType()));
     }
 
     private void subCommandGetTextInfo(CommandCache command, SubCommandInfo info) {
@@ -579,6 +714,10 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         runHandler(info.getHandler());
         completeSubCommand(command, info.getNextSumCommand());
         runHandler(info.getParent());
+    }
+
+    private void convertSumTo() {
+        text = text + "00";
     }
 
     private void subCommandGetInn(CommandCache command) {
@@ -626,9 +765,12 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             command.setDateComplete(LocalDateTime.now());
             commandRepository.save(command);
 
-            log.info(toStringNonNullFields(commandCacheList, true));
+            log.info(toStringServices.toStringNonNullFields(commandCacheList, true));
             commandCacheRepository.deleteByUserBD(user);
             commandCacheList.clear();
+            text = null;
+//            chatId = 0L;
+//            user = null;
         }
     }
 
@@ -692,8 +834,8 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
             partner.setName(data.getName().getShortWithOpf());
             partner.setKpp(data.getKpp());
             partner.setOGRN(data.getOgrn());
-            partner.setCommencement(Request1CConverter.convertLongToLocalDateTime(data.getState().getRegistrationDate()));
-            partner.setDateCertificate(Request1CConverter.convertLongToLocalDateTime(data.getOgrnDate()));
+            partner.setCommencement(Converter1C.convertLongToLocalDateTime(data.getState().getRegistrationDate()));
+            partner.setDateCertificate(Converter1C.convertLongToLocalDateTime(data.getOgrnDate()));
             partner.setOKPO(data.getOkpo());
         }
         return partner;
@@ -726,12 +868,14 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private CommandCache getCommandCache() {
-        return commandCacheList.get(commandCacheList.size() - 1);
+        return commandCacheList.size() == 0 ?
+                new CommandCache() :
+                commandCacheList.get(commandCacheList.size() - 1);
     }
 
     private CommandCache getCommandCache(String message, String nameCommand, String nameSubCommand) {
         if (commandCacheList.isEmpty()) {
-            addNeSubCommand(nameCommand, nameSubCommand);
+            addNewSubCommand(nameCommand, nameSubCommand);
             sendMessage(message);
         }
         return commandCacheList.get(commandCacheList.size() - 1);
@@ -751,14 +895,14 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
     }
 
     private boolean isStart(String message, String nameCommand, String subCommand) {
-        CommandCache command = commandCacheList.isEmpty() ? addNeSubCommand(nameCommand, subCommand) : getCommandCache();
+        CommandCache command = commandCacheList.isEmpty() ? addNewSubCommand(nameCommand, subCommand) : getCommandCache();
         return isStart(command, message);
     }
 
-    private void completeSubCommand(CommandCache command, String subCommand, String result) {
+    private void completeSubCommand(CommandCache command, String nextSubCommand, String result) {
 
         CommandCache commandCache = new CommandCache();
-        commandCache.setSubCommand(subCommand);
+        commandCache.setSubCommand(nextSubCommand);
         commandCache.setUserBD(user);
         commandCache.setCommand(command.getCommand());
         commandCache.setCountStep(0L);
@@ -788,14 +932,6 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         parent.sendMassage(message);
     }
 
-    private SendMessage createMessage(String text) {
-        return createMessage(text, null);
-    }
-
-    private SendMessage createMessage() {
-        return createMessage("", null);
-    }
-
     private List<UserStatus> updateUserAfterRequestAPI(UserDataResponse userData) {
 
         userConverter.updateEntity(userData, user);
@@ -810,7 +946,7 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         userStatuses = userData.getStatusList().stream()
                 .map(statusResponse -> {
                     Optional<LegalEntity> optional = legalRepository.findBySyncDataNotNullAndSyncData_Guid(statusResponse.getGuid());
-                    LegalEntity legal = optional.orElse(getLegalEntityByGuid(statusResponse.getGuid()));
+                    LegalEntity legal = optional.orElseGet(() -> getLegalEntityByGuid(statusResponse.getGuid()));
                     return createUserStatus(legal, statusResponse.getPost());
                 })
                 .collect(Collectors.toList());
@@ -904,14 +1040,19 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         return createUserStatus(getUserTypeByPost(post), legalEntity, post);
     }
 
-    private CommandCache addNeSubCommand(String name, String subCommand) {
+    private CommandCache addNewSubCommand(String name, String subCommand, String result) {
         CommandCache command = new CommandCache();
         command.setCommand(name);
         command.setSubCommand(subCommand);
         command.setUserBD(user);
         command.setCountStep(0L);
+        command.setResult(result);
         commandCacheList.add(command);
         return command;
+    }
+
+    private CommandCache addNewSubCommand(String name, String subCommand) {
+        return addNewSubCommand(name, subCommand, null);
     }
 
     public void setParent(TelegramBotServices parent) {
@@ -928,105 +1069,5 @@ public class BotCommandsImpl implements com.telegrambot.app.components.BotComman
         } catch (Exception e) {
             log.error(e.getMessage());
         }
-    }
-
-    public String toStringNonNullFields(Object object, String tab, boolean isNested) {
-        if (object == null) {
-            return "";
-        }
-        List<Field> allFields = getFieldObject(object);
-        StringBuilder stringBuilder = new StringBuilder();
-        Object value = null;
-
-        for (Field field : allFields) {
-            try {
-                field.setAccessible(true);
-                value = field.get(object);
-            } catch (Exception e) {
-                log.error(e.getMessage());
-                continue;
-            }
-            if (value == null) {
-                continue;
-            }
-            stringBuilder.append(tab).append(field.getName()).append(": ");
-            if (value instanceof Iterable) {
-                toStringIterable(tab, stringBuilder, (Iterable<?>) value, isNested);
-                continue;
-            }
-            if (value.getClass().isArray()) {
-                toStringArray(tab, stringBuilder, value, isNested);
-                continue;
-            }
-            boolean isContains = field.getType().getName().startsWith("com.telegrambot.app");
-            boolean isDesiredType = !field.getType().isPrimitive() && !field.getType().isEnum();
-            if (isDesiredType && isContains && isNested) {
-                toStringObject(tab, stringBuilder, value, isNested);
-                continue;
-            }
-            stringBuilder.append(value).append(SEPARATOR);
-        }
-        return stringBuilder.toString();
-    }
-
-    private List<Field> getFieldObject(Object object) {
-        Class<?> clazz = object.getClass();
-        List<Field> allFields = new ArrayList<>();
-        while (clazz != null && clazz.getTypeName().startsWith("com.telegrambot.app")) {
-            Field[] declaredFields = clazz.getDeclaredFields();
-            allFields.addAll(Arrays.asList(declaredFields));
-            clazz = clazz.getSuperclass();
-        }
-        return allFields;
-    }
-
-    private void toStringObject(String tab, StringBuilder stringBuilder, Object value, boolean isNested) {
-        stringBuilder.append(SEPARATOR)
-                .append(toStringNonNullFields(value, tab + "\t", isNested))
-                .append(SEPARATOR);
-    }
-
-    private void toStringArray(String tab, StringBuilder stringBuilder, Object value, boolean isNested) {
-        stringBuilder.append(SEPARATOR);
-        for (int i = 0; i < Array.getLength(value); i++) {
-            Object objectValue = Array.get(value, i);
-            if (objectValue != null) {
-                addStringInCycle(tab, stringBuilder, i, objectValue, isNested);
-            }
-        }
-    }
-
-    private String toStringIterableNonNull(Iterable<?> value, boolean isNested) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[");
-        toStringIterable("", stringBuilder, value, isNested);
-        return stringBuilder.append("]").toString();
-    }
-
-    private void toStringIterable(String tab, StringBuilder stringBuilder, Iterable<?> value, boolean isNested) {
-        int index = 0;
-        stringBuilder.append(SEPARATOR);
-        for (Object element : value) {
-            if (element != null) {
-                addStringInCycle(tab, stringBuilder, index, element, isNested);
-                index++;
-            }
-        }
-    }
-
-    private void addStringInCycle(String tab, StringBuilder stringBuilder, int index, Object element, boolean isNested) {
-        stringBuilder.append(tab)
-                .append("\t")
-                .append("[").append(index).append("]: ")
-                .append(toStringNonNullFields(element, "\t", isNested))
-                .append(SEPARATOR);
-    }
-
-    public String toStringNonNullFields(Object object, boolean isNested) {
-        return toStringNonNullFields(object, "", isNested);
-    }
-
-    public String toStringNonNullFields(Object object) {
-        return toStringNonNullFields(object, false);
     }
 }

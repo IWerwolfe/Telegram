@@ -1,6 +1,7 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.config.BotConfig;
+import com.telegrambot.app.model.balance.UserBalance;
 import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.transaction.Transaction;
@@ -24,6 +25,7 @@ import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.payments.PreCheckoutQuery;
+import org.telegram.telegrambots.meta.api.objects.payments.SuccessfulPayment;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
@@ -34,6 +36,7 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class TelegramBotServices extends TelegramLongPollingBot {
+    private final UserBalanceRepository userBalanceRepository;
 
     private final BotConfig config;
     private final BotCommandsImpl botCommands;
@@ -43,14 +46,14 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     private final UserStatusRepository statusRepository;
     private final TransactionRepository transactionRepository;
     private Update update;
+    private UserBD user;
 
-    @Override
     public void onUpdateReceived(Update update) {
 
         botCommands.setParent(this);
-
         boolean isCommand = true;
         this.update = update;
+        user = getUser();
 
         if (update.hasPreCheckoutQuery() && update.getPreCheckoutQuery().getId() != null) {
             PreCheckoutQuery checkoutQuery = update.getPreCheckoutQuery();
@@ -59,38 +62,30 @@ public class TelegramBotServices extends TelegramLongPollingBot {
             return;
         }
 
-        if (update.hasMessage() && update.getMessage().hasSuccessfulPayment()) {
-            //TODO дописать преобразование в текст
-        }
-
-        List<CommandCache> commandCache = commandCacheRepository.findByUserBDOrderById(getUser());
+        List<CommandCache> commandCache = commandCacheRepository.findByUserBDOrderById(user);
         if (commandCache.size() > 0) {
-            botCommands.botAnswerUtils(commandCache, getReceivedMessage(), getChatId(), getUser());
+            botCommands.botAnswerUtils(commandCache, getReceivedMessage(), getChatId(), user);
             isCommand = false;
             log.info("The text command processing mode is set");
         }
 
         if (update.hasMessage() && update.getMessage().hasContact()) {
-            updateUserProfile(update.getMessage().getContact(), getChatId(), getUser());
+            updateUserProfile(update.getMessage().getContact(), user);
             isCommand = false;
         }
 
         saveTransaction(isCommand);
 
         if (isCommand) {
-            botCommands.botAnswerUtils(getReceivedMessage(), getChatId(), getUser());
+            botCommands.botAnswerUtils(getReceivedMessage(), getChatId(), user);
         }
-
-        updateLastActivity(getUser());
-
-
+        updateLastActivity(user);
     }
 
-    private void updateUserProfile(Contact contact, long chatId, UserBD userBD) {
+    private void updateUserProfile(Contact contact, UserBD userBD) {
         userBD.setPhone(contact.getPhoneNumber());
         userRepository.save(userBD);
-//        updateUserStatus(userBD, UserType.USER);
-        botCommands.botAnswerUtils("/afterRegistered", chatId, userBD);
+        botCommands.botAnswerUtils("/afterRegistered", getChatId(), userBD);
     }
 
     @Override
@@ -121,7 +116,7 @@ public class TelegramBotServices extends TelegramLongPollingBot {
                 saveTransaction(send);
             }
             if (message instanceof SendInvoice invoice) {
-                saveTransaction(invoice.getTitle(), Integer.parseInt(invoice.getChatId()));
+                saveTransaction(invoice.getTitle());
             }
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
@@ -131,7 +126,7 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     public void sendMassage(BotApiMethodBoolean message) {
         try {
             execute(message);
-            saveTransaction("Подтверждение оплаты", (int) getChatId());
+            saveTransaction("Подтверждение оплаты");
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
         }
@@ -149,12 +144,26 @@ public class TelegramBotServices extends TelegramLongPollingBot {
 
     private String getReceivedMessage() {
         if (update.hasMessage()) {
+
+            if (update.getMessage().hasSuccessfulPayment()) {
+                SuccessfulPayment pay = update.getMessage().getSuccessfulPayment();
+                return pay.getTotalAmount() + ";" +
+                        pay.getInvoicePayload() + ";" +
+                        pay.getTelegramPaymentChargeId() + ";" +
+                        orderInfoToString(pay);
+            }
+
             return update.getMessage().getText();
         }
         if (update.hasCallbackQuery()) {
             return update.getCallbackQuery().getData();
         }
         return "";
+    }
+
+    private String orderInfoToString(SuccessfulPayment pay) {
+        return pay.getOrderInfo() == null ? "" :
+                pay.getOrderInfo().getName() + "*" + pay.getOrderInfo().getPhoneNumber() + "*" + pay.getOrderInfo().getEmail();
     }
 
     private long getChatId() {
@@ -167,6 +176,16 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         return 0;
     }
 
+    private long getMessageId() {
+        if (update.hasMessage()) {
+            return update.getMessage().getMessageId();
+        }
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getMessage().getMessageId();
+        }
+        return 0;
+    }
+
     private UserBD getUser() {
         User user = null;
         if (update.hasMessage()) {
@@ -175,51 +194,48 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         if (update.hasCallbackQuery()) {
             user = update.getCallbackQuery().getFrom();
         }
-        return user == null ? null : getUser(user);
-    }
-
-    private UserBD getUser(User user) {
-        UserBD userBD = null;
-        Optional<UserBD> option = userRepository.findById(user.getId());
-        if (option.isEmpty()) {
-            userBD = getUserBD(user);
-            log.info("Create new telegram user {} {}", userBD.getPerson().getFirstName(), userBD.getUserName());
-            updateUserStatus(userBD);
-        }
-        return option.orElse(userBD);
+        return user == null ? null : getUserBD(user);
     }
 
     private UserBD getUserBD(User user) {
+        Optional<UserBD> option = userRepository.findById(user.getId());
+        return option.orElseGet(() -> createUserBD(user));
+    }
+
+    private UserBD createUserBD(User user) {
         UserBD userBD = new UserBD();
         BeanUtils.copyProperties(user, userBD);
         PersonData person = new PersonData(user.getFirstName(), user.getLastName());
         userBD.setPerson(person);
-        return userRepository.save(userBD);
+
+        userRepository.save(userBD);
+        updateUserStatus(userBD, UserType.UNAUTHORIZED);
+        userBalanceRepository.save(new UserBalance(userBD));
+
+        log.info("Create new telegram user {} {}", userBD.getPerson().getFirstName(), userBD.getUserName());
+        return userBD;
     }
 
     private void saveTransaction(boolean isCommand) {
-        Transaction transaction = new Transaction();
-        transaction.setUserBD(getUser());
-        transaction.setDate(LocalDateTime.now());
-        transaction.setText(getReceivedMessage());
-        transaction.setIdMessage((int) getChatId());
-        transaction.setTransactionType(getTransactionTypeFromMessage());
-        transaction.setCommand(isCommand);
-        transactionRepository.save(transaction);
+        saveTransaction(getReceivedMessage(), isCommand);
     }
 
     private void saveTransaction(SendMessage sendMessage) {
-        saveTransaction(sendMessage.getText(), Integer.parseInt(sendMessage.getChatId()));
+        saveTransaction(sendMessage.getText());
     }
 
-    private void saveTransaction(String text, int chatId) {
+    private void saveTransaction(String text) {
+        saveTransaction(text, false);
+    }
+
+    private void saveTransaction(String text, boolean isCommand) {
         Transaction transaction = new Transaction();
-        transaction.setUserBD(getUser());
+        transaction.setUserBD(user);
         transaction.setDate(LocalDateTime.now());
         transaction.setText(text);
-        transaction.setIdMessage(chatId);
+        transaction.setIdMessage((int) getMessageId());
         transaction.setTransactionType(TransactionType.BOT_MESSAGE);
-        transaction.setCommand(false);
+        transaction.setCommand(isCommand);
         transactionRepository.save(transaction);
     }
 
@@ -241,9 +257,4 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         statusRepository.save(status);
         log.info("Update telegram userBD {} status on {}", userBD.getPerson().getFirstName(), status.getUserType());
     }
-
-    private void updateUserStatus(UserBD userBD) {
-        updateUserStatus(userBD, UserType.UNAUTHORIZED);
-    }
-
 }

@@ -1,16 +1,22 @@
 package com.telegrambot.app.DTO.message;
 
 import com.telegrambot.app.model.documents.doc.service.Task;
+import com.telegrambot.app.model.documents.doctype.PayDoc;
+import com.telegrambot.app.model.legalentity.LegalEntity;
 import com.telegrambot.app.model.user.UserStatus;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Data
 public abstract class Message {
 
     private static final String SEPARATOR = System.lineSeparator();
     private static final String DUAL_SEPARATOR = System.lineSeparator() + System.lineSeparator();
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault());
 
     public static String getWelcomeMessage() {
         return "Добро пожаловать в наш телеграмм бот!" + DUAL_SEPARATOR +
@@ -164,4 +170,20 @@ public abstract class Message {
     public static String getInputSum() {
         return "Введите сумму для внесения на баланс";
     }
+
+    public static String getSuccessfullyCreatingCardDoc(PayDoc doc) {
+        return "От вас поступила оплата в размере " + doc.getPresentTotalAmount() + " руб." + SEPARATOR +
+                "Номер платежного документа " + doc.getCodeEntity();
+    }
+
+    public static String getBalanceUser(int sum) {
+        return "Ваш баланс на " + formatter.format(LocalDateTime.now()) +
+                " составляет " + (sum / 100.00) + " руб.";
+    }
+
+    public static String getBalanceLegal(LegalEntity legal, int sum) {
+        return "Баланс " + legal.getName() + " на " + formatter.format(LocalDateTime.now()) +
+                " составляет " + (sum / 100.00) + " руб.";
+    }
+
 }

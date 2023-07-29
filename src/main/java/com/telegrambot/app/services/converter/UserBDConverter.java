@@ -1,8 +1,11 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.Gender;
 import com.telegrambot.app.DTO.api_1C.UserDataResponse;
+import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.types.Gender;
+import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.documents.docdata.PersonData;
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,23 +13,27 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class UserBDConverter extends Request1CConverter {
+public class UserBDConverter extends Converter1C {
 
     private final UserRepository userRepository;
 
     @Override
-    public <T, R> T updateEntity(R dto, T entity) {
+    public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+        return null;
+    }
+
+    @Override
+    public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof UserDataResponse response && entity instanceof UserBD entityBD) {
             if (entityBD.getPerson() == null) {
                 entityBD.setPerson(new PersonData());
             }
-            entityBD.setGuid(response.getGuid());
+            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
             entityBD.getPerson().setGender(convertToEnum(response.getGender(), Gender.class));
             entityBD.setNotValid(convertToBoolean(response.getNotValid()));
 //            entityBD.setIsEmployee(convertToBoolean(response.getIsEmployee()));
@@ -39,12 +46,13 @@ public class UserBDConverter extends Request1CConverter {
     }
 
     @Override
-    public <T, R> T getOrCreateEntity(R dto) {
-        if (dto instanceof UserDataResponse response) {
-            Optional<UserBD> existingEntity = userRepository.findByPhoneIgnoreCase(response.getPhone());
-            return (T) existingEntity.orElseGet(() -> new UserBD(response.getPhone()));
-        }
-        return null;
+    public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
+        return (T) Converter1C.getOrCreateEntity(dto, userRepository, UserBD.class);
+    }
+
+    @Override
+    public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
+        return (T) Converter1C.getOrCreateEntity(guid, userRepository, UserBD.class, isSaved);
     }
 
     public static void updateUserFIO(String fio, PersonData personFields) {

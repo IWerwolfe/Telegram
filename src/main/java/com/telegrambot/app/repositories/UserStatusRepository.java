@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface UserStatusRepository extends CrudRepository<UserStatus, Long> {
+    List<UserStatus> findByUserBDAndLegalNotNull(UserBD userBD);
+
     @Transactional
     void deleteByUserBD(UserBD userBD);
 
