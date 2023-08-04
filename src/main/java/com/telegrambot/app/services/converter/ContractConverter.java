@@ -1,10 +1,9 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.ContractResponse;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.legal.partner.ContractResponse;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.DTO.types.BillingType;
 import com.telegrambot.app.model.Entity;
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.repositories.ContractRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class ContractConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof ContractResponse response && entity instanceof Contract entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
+            entityBD.setSyncData(response.getGuid(), response.getCode());
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setBilling(convertToBoolean(response.getIsBilling()));
             entityBD.setStartBilling(convertToLocalDateTime(response.getStartBilling()));

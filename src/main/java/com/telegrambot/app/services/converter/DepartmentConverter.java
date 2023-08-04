@@ -1,9 +1,8 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.DepartmentResponse;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.legal.partner.DepartmentResponse;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.legalentity.Department;
 import com.telegrambot.app.repositories.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class DepartmentConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof DepartmentResponse response && entity instanceof Department entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
+            entityBD.setSyncData(response.getGuid(), response.getCode());
             entityBD.setBilling(convertToBoolean(response.getIsBilling()));
             entityBD.setExcusableGoods(convertToBoolean(response.getIsExcusableGoods()));
             entityBD.setMarkedGoods(convertToBoolean(response.getIsMarkedGoods()));

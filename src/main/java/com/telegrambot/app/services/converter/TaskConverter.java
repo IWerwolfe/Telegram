@@ -1,11 +1,10 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.documents.doc.service.Task;
 import com.telegrambot.app.model.documents.docdata.PropertyData;
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.Manager;
 import com.telegrambot.app.repositories.ManagerRepository;
 import com.telegrambot.app.repositories.TaskRepository;
@@ -58,11 +57,11 @@ public class TaskConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof TaskResponse response && entity instanceof Task entityBD) {
 //            entityBD.setName(response.getName());
-            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
+            entityBD.setSyncData(response.getGuid(), response.getCode());
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setComment(response.getComment());
             entityBD.setAuthor(response.getGuidAuthor()); //TODO заменить потом на сущность
-            entityBD.setManager(Converter1C.getOrCreateEntity(response.getGuidManager(), managerRepository, Manager.class));
+            entityBD.setManager(Converter1C.getOrCreateEntity(response.getGuidManager(), managerRepository, Manager.class, true));
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setDescription(response.getDescription());
             entityBD.setDecision(response.getDecision());

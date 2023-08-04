@@ -1,7 +1,7 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.doc.service.Task;

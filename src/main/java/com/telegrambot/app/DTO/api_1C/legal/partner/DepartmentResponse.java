@@ -1,7 +1,7 @@
-package com.telegrambot.app.DTO.api_1C;
+package com.telegrambot.app.DTO.api_1C.legal.partner;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import lombok.Data;
 
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -1,8 +1,9 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.repositories.EntityRepository;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
@@ -10,10 +11,23 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Optional;
 
 @Slf4j
 public abstract class Converter1C {
+
+    private static final HashMap<String, String> entityForRequest = new HashMap<>();
+
+    private static void addEntityForRequest(@NonNull String guid, String type) {
+        entityForRequest.put(guid, type);
+    }
+
+    private static HashMap<String, String> getEntityForRequest() {
+        return entityForRequest;
+    }
+
+//    private static get
 
     public abstract <T extends Entity, R extends Entity1C> R convertToResponse(T entity);
 
@@ -58,6 +72,7 @@ public abstract class Converter1C {
                                                                                     boolean isSaved) {
         try {
             T entity = entityType.getDeclaredConstructor(String.class).newInstance(guid);
+            addEntityForRequest(guid, entityType.getName());
             return isSaved ? repository.save(entity) : entity;
 
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |

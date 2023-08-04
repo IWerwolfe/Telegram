@@ -11,7 +11,7 @@ import lombok.Setter;
 //@jakarta.persistence.Entity
 //@DiscriminatorValue("references_entities")
 @MappedSuperclass
-public class Reference extends Entity {
+public abstract class Reference extends Entity {
     private String name;
 
     @Override

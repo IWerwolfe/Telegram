@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @MappedSuperclass
@@ -22,6 +24,17 @@ public abstract class Entity {
     @PrePersist
     private void prePersist() {
         EntityDefaults.initializeDefaultEntity1C(this);
+    }
+
+    public void setSyncData(String guid, String code) {
+        if (syncData == null) {
+            this.syncData = new SyncData(guid, code);
+            return;
+        }
+        if (code != null) {
+            this.syncData.setCode(code);
+        }
+        this.syncData.setLastUpdate(LocalDateTime.now());
     }
 
     public String getCodeEntity() {

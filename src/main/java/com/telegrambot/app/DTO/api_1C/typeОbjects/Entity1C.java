@@ -1,4 +1,4 @@
-package com.telegrambot.app.DTO.api_1C.typesОbjects;
+package com.telegrambot.app.DTO.api_1C.typeОbjects;
 
 import lombok.Data;
 

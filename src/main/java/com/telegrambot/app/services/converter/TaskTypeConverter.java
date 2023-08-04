@@ -1,10 +1,9 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskTypeResponse;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.model.Entity;
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.repositories.TaskTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,7 @@ public class TaskTypeConverter extends Converter1C {
     @Override
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof TaskTypeResponse response && entity instanceof TaskType entityBD) {
-            entityBD.setSyncData(new SyncData(response.getGuid()));
+            entityBD.setSyncData(response.getGuid(), null);
             entityBD.setName(response.getName());
             return entity;
         }

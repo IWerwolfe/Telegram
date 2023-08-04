@@ -1,4 +1,4 @@
-package com.telegrambot.app.DTO.api_1C;
+package com.telegrambot.app.DTO.api_1C.legal;
 
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;

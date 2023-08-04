@@ -2,7 +2,7 @@ package com.telegrambot.app.DTO.api_1C.taskResponse;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import lombok.Data;
 
 import java.util.Date;

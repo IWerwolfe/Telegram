@@ -34,7 +34,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
 
     private final String DEFAULT_NAME_CLOSED = "Завершена";
     private final String DEFAULT_NAME_INIT = "Ожидает обработки";
-    private final String DEFAULT_NAME_TYPE = "ОбращениеЧерезЧатБот";
+    private final String DEFAULT_NAME_TYPE = "Обращение через чат бот";
 
     @Override
     public void run(String... args) throws Exception {

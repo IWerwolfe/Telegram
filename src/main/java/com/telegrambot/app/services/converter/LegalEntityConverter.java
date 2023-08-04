@@ -1,13 +1,13 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.LegalEntityResponse;
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
+import com.telegrambot.app.DTO.api_1C.legal.LegalEntityResponse;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.DTO.types.PartnerType;
 import com.telegrambot.app.model.Entity;
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.legalentity.LegalEntity;
 import com.telegrambot.app.model.legalentity.Partner;
 import com.telegrambot.app.repositories.LegalEntityRepository;
+import com.telegrambot.app.repositories.PartnerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class LegalEntityConverter extends Converter1C {
+    private final PartnerRepository partnerRepository;
 
     private final LegalEntityRepository legalEntityRepository;
 
@@ -28,7 +29,7 @@ public class LegalEntityConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof LegalEntityResponse response && entity instanceof LegalEntity entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setSyncData(new SyncData(response.getGuid(), response.getCode()));
+            entityBD.setSyncData(response.getGuid(), response.getCode());
             entityBD.setInn(response.getInn());
             entityBD.setKpp(response.getKpp());
             entityBD.setBankAccount(response.getGuidBankAccount());
@@ -48,11 +49,11 @@ public class LegalEntityConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, legalEntityRepository, LegalEntity.class);
+        return (T) Converter1C.getOrCreateEntity(dto, partnerRepository, Partner.class);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, legalEntityRepository, LegalEntity.class, isSaved);
+        return (T) Converter1C.getOrCreateEntity(guid, partnerRepository, Partner.class, isSaved);
     }
 }

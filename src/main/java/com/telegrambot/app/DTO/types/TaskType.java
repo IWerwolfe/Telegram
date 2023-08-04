@@ -1,5 +1,6 @@
 package com.telegrambot.app.DTO.types;
 
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -18,7 +19,12 @@ public class TaskType extends Reference {
     @Transient
     private static TaskType defaultType;
 
-    public TaskType(String name) {
+    public TaskType(String guid) {
+        this.setSyncData(new SyncData(guid));
+    }
+
+    public TaskType(String guid, String name) {
+        this(guid);
         setName(name);
     }
 

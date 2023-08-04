@@ -2,7 +2,13 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.SubCommandInfo;
 import com.telegrambot.app.DTO.TaskListToSend;
-import com.telegrambot.app.DTO.api_1C.*;
+import com.telegrambot.app.DTO.api_1C.SyncDataResponse;
+import com.telegrambot.app.DTO.api_1C.UserDataResponse;
+import com.telegrambot.app.DTO.api_1C.legal.LegalListData;
+import com.telegrambot.app.DTO.api_1C.legal.partner.ContractResponse;
+import com.telegrambot.app.DTO.api_1C.legal.partner.DepartmentResponse;
+import com.telegrambot.app.DTO.api_1C.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api_1C.legal.partner.PartnerResponse;
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataListResponse;
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
@@ -661,7 +667,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private void sendDefault(String receivedMessage) {
         if (receivedMessage.matches(REGEX_INN)) {
-            CompanyDataResponse response = api1C.getCompanyData(receivedMessage);
+            PartnerDataResponse response = api1C.getPartnerData(receivedMessage);
             LegalListData data = createDataByCompanyDataResponse(response);
             sendMessage(toStringServices.toStringNonNullFields(data));
             return;
@@ -793,7 +799,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private Partner getPartnerByAPI(String text) {
-        CompanyDataResponse response = text.matches(REGEX_INN) ? api1C.getCompanyData(text) : api1C.getCompanyByGuid(text);
+        PartnerDataResponse response = text.matches(REGEX_INN) ? api1C.getPartnerData(text) : api1C.getPartnerByGuid(text);
         LegalListData data = createDataByCompanyDataResponse(response);
         Partner partner = data.getLegals() == null || data.getLegals().isEmpty() ?
                 createLegalByInnFromDaData() :
@@ -803,7 +809,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private PartnerData getPartnerDateByAPI(String text) {
-        CompanyDataResponse response = text.matches(REGEX_INN) ? api1C.getCompanyData(text) : api1C.getCompanyByGuid(text);
+        PartnerDataResponse response = text.matches(REGEX_INN) ? api1C.getPartnerData(text) : api1C.getPartnerByGuid(text);
         LegalListData data = createDataByCompanyDataResponse(response);
         PartnerData partnerData = new PartnerData();
 
@@ -954,12 +960,12 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private LegalEntity getLegalEntityByGuid(String guid) {
-        CompanyDataResponse dataResponse = api1C.getCompanyByGuid(guid);
+        PartnerDataResponse dataResponse = api1C.getPartnerByGuid(guid);
         LegalListData data = createDataByCompanyDataResponse(dataResponse);
         return data.getLegals().isEmpty() ? null : data.getLegals().get(0);
     }
 
-    private LegalListData createDataByCompanyDataResponse(CompanyDataResponse dataResponse) {
+    private LegalListData createDataByCompanyDataResponse(PartnerDataResponse dataResponse) {
         LegalListData data = new LegalListData();
         if (dataResponse != null && dataResponse.isResult()) {
             data.setLegals(createLegalEntities(dataResponse.getLegalEntities()));

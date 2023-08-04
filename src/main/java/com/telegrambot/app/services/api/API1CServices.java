@@ -1,9 +1,9 @@
 package com.telegrambot.app.services.api;
 
-import com.telegrambot.app.DTO.api_1C.CompanyDataResponse;
 import com.telegrambot.app.DTO.api_1C.DefaultDataResponse;
 import com.telegrambot.app.DTO.api_1C.SyncDataResponse;
 import com.telegrambot.app.DTO.api_1C.UserDataResponse;
+import com.telegrambot.app.DTO.api_1C.legal.partner.PartnerDataResponse;
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataListResponse;
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
@@ -13,11 +13,11 @@ public interface API1CServices {
 
     DefaultDataResponse getDefaultData();
 
-    CompanyDataResponse getCompanyData(@NonNull String inn, String kpp);
+    PartnerDataResponse getPartnerData(@NonNull String inn, String kpp);
 
-    CompanyDataResponse getCompanyData(@NonNull String inn);
+    PartnerDataResponse getPartnerData(@NonNull String inn);
 
-    CompanyDataResponse getCompanyByGuid(@NonNull String guid);
+    PartnerDataResponse getPartnerByGuid(@NonNull String guid);
 
     UserDataResponse getUserData(@NonNull String phone);
 

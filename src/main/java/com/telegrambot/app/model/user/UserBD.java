@@ -3,8 +3,10 @@ package com.telegrambot.app.model.user;    /*
  */
 
 import com.telegrambot.app.model.documents.docdata.PersonData;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
+import com.telegrambot.app.model.documents.docdata.SyncData;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,11 +14,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
-@AllArgsConstructor
-public class UserBD extends com.telegrambot.app.model.Entity {
+public class UserBD {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Boolean isBot;
     private String userName;
@@ -30,6 +31,19 @@ public class UserBD extends com.telegrambot.app.model.Entity {
     private Boolean notValid = false;
     private Boolean isMaster = false;
     private PersonData person;
+    private SyncData syncData;
+
+    public String getGuidEntity() {
+        return this.getSyncData() == null ? null :
+                this.getSyncData().getGuid();
+    }
+
+    public void setSyncData(String guid) {
+        if (syncData == null) {
+            this.syncData = new SyncData(guid);
+        }
+    }
+
 //    private String guid;
 //    private List<UserStatus> statuses;
 

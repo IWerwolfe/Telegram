@@ -12,16 +12,16 @@ import java.time.LocalDateTime;
 @Table(name = "users_status")
 public class UserStatus {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "users_id")
     private UserBD userBD;
     @Enumerated(EnumType.STRING)
     private UserType userType;
     private LocalDateTime lastUpdate;
     @ManyToOne
-    @JoinColumn(name = "Legal_id")
+    @JoinColumn(name = "legal_id")
     private LegalEntity legal;
     @ManyToOne
     @JoinColumn(name = "department_id")

@@ -1,10 +1,14 @@
 package com.telegrambot.app.DTO.api_1C;
 
-import com.telegrambot.app.DTO.api_1C.typesОbjects.Entity1C;
 import lombok.Data;
 
 @Data
-public abstract class DataResponse extends Entity1C {
+public class DataResponse {
     private boolean result;
     private String error;
+
+    public DataResponse(boolean result, String error) {
+        this.result = result;
+        this.error = error;
+    }
 }
