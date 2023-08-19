@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
 @RequiredArgsConstructor
 public class DataConverter {
 
-    private final LegalEntityConverter legalConverter;
+    private final PartnerConverter legalConverter;
     private final ContractConverter contractConverter;
     private final DepartmentConverter departmentConverter;
 

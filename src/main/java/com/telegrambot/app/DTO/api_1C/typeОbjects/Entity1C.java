@@ -8,4 +8,5 @@ public class Entity1C {
     private String code;
     private String guid;
     private String name;
+    private Boolean markedForDel;
 }

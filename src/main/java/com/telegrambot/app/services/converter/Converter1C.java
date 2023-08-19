@@ -2,6 +2,7 @@ package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
+import com.telegrambot.app.model.reference.Reference;
 import com.telegrambot.app.repositories.EntityRepository;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -37,8 +38,17 @@ public abstract class Converter1C {
 
     public abstract <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved);
 
+    public <T extends Reference, R extends Entity1C> R convertReferenceToResponse(T entity) {
+        Entity1C request = new Entity1C();
+        request.setName(entity.getName());
+        request.setGuid(entity.getGuidEntity());
+        request.setMarkedForDel(entity.getMarkedForDel());
+        return (R) request;
+    }
+
     public <T extends Entity, R extends Entity1C> T convertToEntity(R dto) {
         T entity = getOrCreateEntity(dto);
+        entity.setSyncData(dto.getGuid(), dto.getCode());
         return updateEntity(dto, entity);
     }
 

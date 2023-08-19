@@ -2,9 +2,10 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.SubCommandInfo;
 import com.telegrambot.app.DTO.TaskListToSend;
+import com.telegrambot.app.DTO.api_1C.BalanceResponse;
 import com.telegrambot.app.DTO.api_1C.SyncDataResponse;
 import com.telegrambot.app.DTO.api_1C.UserDataResponse;
-import com.telegrambot.app.DTO.api_1C.legal.LegalListData;
+import com.telegrambot.app.DTO.api_1C.legal.PartnerListData;
 import com.telegrambot.app.DTO.api_1C.legal.partner.ContractResponse;
 import com.telegrambot.app.DTO.api_1C.legal.partner.DepartmentResponse;
 import com.telegrambot.app.DTO.api_1C.legal.partner.PartnerDataResponse;
@@ -42,7 +43,7 @@ import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.model.user.UserStatus;
 import com.telegrambot.app.model.user.UserType;
 import com.telegrambot.app.repositories.*;
-import com.telegrambot.app.services.api.API1CServicesImpl;
+import com.telegrambot.app.services.api.ApiOutServiceImpl;
 import com.telegrambot.app.services.api.DaDataService;
 import com.telegrambot.app.services.converter.*;
 import lombok.RequiredArgsConstructor;
@@ -70,22 +71,23 @@ public class BotCommandsImpl implements BotCommands {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final UserStatusRepository statusRepository;
-    private final LegalEntityRepository legalRepository;
+    private final PartnerRepository partnerRepository;
     private final DepartmentRepository departmentRepository;
     private final ContractRepository contractRepository;
     private final CommandCacheRepository commandCacheRepository;
     private final CommandRepository commandRepository;
-    private final API1CServicesImpl api1C;
+    private final ApiOutServiceImpl api1C;
     private final DaDataService daDataService;
 
     private final ApplicationEventPublisher eventPublisher;
 
-    private final LegalEntityConverter legalConverter;
+    private final PartnerConverter partnerConverter;
     private final DepartmentConverter departmentConverter;
     private final ContractConverter contractConverter;
     private final UserBDConverter userConverter;
     private final TaskConverter taskConverter;
     private final ToStringServices toStringServices;
+    private final BalanceService balanceService;
 
     private final BotConfig bot;
 
@@ -268,8 +270,12 @@ public class BotCommandsImpl implements BotCommands {
         String[] strings = text.split(";");
         String ref = strings.length > 1 ? strings[1] : null;
 
+        List<UserStatus> statuses = statusRepository.findByUserBDAndLegalNotNull(user);
+        Partner partner = statuses.size() == 1 ? (Partner) statuses.get(0).getLegal() : null;
+
         CardDoc cardDoc = new CardDoc();
         cardDoc.setTotalAmount(Integer.valueOf(getResultSubCommandFromCache("getSum")));
+        cardDoc.setPartnerData(partner);
         cardDoc.setReferenceNumber(ref);
         cardDoc.setAuthor(user.getGuidEntity());
         cardDoc.setCreator(user);
@@ -530,15 +536,13 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private List<Task> createTasks(TaskDataListResponse response) {
+        return response.isResult() ? createTasks(response.getTasks()) : new ArrayList<>();
+    }
+
+    private List<Task> createTasks(List<TaskResponse> list) {
         List<Task> tasks = new ArrayList<>();
-        if (!response.isResult()) {
-            return tasks;
-        }
-        for (TaskResponse task : response.getTasks()) {
-            tasks.add(taskConverter.convertToEntity(task));
-        }
-        taskRepository.saveAll(tasks);
-        return tasks;
+        list.forEach(r -> tasks.add(taskConverter.convertToEntity(r)));
+        return taskRepository.saveAll(tasks);
     }
 
     private void subCommandCreateTask() {
@@ -668,7 +672,7 @@ public class BotCommandsImpl implements BotCommands {
     private void sendDefault(String receivedMessage) {
         if (receivedMessage.matches(REGEX_INN)) {
             PartnerDataResponse response = api1C.getPartnerData(receivedMessage);
-            LegalListData data = createDataByCompanyDataResponse(response);
+            PartnerListData data = createDataByCompanyDataResponse(response);
             sendMessage(toStringServices.toStringNonNullFields(data));
             return;
         }
@@ -800,26 +804,26 @@ public class BotCommandsImpl implements BotCommands {
 
     private Partner getPartnerByAPI(String text) {
         PartnerDataResponse response = text.matches(REGEX_INN) ? api1C.getPartnerData(text) : api1C.getPartnerByGuid(text);
-        LegalListData data = createDataByCompanyDataResponse(response);
-        Partner partner = data.getLegals() == null || data.getLegals().isEmpty() ?
+        PartnerListData data = createDataByCompanyDataResponse(response);
+        Partner partner = data.getPartners() == null || data.getPartners().isEmpty() ?
                 createLegalByInnFromDaData() :
-                (Partner) data.getLegals().get(0);
-        legalRepository.save(partner);
+                data.getPartners().get(0);
+        partnerRepository.save(partner);
         return partner;
     }
 
     private PartnerData getPartnerDateByAPI(String text) {
         PartnerDataResponse response = text.matches(REGEX_INN) ? api1C.getPartnerData(text) : api1C.getPartnerByGuid(text);
-        LegalListData data = createDataByCompanyDataResponse(response);
+        PartnerListData data = createDataByCompanyDataResponse(response);
         PartnerData partnerData = new PartnerData();
 
-        if (data.getLegals().isEmpty()) {
+        if (data.getPartners().isEmpty()) {
             Partner partner = createLegalByInnFromDaData();
-            partnerData.setPartner(legalRepository.save(partner));
+            partnerData.setPartner(partnerRepository.save(partner));
             partnerData.setContract(contractRepository.save(new Contract(partner)));
             return partnerData;
         }
-        Partner partner = (Partner) data.getLegals().get(0);
+        Partner partner = data.getPartners().get(0);
         partnerData.setPartner(partner);
         partnerData.setContract(data.getContracts().isEmpty() ? contractRepository.save(new Contract(partner)) : data.getContracts().get(0));
         partnerData.setDepartment(data.getDepartments().size() == 1 ? data.getDepartments().get(0) : null);
@@ -943,36 +947,49 @@ public class BotCommandsImpl implements BotCommands {
         userConverter.updateEntity(userData, user);
         userRepository.save(user);
 
-        //TODO Добавить обработку задач
+        if (userData.getTaskList() != null && !userData.getTaskList().isEmpty()) {
+            createTasks(userData.getTaskList());
+        }
 
-        List<UserStatus> userStatuses = new ArrayList<>();
-        if (userData.getStatusList() == null || userData.getStatusList().isEmpty()) return userStatuses;
+        if (userData.getPartnerListData() != null) {
+            createDataByCompanyDataResponse(userData.getPartnerListData());
+        }
+
+        if (userData.getStatusList() == null || userData.getStatusList().isEmpty()) {
+            return statusRepository.findByUserBDAndLegalNotNull(user);
+        }
 
         statusRepository.deleteByUserBD(user);
-        userStatuses = userData.getStatusList().stream()
+        return userData.getStatusList().stream()
                 .map(statusResponse -> {
-                    Optional<LegalEntity> optional = legalRepository.findBySyncDataNotNullAndSyncData_Guid(statusResponse.getGuid());
-                    LegalEntity legal = optional.orElseGet(() -> getLegalEntityByGuid(statusResponse.getGuid()));
-                    return createUserStatus(legal, statusResponse.getPost());
+                    Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(statusResponse.getGuid());
+                    Partner partner = optional.orElseGet(() -> getLegalEntityByGuid(statusResponse.getGuid()));
+                    return createUserStatus(partner, statusResponse.getPost());
                 })
                 .collect(Collectors.toList());
-        return userStatuses;
     }
 
-    private LegalEntity getLegalEntityByGuid(String guid) {
+    private Partner getLegalEntityByGuid(String guid) {
         PartnerDataResponse dataResponse = api1C.getPartnerByGuid(guid);
-        LegalListData data = createDataByCompanyDataResponse(dataResponse);
-        return data.getLegals().isEmpty() ? null : data.getLegals().get(0);
+        PartnerListData data = createDataByCompanyDataResponse(dataResponse);
+        return data.getPartners().isEmpty() ? null : data.getPartners().get(0);
     }
 
-    private LegalListData createDataByCompanyDataResponse(PartnerDataResponse dataResponse) {
-        LegalListData data = new LegalListData();
+    private PartnerListData createDataByCompanyDataResponse(PartnerDataResponse dataResponse) {
+        PartnerListData data = new PartnerListData();
         if (dataResponse != null && dataResponse.isResult()) {
-            data.setLegals(createLegalEntities(dataResponse.getLegalEntities()));
+            data.setPartners(createLegalEntities(dataResponse.getPartners()));
             data.setDepartments(createDepartments(dataResponse.getDepartments()));
             data.setContracts(createContracts(dataResponse.getContracts()));
+            data.setBalances(updateBalance(dataResponse.getBalance()));
         }
         return data;
+    }
+
+    private List<LegalBalance> updateBalance(List<BalanceResponse> list) {
+        return list.stream()
+                .map(balanceService::updateLegalBalance)
+                .collect(Collectors.toList());
     }
 
     private List<Contract> createContracts(List<ContractResponse> list) {
@@ -982,11 +999,11 @@ public class BotCommandsImpl implements BotCommands {
 
         for (String key : groupedByGuidPartner.keySet()) {
 
-            Optional<LegalEntity> optional = legalRepository.findBySyncDataNotNullAndSyncData_Guid(key);
+            Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(key);
             if (optional.isEmpty()) {
                 continue;
             }
-            Partner partner = (Partner) optional.get();
+            Partner partner = optional.get();
             List<Contract> contracts = contractRepository.findByPartnerOrderByIdAsc(partner);
             List<ContractResponse> contractResponses = groupedByGuidPartner.get(key);
 
@@ -1008,10 +1025,10 @@ public class BotCommandsImpl implements BotCommands {
                 .collect(Collectors.toList());
     }
 
-    private List<LegalEntity> createLegalEntities(List<PartnerResponse> list) {
+    private List<Partner> createLegalEntities(List<PartnerResponse> list) {
         return list.stream()
-                .map(legalConverter::convertToEntity)
-                .map(legal -> legalRepository.save((LegalEntity) legal))
+                .map(partnerConverter::convertToEntity)
+                .map(partner -> partnerRepository.save((Partner) partner))
                 .collect(Collectors.toList());
     }
 

@@ -1,22 +1,20 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.api_1C.DefaultDataResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskStatusResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskTypeResponse;
+import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
 import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.components.Buttons;
+import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.reference.TaskStatus;
-import com.telegrambot.app.repositories.TaskRepository;
-import com.telegrambot.app.repositories.TaskStatusRepository;
-import com.telegrambot.app.repositories.TaskTypeRepository;
-import com.telegrambot.app.services.api.API1CServicesImpl;
-import com.telegrambot.app.services.converter.TaskStatusConverter;
-import com.telegrambot.app.services.converter.TaskTypeConverter;
+import com.telegrambot.app.repositories.*;
+import com.telegrambot.app.services.api.ApiOutServiceImpl;
+import com.telegrambot.app.services.converter.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,13 +22,18 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class DefaultDataInitializer implements CommandLineRunner {
+
+    private final CompanyConverter companyConverter;
+    private final CompanyRepository companyRepository;
+    private final ManagerRepository managerRepository;
     private final TaskRepository taskRepository;
 
-    private final API1CServicesImpl api1C;
+    private final ApiOutServiceImpl api1C;
     private final TaskTypeRepository typeRepository;
     private final TaskTypeConverter typeConverter;
     private final TaskStatusConverter statusConverter;
     private final TaskStatusRepository statusRepository;
+    private final ManagerConverter managerConverter;
 
     private final String DEFAULT_NAME_CLOSED = "Завершена";
     private final String DEFAULT_NAME_INIT = "Ожидает обработки";
@@ -40,7 +43,13 @@ public class DefaultDataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
 
         Buttons.init();
-        DefaultDataResponse data = api1C.getDefaultData();
+        DefaultDataResponse data = null;
+        try {
+            data = api1C.getDefaultData();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
         if (data == null || !data.isResult()) {
             TaskType.setDefaultType(getDefaultType());
             TaskStatus.setDefaultInitialStatus(getDefaultByName(DEFAULT_NAME_INIT));
@@ -49,8 +58,10 @@ public class DefaultDataInitializer implements CommandLineRunner {
             return;
         }
 
-        updateTaskTypes(data.getTaskTypes());
-        updateTaskStatuses(data.getTaskStatuses());
+        updateEntity(data.getTaskTypes(), typeRepository, typeConverter);
+        updateEntity(data.getTaskStatuses(), statusRepository, statusConverter);
+        updateEntity(data.getManagers(), managerRepository, managerConverter);
+        updateEntity(data.getCompanies(), companyRepository, companyConverter);
         updateDefaultInfo(data);
         log.info("Loading default data success");
     }
@@ -77,23 +88,17 @@ public class DefaultDataInitializer implements CommandLineRunner {
 
     private TaskType getDefaultType() {
         Optional<TaskType> optional = typeRepository.findByNameIgnoreCase(DEFAULT_NAME_TYPE);
-        return optional.orElseGet(() -> typeRepository.save(new TaskType(DEFAULT_NAME_TYPE)));
+        return optional.orElseGet(() -> typeRepository.save(new TaskType(null, DEFAULT_NAME_TYPE)));
     }
 
-
-    private void updateTaskTypes(List<TaskTypeResponse> list) {
+    private <T extends Entity1C, E extends Entity, R extends EntityRepository<E>, C extends Converter1C> void updateEntity(List<T> list,
+                                                                                                                           R repository,
+                                                                                                                           C converter) {
         if (list == null || list.isEmpty()) return;
-        for (TaskTypeResponse response : list) {
-            TaskType type = typeConverter.convertToEntity(response);
-            typeRepository.save(type);
+        List<E> entityList = new ArrayList<>();
+        for (T response : list) {
+            entityList.add(converter.convertToEntity(response));
         }
-    }
-
-    private void updateTaskStatuses(List<TaskStatusResponse> list) {
-        if (list == null || list.isEmpty()) return;
-        for (TaskStatusResponse response : list) {
-            TaskStatus status = statusConverter.convertToEntity(response);
-            statusRepository.save(status);
-        }
+        repository.saveAll(entityList);
     }
 }

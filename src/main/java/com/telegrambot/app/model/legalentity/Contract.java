@@ -6,15 +6,12 @@ import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.Reference;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
 @Table(name = "contracts")
 public class Contract extends Reference {
@@ -29,7 +26,13 @@ public class Contract extends Reference {
     @JoinColumn(name = "partner_id")
     private Partner partner;
 
+    public Contract() {
+        this.date = LocalDateTime.now();
+        setName("Основной");
+    }
+
     public Contract(Partner partner) {
+        this();
         this.partner = partner;
     }
 
@@ -40,15 +43,5 @@ public class Contract extends Reference {
 
     public Contract(String guid) {
         this.setSyncData(new SyncData(guid));
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append(getName());
-        if (getDate() != null) {
-            builder.append(" от ").append(getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
-        }
-        return builder.toString();
     }
 }

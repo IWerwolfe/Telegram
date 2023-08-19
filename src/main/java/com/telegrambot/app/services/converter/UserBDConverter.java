@@ -24,7 +24,6 @@ public class UserBDConverter {
         if (entityBD.getPerson() == null) {
             entityBD.setPerson(new PersonData());
         }
-        entityBD.setSyncData(response.getGuid());
         entityBD.getPerson().setGender(Converter1C.convertToEnum(response.getGender(), Gender.class));
         entityBD.setNotValid(Converter1C.convertToBoolean(response.getNotValid()));
 //            entityBD.setIsEmployee(convertToBoolean(response.getIsEmployee()));

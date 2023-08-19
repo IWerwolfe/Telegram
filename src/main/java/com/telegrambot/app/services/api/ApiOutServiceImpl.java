@@ -21,6 +21,7 @@ import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -28,39 +29,58 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class API1CServicesImpl implements API1CServices {
+public class ApiOutServiceImpl implements ApiOutService {
 
     private final Connector1C connector1C;
-    private final DaDataService dataService;
 
     public <T, R extends DataResponse> R executeRequest(T requestBody, Class<R> responseType, String method, String param, HttpMethod httpMethod) {
-        ByteArrayHttpMessageConverter converter = new ByteArrayHttpMessageConverter();
-        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
+        long start = System.currentTimeMillis();
+        HttpHeaders headers = getHttpHeaders();
+        HttpEntity<T> requestEntity = new HttpEntity<>(requestBody, headers);
+        String url = connector1C.getUrl() + method + (param.isEmpty() ? "" : "?" + param);
+        R response;
+        try {
+            response = getR(responseType, url, httpMethod, requestEntity);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            response = (R) new DataResponse(false, "Data not found");
+        }
+        log.info("the user's request was executed for {} ms", System.currentTimeMillis() - start);
+        return response;
+    }
 
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.getMessageConverters().add(converter);
-
+    private HttpHeaders getHttpHeaders() {
         HttpHeaders headers = new HttpHeaders();
 //        headers.add("Authorization", connector1C.getToken());
         headers.add("token", connector1C.getToken());
         headers.setBasicAuth(connector1C.getLogin(), connector1C.getPassword());
-        HttpEntity<T> requestEntity = new HttpEntity<>(requestBody, headers);
-        param = param.isEmpty() ? "" : "?" + param;
+        return headers;
+    }
 
-        try {
-            byte[] responseBody = restTemplate.exchange(
-                            connector1C.getUrl() + method + param, httpMethod, requestEntity, byte[].class)
-                    .getBody();
-            ObjectMapper objectMapper = new ObjectMapper();
-            R request = objectMapper.readValue(responseBody, responseType);
-            if (!request.isResult()) {
-                log.warn("The user's request was not executed, the server response: {}", request.getError());
-            }
-            return request;
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return (R) new DataResponse(false, "Data not found");
+    private static ByteArrayHttpMessageConverter getByteArrayHttpMessageConverter() {
+        ByteArrayHttpMessageConverter converter = new ByteArrayHttpMessageConverter();
+        converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
+        return converter;
+    }
+
+    private static RestTemplate getRestTemplate() {
+        ByteArrayHttpMessageConverter converter = getByteArrayHttpMessageConverter();
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters().add(converter);
+        return restTemplate;
+    }
+
+    private <T, R extends DataResponse> R getR(Class<R> responseType, String url, HttpMethod httpMethod, HttpEntity<T> requestEntity) throws IOException {
+        RestTemplate restTemplate = getRestTemplate();
+        byte[] responseBody = restTemplate
+                .exchange(url, httpMethod, requestEntity, byte[].class)
+                .getBody();
+        ObjectMapper objectMapper = new ObjectMapper();
+        R request = objectMapper.readValue(responseBody, responseType);
+        if (!request.isResult()) {
+            log.warn("The user's request was not executed, the server response: {}", request.getError());
         }
+        return request;
     }
 
     public <R extends DataResponse> R executeGetRequest(Class<R> responseType, String method, String param) {
@@ -94,8 +114,7 @@ public class API1CServicesImpl implements API1CServices {
 
     @Override
     public UserDataResponse getUserData(@NonNull String phone) {
-        String param = "phone=" + phone;
-        return executeGetRequest(UserDataResponse.class, "userdata", param);
+        return executeGetRequest(UserDataResponse.class, "userdata", "phone=" + phone);
     }
 
     @Override

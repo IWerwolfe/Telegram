@@ -21,11 +21,11 @@ public class BotCommandsImplTest {
 //    @Mock
 //    private DaDataService dataService;
 //    @Mock
-//    private API1CServicesImpl api1C;
+//    private ApiOutServiceImpl api1C;
 //    @Mock
 //    private DaDataService daDataService;
 //    @Mock
-//    private LegalEntityConverter legalConverter;
+//    private PartnerConverter legalConverter;
 //    @Mock
 //    private DepartmentConverter departmentConverter;
 //    @Mock

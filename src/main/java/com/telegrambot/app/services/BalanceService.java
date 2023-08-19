@@ -1,12 +1,15 @@
 package com.telegrambot.app.services;
 
+import com.telegrambot.app.DTO.api_1C.BalanceResponse;
 import com.telegrambot.app.model.balance.LegalBalance;
 import com.telegrambot.app.model.balance.UserBalance;
 import com.telegrambot.app.model.documents.doctype.Document;
+import com.telegrambot.app.model.legalentity.Partner;
 import com.telegrambot.app.model.transaction.FinTransaction;
 import com.telegrambot.app.repositories.FinTransactionRepository;
 import com.telegrambot.app.repositories.LegalBalanceRepository;
 import com.telegrambot.app.repositories.UserBalanceRepository;
+import com.telegrambot.app.services.converter.PartnerConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ public class BalanceService {
     private final UserBalanceRepository userBalanceRepository;
     private final LegalBalanceRepository legalBalanceRepository;
     private final FinTransactionRepository finTransactionRepository;
+    private final PartnerConverter partnerConverter;
 
     public void updateBalanceAndFinTransaction(Document doc) {
 
@@ -50,6 +54,15 @@ public class BalanceService {
         legalBalance.setDate(System.currentTimeMillis());
         legalBalance.setAmount(legalBalance.getAmount() + doc.getTransactionAmount());
         legalBalanceRepository.save(legalBalance);
+    }
+
+    public LegalBalance updateLegalBalance(BalanceResponse response) {
+        Partner partner = partnerConverter.getOrCreateEntity(response.getGuid(), true);
+        Optional<LegalBalance> optional = legalBalanceRepository.findByLegal(partner);
+        LegalBalance legalBalance = optional.orElse(new LegalBalance(partner));
+        legalBalance.setDate(System.currentTimeMillis());
+        legalBalance.setAmount(Integer.valueOf(response.getAmount()));
+        return legalBalanceRepository.save(legalBalance);
     }
 
     private void addFinTransaction(Document doc) {

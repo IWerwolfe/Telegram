@@ -9,7 +9,7 @@ import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
 import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
 import lombok.NonNull;
 
-public interface API1CServices {
+public interface ApiOutService {
 
     DefaultDataResponse getDefaultData();
 

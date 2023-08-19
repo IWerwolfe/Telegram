@@ -56,6 +56,17 @@ public abstract class Document extends Entity {
         return getPartnerData() == null ? null : getPartnerData().getContract();
     }
 
+    public void setPartnerData(Partner partner) {
+        PartnerData partnerData = getPartnerData() == null ? new PartnerData() : getPartnerData();
+        partnerData.setPartner(partner);
+        partnerData.setContract(partner.getDefaultContract());
+        this.partnerData = partnerData;
+    }
+
+    public void setPartnerData(PartnerData partnerData) {
+        this.partnerData = partnerData;
+    }
+
     protected abstract String getDescriptor();
 
     public String getPresentTotalAmount() {

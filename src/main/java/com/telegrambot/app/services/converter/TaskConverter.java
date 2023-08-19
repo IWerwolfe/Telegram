@@ -17,9 +17,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TaskConverter extends Converter1C {
 
-    private final ManagerRepository managerRepository;
-    private final TaskRepository taskRepository;
+    private final Class<Task> classType = Task.class;
+    private final TaskRepository repository;
 
+    private final ManagerRepository managerRepository;
     private final TaskTypeConverter typeConverter;
     private final TaskStatusConverter statusConverter;
     private final DataConverter dataConverter;
@@ -57,7 +58,6 @@ public class TaskConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof TaskResponse response && entity instanceof Task entityBD) {
 //            entityBD.setName(response.getName());
-            entityBD.setSyncData(response.getGuid(), response.getCode());
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setComment(response.getComment());
             entityBD.setAuthor(response.getGuidAuthor()); //TODO заменить потом на сущность
@@ -87,11 +87,11 @@ public class TaskConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, taskRepository, Task.class);
+        return (T) Converter1C.getOrCreateEntity(dto, repository, classType);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, taskRepository, Task.class, isSaved);
+        return (T) Converter1C.getOrCreateEntity(guid, repository, classType);
     }
 }

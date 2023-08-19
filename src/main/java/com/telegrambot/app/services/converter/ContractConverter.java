@@ -15,8 +15,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class ContractConverter extends Converter1C {
 
-    private final ContractRepository contractRepository;
-    private final LegalEntityConverter legalConverter;
+    private final Class<Contract> classType = Contract.class;
+    private final ContractRepository repository;
+    private final PartnerConverter legalConverter;
 
     @Override
     public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
@@ -27,7 +28,6 @@ public class ContractConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof ContractResponse response && entity instanceof Contract entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setSyncData(response.getGuid(), response.getCode());
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setBilling(convertToBoolean(response.getIsBilling()));
             entityBD.setStartBilling(convertToLocalDateTime(response.getStartBilling()));
@@ -42,11 +42,11 @@ public class ContractConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, contractRepository, Contract.class);
+        return (T) Converter1C.getOrCreateEntity(dto, repository, classType);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, contractRepository, Contract.class, isSaved);
+        return (T) Converter1C.getOrCreateEntity(guid, repository, classType, isSaved);
     }
 }

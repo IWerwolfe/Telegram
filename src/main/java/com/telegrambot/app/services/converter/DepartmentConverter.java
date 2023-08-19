@@ -14,9 +14,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class DepartmentConverter extends Converter1C {
 
-    private final DepartmentRepository departmentRepository;
+    private final Class<Department> classType = Department.class;
+    private final DepartmentRepository repository;
     private final ContractConverter contractConverter;
-    private final LegalEntityConverter legalConverter;
+    private final PartnerConverter legalConverter;
 
     @Override
     public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
@@ -27,7 +28,6 @@ public class DepartmentConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof DepartmentResponse response && entity instanceof Department entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setSyncData(response.getGuid(), response.getCode());
             entityBD.setBilling(convertToBoolean(response.getIsBilling()));
             entityBD.setExcusableGoods(convertToBoolean(response.getIsExcusableGoods()));
             entityBD.setMarkedGoods(convertToBoolean(response.getIsMarkedGoods()));
@@ -41,12 +41,12 @@ public class DepartmentConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, departmentRepository, Department.class);
+        return (T) Converter1C.getOrCreateEntity(dto, repository, classType);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, departmentRepository, Department.class, isSaved);
+        return (T) Converter1C.getOrCreateEntity(guid, repository, classType, isSaved);
     }
 }
 
