@@ -1,5 +1,6 @@
 package com.telegrambot.app.services.converter;
 
+import com.telegrambot.app.DTO.api.typeОbjects.EntityDoc1C;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.legalentity.Contract;
 import com.telegrambot.app.model.legalentity.Department;
@@ -15,7 +16,7 @@ import java.lang.reflect.Field;
 @RequiredArgsConstructor
 public class DataConverter {
 
-    private final PartnerConverter legalConverter;
+    private final PartnerConverter partnerConverter;
     private final ContractConverter contractConverter;
     private final DepartmentConverter departmentConverter;
 
@@ -30,10 +31,18 @@ public class DataConverter {
         return null;
     }
 
-    public PartnerData getPartnerData(Object response) {
-        Partner partner = legalConverter.getOrCreateEntity(getFieldValue(response, "guidPartner"), true);
-        Department department = departmentConverter.getOrCreateEntity(getFieldValue(response, "guidDepartment"), true);
-        Contract contract = contractConverter.getOrCreateEntity(getFieldValue(response, "guidContract"), true);
+    public <R extends EntityDoc1C> PartnerData getPartnerData(R response) {
+        Partner partner = partnerConverter.getOrCreateEntity(response.getGuidPartner(), true);
+        Department department = departmentConverter.getOrCreateEntity(response.getGuidDepartment(), true);
+        Contract contract = contractConverter.getOrCreateEntity(response.getGuidContract(), true);
         return new PartnerData(partner, department, contract);
+    }
+
+    public <R extends EntityDoc1C> void fillPartnerDataToResponse(PartnerData partnerData, R response) {
+        if (partnerData != null) {
+            response.setGuidPartner(Converter1C.convertToGuid(partnerData.getPartner()));
+            response.setGuidContract(Converter1C.convertToGuid(partnerData.getContract()));
+            response.setGuidDepartment(Converter1C.convertToGuid(partnerData.getDepartment()));
+        }
     }
 }

@@ -1,13 +1,13 @@
 package com.telegrambot.app.services;
 
-import com.telegrambot.app.DTO.api_1C.BalanceResponse;
-import com.telegrambot.app.model.balance.LegalBalance;
+import com.telegrambot.app.DTO.api.balance.BalanceResponse;
+import com.telegrambot.app.model.balance.PartnerBalance;
 import com.telegrambot.app.model.balance.UserBalance;
 import com.telegrambot.app.model.documents.doctype.Document;
 import com.telegrambot.app.model.legalentity.Partner;
 import com.telegrambot.app.model.transaction.FinTransaction;
 import com.telegrambot.app.repositories.FinTransactionRepository;
-import com.telegrambot.app.repositories.LegalBalanceRepository;
+import com.telegrambot.app.repositories.PartnerBalanceRepository;
 import com.telegrambot.app.repositories.UserBalanceRepository;
 import com.telegrambot.app.services.converter.PartnerConverter;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BalanceService {
     private final UserBalanceRepository userBalanceRepository;
-    private final LegalBalanceRepository legalBalanceRepository;
+    private final PartnerBalanceRepository partnerBalanceRepository;
     private final FinTransactionRepository finTransactionRepository;
     private final PartnerConverter partnerConverter;
 
@@ -49,26 +49,26 @@ public class BalanceService {
     }
 
     private void updateLegalBalance(Document doc) {
-        Optional<LegalBalance> optional = legalBalanceRepository.findByLegal(doc.getPartner());
-        LegalBalance legalBalance = optional.orElse(new LegalBalance(doc.getPartner()));
-        legalBalance.setDate(System.currentTimeMillis());
-        legalBalance.setAmount(legalBalance.getAmount() + doc.getTransactionAmount());
-        legalBalanceRepository.save(legalBalance);
+        Optional<PartnerBalance> optional = partnerBalanceRepository.findByPartner(doc.getPartner());
+        PartnerBalance partnerBalance = optional.orElse(new PartnerBalance(doc.getPartner()));
+        partnerBalance.setDate(System.currentTimeMillis());
+        partnerBalance.setAmount(partnerBalance.getAmount() + doc.getTransactionAmount());
+        partnerBalanceRepository.save(partnerBalance);
     }
 
-    public LegalBalance updateLegalBalance(BalanceResponse response) {
+    public PartnerBalance updateLegalBalance(BalanceResponse response) {
         Partner partner = partnerConverter.getOrCreateEntity(response.getGuid(), true);
-        Optional<LegalBalance> optional = legalBalanceRepository.findByLegal(partner);
-        LegalBalance legalBalance = optional.orElse(new LegalBalance(partner));
-        legalBalance.setDate(System.currentTimeMillis());
-        legalBalance.setAmount(Integer.valueOf(response.getAmount()));
-        return legalBalanceRepository.save(legalBalance);
+        Optional<PartnerBalance> optional = partnerBalanceRepository.findByPartner(partner);
+        PartnerBalance partnerBalance = optional.orElse(new PartnerBalance(partner));
+        partnerBalance.setDate(System.currentTimeMillis());
+        partnerBalance.setAmount(Integer.valueOf(response.getAmount()));
+        return partnerBalanceRepository.save(partnerBalance);
     }
 
     private void addFinTransaction(Document doc) {
         FinTransaction transaction = new FinTransaction();
         transaction.setDate(System.currentTimeMillis());
-        transaction.setLegal(doc.getPartner());
+        transaction.setPartner(doc.getPartner());
         transaction.setDepartment(doc.getDepartment());
 //        transaction.setBasicDoc(doc);
         transaction.setUser(doc.getCreator());

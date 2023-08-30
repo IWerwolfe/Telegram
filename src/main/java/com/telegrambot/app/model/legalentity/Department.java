@@ -24,13 +24,13 @@ public class Department extends Reference {
     @JoinColumn(name = "contract_id")
     private Contract contract;
     @JoinColumn(name = "is_billing")
-    private boolean isBilling;
+    private Boolean isBilling = false;
     @JoinColumn(name = "is_excusable_goods")
-    private boolean isExcusableGoods;
+    private Boolean isExcisableGoods = false;
     @JoinColumn(name = "is_marked_goods")
-    private boolean isMarkedGoods;
+    private Boolean isMarkedGoods = false;
     @JoinColumn(name = "is_egais")
-    private boolean isEGAIS;
+    private Boolean isEgais = false;
 
     public Department(String guid) {
         this.setSyncData(new SyncData(guid));

@@ -1,7 +1,7 @@
 package com.telegrambot.app.controllers;
 
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataListResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.services.api.ApiInService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +20,14 @@ public class ApiController {
     private final ApiInService api;
 
     @GetMapping("/task")
-    public ResponseEntity<TaskDataResponse> getTask(@RequestParam("guid") String guid) {
+    public ResponseEntity<TaskDocDataResponse> getTask(@RequestParam("guid") String guid) {
         return ResponseEntity.ok(api.getTask(guid));
     }
 
     @GetMapping("/tasks")
-    public ResponseEntity<TaskDataListResponse> getTasks(@RequestParam("guidManager") String guidManager,
-                                                         @RequestParam("guidCompany") String guidCompany,
-                                                         @RequestParam("guidDepartment") String guidDepartment) {
+    public ResponseEntity<TaskDocDataListResponse> getTasks(@RequestParam("guidManager") String guidManager,
+                                                            @RequestParam("guidCompany") String guidCompany,
+                                                            @RequestParam("guidDepartment") String guidDepartment) {
         return ResponseEntity.ok(api.getTasks(guidManager, guidCompany, guidDepartment));
     }
 }

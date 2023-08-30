@@ -1,0 +1,25 @@
+package com.telegrambot.app.model.balance;
+
+import com.telegrambot.app.model.legalentity.Partner;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@Entity
+@Table(name = "partner_balances")
+@NoArgsConstructor
+public class PartnerBalance extends Balance {
+    @ManyToOne
+    @JoinColumn(name = "partner_id")
+    private Partner partner;
+
+    public PartnerBalance(Partner partner) {
+        this.partner = partner;
+    }
+}

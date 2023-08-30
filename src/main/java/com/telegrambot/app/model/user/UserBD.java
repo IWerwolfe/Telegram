@@ -1,5 +1,5 @@
 package com.telegrambot.app.model.user;    /*
- *created by WerWolfe on UserBD
+ *created by WerWolfe on UserResponse
  */
 
 import com.telegrambot.app.model.documents.docdata.PersonData;

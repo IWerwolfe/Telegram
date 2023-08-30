@@ -1,39 +1,644 @@
 package com.telegrambot.app.services.api;
 
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataListResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
-import com.telegrambot.app.model.documents.doc.service.Task;
-import com.telegrambot.app.repositories.TaskRepository;
-import com.telegrambot.app.services.converter.TaskConverter;
+import com.telegrambot.app.DTO.api.DataEntityResponse;
+import com.telegrambot.app.DTO.api.DataListResponse;
+import com.telegrambot.app.DTO.api.DataResponse;
+import com.telegrambot.app.DTO.api.balance.BalanceDataListResponse;
+import com.telegrambot.app.DTO.api.balance.BalanceResponse;
+import com.telegrambot.app.DTO.api.doc.bankDoc.BankDocDataListResponse;
+import com.telegrambot.app.DTO.api.doc.bankDoc.BankDocDataResponse;
+import com.telegrambot.app.DTO.api.doc.bankDoc.BankDocResponse;
+import com.telegrambot.app.DTO.api.doc.cardDoc.CardDocDataListResponse;
+import com.telegrambot.app.DTO.api.doc.cardDoc.CardDocDataResponse;
+import com.telegrambot.app.DTO.api.doc.cardDoc.CardDocResponse;
+import com.telegrambot.app.DTO.api.doc.cashDoc.CashDocDataListResponse;
+import com.telegrambot.app.DTO.api.doc.cashDoc.CashDocDataResponse;
+import com.telegrambot.app.DTO.api.doc.cashDoc.CashDocResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
+import com.telegrambot.app.DTO.api.legal.contract.ContractDataListResponse;
+import com.telegrambot.app.DTO.api.legal.contract.ContractDataResponse;
+import com.telegrambot.app.DTO.api.legal.contract.ContractResponse;
+import com.telegrambot.app.DTO.api.legal.department.DepartmentDataListResponse;
+import com.telegrambot.app.DTO.api.legal.department.DepartmentDataResponse;
+import com.telegrambot.app.DTO.api.legal.department.DepartmentResponse;
+import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.legal.partner.PartnerResponse;
+import com.telegrambot.app.DTO.api.manager.ManagerDataListResponse;
+import com.telegrambot.app.DTO.api.manager.ManagerDataResponse;
+import com.telegrambot.app.DTO.api.manager.ManagerResponse;
+import com.telegrambot.app.DTO.api.taskStatus.TaskStatusDataListResponse;
+import com.telegrambot.app.DTO.api.taskStatus.TaskStatusDataResponse;
+import com.telegrambot.app.DTO.api.taskStatus.TaskStatusResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
+import com.telegrambot.app.model.Entity;
+import com.telegrambot.app.model.balance.PartnerBalance;
+import com.telegrambot.app.model.documents.doc.payment.BankDoc;
+import com.telegrambot.app.model.documents.doc.payment.CardDoc;
+import com.telegrambot.app.model.documents.doc.payment.CashDoc;
+import com.telegrambot.app.model.documents.doc.service.TaskDoc;
+import com.telegrambot.app.model.legalentity.Contract;
+import com.telegrambot.app.model.legalentity.Department;
+import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.Manager;
+import com.telegrambot.app.model.reference.TaskStatus;
+import com.telegrambot.app.repositories.EntityRepository;
+import com.telegrambot.app.repositories.PartnerBalanceRepository;
+import com.telegrambot.app.repositories.doc.BankDocRepository;
+import com.telegrambot.app.repositories.doc.CardDocRepository;
+import com.telegrambot.app.repositories.doc.CashDocRepository;
+import com.telegrambot.app.repositories.doc.TaskDocRepository;
+import com.telegrambot.app.repositories.reference.*;
+import com.telegrambot.app.services.converter.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ApiInServiceImpl implements ApiInService {
+    private final PartnerBalanceRepository partnerBalanceRepository;
+    private final CashDocRepository cashDocRepository;
+    private final CardDocRepository cardDocRepository;
+    private final BankDocRepository bankDocRepository;
+    private final TaskStatusRepository taskStatusRepository;
+    private final ContractRepository contractRepository;
+    private final DepartmentRepository departmentRepository;
+    private final PartnerRepository partnerRepository;
+    private final ManagerRepository managerRepository;
+    private final TaskDocRepository taskDocRepository;
 
-    private final TaskRepository taskRepository;
-    private final TaskConverter taskConverter;
+
+    private final PartnerConverter partnerConverter;
+    private final TaskDocConverter taskDocConverter;
+    private final DepartmentConverter departmentConverter;
+    private final ContractConverter contractConverter;
+    private final TaskStatusConverter taskStatusConverter;
+    private final ManagerConverter managerConverter;
+    private final CardDocConverter cardDocConverter;
+    private final BankDocConverter bankDocConverter;
+    private final CashDocConverter cashDocConverter;
+    private final BalanceConverter balanceConverter;
 
     @Override
-    public TaskDataResponse getTask(String guid) {
-        Optional<Task> optional = taskRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
-        TaskDataResponse dataResponse = new TaskDataResponse();
-        dataResponse.setResult(optional.isPresent());
-        dataResponse.setTask(optional.<TaskResponse>map(taskConverter::convertToResponse).orElse(null));
-        dataResponse.setError(optional.isEmpty() ? "Data not found" : "");
+    public TaskDocDataResponse getTask(String guid) {
+        return getDataResponse(guid, taskDocConverter, taskDocRepository, TaskDocDataResponse.class);
+    }
+
+    @Override
+    public TaskDocDataListResponse getTasks(String guidManager, String guidCompany, String guidDepartment) {
+        List<TaskDoc> list = getTaskList(guidManager, guidCompany, guidDepartment);
+        return getDataListResponse(list, taskDocConverter, TaskDocDataListResponse.class);
+    }
+
+    @Override
+    public TaskDocDataListResponse getNotSyncTasks() {
+        List<TaskDoc> list = taskDocRepository.findBySyncDataNull();
+        return getDataListResponse(list, taskDocConverter, TaskDocDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createTask(TaskDocResponse response) {
+        return createEntity(response, taskDocConverter, taskDocRepository);
+    }
+
+    @Override
+    public DataResponse updateTask(TaskDocResponse response) {
+        return updateEntity(response, taskDocConverter, taskDocRepository);
+    }
+
+    @Override
+    public DataResponse delTask(String guid) {
+        return delEntity(guid, taskDocRepository);
+    }
+
+    @Override
+    public PartnerDataResponse getPartner(String guid) {
+        List<Partner> partners = getPartnerByBD(null, guid);
+        return getPartnerDataResponse(partners);
+    }
+
+    @Override
+    public PartnerDataResponse getPartners(String inn) {
+        List<Partner> partners = getPartnerByBD(inn, null);
+        return getPartnerDataResponse(partners);
+    }
+
+    @Override
+    public PartnerDataResponse getNotSyncPartners() {
+        List<Partner> partners = partnerRepository.findBySyncDataNull();
+        return getPartnerDataResponse(partners);
+    }
+
+    @Override
+    public DataResponse createPartner(PartnerDataResponse response) {
+        if (response.getPartners() == null || response.getPartners().isEmpty()) {
+            return new DataResponse(false, "The request does not contain the necessary data");
+        }
+        response.getPartners().forEach(r -> createEntity(r, partnerConverter, partnerRepository));
+        response.getContracts().forEach(r -> createEntity(r, contractConverter, contractRepository));
+        response.getDepartments().forEach(r -> createEntity(r, departmentConverter, departmentRepository));
+        response.getBalance().forEach(this::updateOrCreateBalance);
+        return new DataResponse(true, "");
+    }
+
+    @Override
+    public DataResponse updatePartner(PartnerResponse response) {
+        return updateEntity(response, partnerConverter, partnerRepository);
+    }
+
+    @Override
+    public DataResponse delPartner(String guid) {
+        List<Partner> partners = getPartnerByBD(null, guid);
+        if (partners.isEmpty()) {
+            return new DataResponse(false, "Data not found");
+        }
+
+        List<Contract> contracts = contractRepository.findByPartnerIn(partners);
+        List<Department> departments = departmentRepository.findByPartnerIn(partners);
+
+        delEntities(partners, partnerRepository);
+        delEntities(departments, departmentRepository);
+        delEntities(contracts, contractRepository);
+        return new DataResponse(true, "");
+    }
+
+    @Override
+    public DepartmentDataResponse getDepartment(String guid) {
+        return getDataResponse(guid, departmentConverter, departmentRepository, DepartmentDataResponse.class);
+    }
+
+    @Override
+    public DepartmentDataListResponse getDepartments(String inn, String guidPartner) {
+        List<Partner> partners = getPartnerByBD(inn, guidPartner);
+        return getDataListResponse(
+                departmentRepository.findByPartnerIn(partners),
+                departmentConverter,
+                DepartmentDataListResponse.class);
+    }
+
+    @Override
+    public DepartmentDataListResponse getNotSyncDepartments() {
+        List<Department> list = departmentRepository.findBySyncDataNull();
+        return getDataListResponse(list, departmentConverter, DepartmentDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createDepartment(DepartmentResponse response) {
+        return createEntity(response, departmentConverter, departmentRepository);
+    }
+
+    @Override
+    public DataResponse updateDepartment(DepartmentResponse response) {
+        return updateEntity(response, departmentConverter, departmentRepository);
+    }
+
+    @Override
+    public DataResponse delDepartment(String guid) {
+        return delEntity(guid, departmentRepository);
+    }
+
+    @Override
+    public ContractDataResponse getContract(String guid) {
+        return getDataResponse(guid, contractConverter, contractRepository, ContractDataResponse.class);
+    }
+
+    @Override
+    public ContractDataListResponse getContracts(String inn, String guidPartner) {
+        List<Partner> partners = getPartnerByBD(inn, guidPartner);
+        return getDataListResponse(
+                contractRepository.findByPartnerIn(partners),
+                contractConverter,
+                ContractDataListResponse.class);
+    }
+
+    @Override
+    public ContractDataListResponse getNotSyncContracts() {
+        List<Contract> list = contractRepository.findBySyncDataNull();
+        return getDataListResponse(list, contractConverter, ContractDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createContract(ContractResponse response) {
+        return createEntity(response, contractConverter, contractRepository);
+    }
+
+    @Override
+    public DataResponse updateContract(ContractResponse response) {
+        return updateEntity(response, contractConverter, contractRepository);
+    }
+
+    @Override
+    public DataResponse delContract(String guid) {
+        return delEntity(guid, contractRepository);
+    }
+
+    @Override
+    public ManagerDataResponse getManager(String guid) {
+        return getDataResponse(guid, managerConverter, managerRepository, ManagerDataResponse.class);
+    }
+
+    @Override
+    public ManagerDataListResponse getManagers() {
+        return getDataListResponse(
+                managerRepository.findAll(),
+                managerConverter,
+                ManagerDataListResponse.class);
+    }
+
+    @Override
+    public ManagerDataListResponse getNotSyncManagers() {
+        List<Manager> list = managerRepository.findBySyncDataNull();
+        return getDataListResponse(list, managerConverter, ManagerDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createManager(ManagerResponse response) {
+        return createEntity(response, managerConverter, managerRepository);
+    }
+
+    @Override
+    public DataResponse updateManager(ManagerResponse response) {
+        return updateEntity(response, managerConverter, managerRepository);
+    }
+
+    @Override
+    public DataResponse delManager(String guid) {
+        return delEntity(guid, managerRepository);
+    }
+
+    @Override
+    public TaskStatusDataResponse getTaskStatus(String guid) {
+        return getDataResponse(guid, taskStatusConverter, taskStatusRepository, TaskStatusDataResponse.class);
+    }
+
+    @Override
+    public TaskStatusDataListResponse getTaskStatuses() {
+        return getDataListResponse(
+                taskStatusRepository.findAll(),
+                taskStatusConverter,
+                TaskStatusDataListResponse.class);
+    }
+
+    @Override
+    public TaskStatusDataListResponse getNotSyncTaskStatuses() {
+        List<TaskStatus> list = taskStatusRepository.findBySyncDataNull();
+        return getDataListResponse(list, taskStatusConverter, TaskStatusDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createTaskStatus(TaskStatusResponse response) {
+        return createEntity(response, taskStatusConverter, taskStatusRepository);
+    }
+
+    @Override
+    public DataResponse updateTaskStatus(TaskStatusResponse response) {
+        return updateEntity(response, taskStatusConverter, taskStatusRepository);
+    }
+
+    @Override
+    public DataResponse delTaskStatus(String guid) {
+        return delEntity(guid, taskStatusRepository);
+    }
+
+    @Override
+    public BalanceDataListResponse getBalances(String inn, String guidPartner) {
+        List<Partner> list = getPartnerByBD(inn, guidPartner);
+        List<PartnerBalance> balances = partnerBalanceRepository.findByPartnerInOrderByPartner_NameAsc(list);
+        List<BalanceResponse> responses = new ArrayList<>();
+
+        balances.forEach(b -> responses.add(balanceConverter.convertToResponse(b)));
+        BalanceDataListResponse dataResponse = new BalanceDataListResponse();
+        dataResponse.setResult(!responses.isEmpty());
+        dataResponse.setList(responses);
         return dataResponse;
     }
 
     @Override
-    public TaskDataListResponse getTasks(String guidManager, String guidCompany, String guidDepartment) {
+    public DataResponse updateBalance(BalanceResponse response) {
+        updateOrCreateBalance(response);
+        return new DataResponse(true, "");
+    }
 
-        if ()
-            return null;
+    private void updateOrCreateBalance(BalanceResponse response) {
+        PartnerBalance balance = balanceConverter.getOrCreateEntity(response);
+        balanceConverter.updateEntity(response, balance);
+        partnerBalanceRepository.save(balance);
+    }
+
+    @Override
+    public BankDocDataResponse getBankDoc(String guid) {
+        return getDataResponse(guid, bankDocConverter, bankDocRepository, BankDocDataResponse.class);
+    }
+
+    @Override
+    public BankDocDataListResponse getBankDocs(String inn, String guidPartner) {
+        List<Partner> partners = getPartnerByBD(inn, guidPartner);
+        return getDataListResponse(
+                bankDocRepository.findByPartnerDataNotNullAndPartnerData_PartnerIn(partners),
+                bankDocConverter,
+                BankDocDataListResponse.class);
+    }
+
+    @Override
+    public BankDocDataListResponse getNotSyncBankDocs() {
+        List<BankDoc> list = bankDocRepository.findBySyncDataNull();
+        return getDataListResponse(list, bankDocConverter, BankDocDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createBankDoc(BankDocResponse response) {
+        return createEntity(response, bankDocConverter, bankDocRepository);
+    }
+
+    @Override
+    public DataResponse updateBankDoc(BankDocResponse response) {
+        return updateEntity(response, bankDocConverter, bankDocRepository);
+    }
+
+    @Override
+    public DataResponse delBankDoc(String guid) {
+        return delEntity(guid, bankDocRepository);
+    }
+
+    @Override
+    public CardDocDataResponse getCardDoc(String guid) {
+        return getDataResponse(guid, cardDocConverter, cardDocRepository, CardDocDataResponse.class);
+    }
+
+    @Override
+    public CardDocDataListResponse getCardDocs(String inn, String guidPartner) {
+        List<Partner> partners = getPartnerByBD(inn, guidPartner);
+        return getDataListResponse(
+                cardDocRepository.findByPartnerDataNotNullAndPartnerData_PartnerIn(partners),
+                cardDocConverter,
+                CardDocDataListResponse.class);
+    }
+
+    @Override
+    public CardDocDataListResponse getNotSyncCardDocs() {
+        List<CardDoc> list = cardDocRepository.findBySyncDataNull();
+        return getDataListResponse(list, cardDocConverter, CardDocDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createCardDoc(CardDocResponse response) {
+        return createEntity(response, cardDocConverter, cardDocRepository);
+    }
+
+    @Override
+    public DataResponse updateCardDoc(CardDocResponse response) {
+        return updateEntity(response, cardDocConverter, cardDocRepository);
+    }
+
+    @Override
+    public DataResponse delCardDoc(String guid) {
+        return delEntity(guid, cardDocRepository);
+    }
+
+    @Override
+    public CashDocDataResponse getCashDoc(String guid) {
+        return getDataResponse(guid, cashDocConverter, cashDocRepository, CashDocDataResponse.class);
+    }
+
+    @Override
+    public CashDocDataListResponse getCashDocs(String inn, String guidPartner) {
+        List<Partner> partners = getPartnerByBD(inn, guidPartner);
+        return getDataListResponse(
+                cashDocRepository.findByPartnerDataNotNullAndPartnerData_PartnerIn(partners),
+                cashDocConverter,
+                CashDocDataListResponse.class);
+    }
+
+    @Override
+    public CashDocDataListResponse getNotSyncCashDocs() {
+        List<CashDoc> list = cashDocRepository.findBySyncDataNull();
+        return getDataListResponse(list, cashDocConverter, CashDocDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createCashDoc(CashDocResponse response) {
+        return createEntity(response, cashDocConverter, cashDocRepository);
+    }
+
+    @Override
+    public DataResponse updateCashDoc(CashDocResponse response) {
+        return updateEntity(response, cashDocConverter, cashDocRepository);
+    }
+
+    @Override
+    public DataResponse delCashDoc(String guid) {
+        return delEntity(guid, cashDocRepository);
+    }
+
+    private PartnerDataResponse getPartnerDataResponse(List<Partner> partners) {
+
+        PartnerDataResponse response = new PartnerDataResponse();
+
+        if (partners.isEmpty()) {
+            fillDataResponse(response, partners);
+            return response;
+        }
+
+        List<Contract> contracts = contractRepository.findByPartnerIn(partners);
+        List<Department> departments = departmentRepository.findByPartnerIn(partners);
+        List<PartnerBalance> balances = partnerBalanceRepository.findByPartnerIn(partners);
+
+        List<BalanceResponse> balanceResponses = new ArrayList<>();
+        balances.forEach(b -> balanceResponses.add(balanceConverter.convertToResponse(b)));
+
+        response.setPartners(getResponses(partners, partnerConverter));
+        response.setContracts(getResponses(contracts, contractConverter));
+        response.setDepartments(getResponses(departments, departmentConverter));
+        response.setBalance(balanceResponses);
+
+        return response;
+    }
+
+    private List<TaskDoc> getTaskList(String guidManager, String guidCompany, String guidDepartment) {
+        if (guidIsCorrect(guidManager)) {
+            return getTasksByGuidManager(guidManager);
+        }
+        if (guidIsCorrect(guidCompany)) {
+            return getTasksByGuidCompany(guidCompany);
+        }
+        if (guidIsCorrect(guidDepartment)) {
+            return getTasksByGuidDepartment(guidDepartment);
+        }
+        return new ArrayList<>();
+    }
+
+    private boolean guidIsCorrect(String guid) {
+        return guid != null && !guid.isEmpty();
+    }
+
+    private List<TaskDoc> getTasksByGuidDepartment(String guidDepartment) {
+        Optional<Department> optional = departmentRepository.findBySyncDataNotNullAndSyncData_Guid(guidDepartment);
+        if (optional.isPresent()) {
+            return taskDocRepository
+                    .findByPartnerDataNotNullAndPartnerData_DepartmentAndStatusOrderByStatusDesc(optional.get(),
+                            TaskStatus.getDefaultClosedStatus());
+        }
+        return new ArrayList<>();
+    }
+
+    private List<TaskDoc> getTasksByGuidCompany(String guidCompany) {
+        Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guidCompany);
+        if (optional.isPresent()) {
+            return taskDocRepository
+                    .findByPartnerDataNotNullAndPartnerData_PartnerAndStatusOrderByDateDesc(optional.get(),
+                            TaskStatus.getDefaultClosedStatus());
+        }
+        return new ArrayList<>();
+    }
+
+    private List<TaskDoc> getTasksByGuidManager(String guidManager) {
+        Optional<Manager> optional = managerRepository.findBySyncDataNotNullAndSyncData_Guid(guidManager);
+        if (optional.isPresent()) {
+            return taskDocRepository
+                    .findByManagerAndStatusOrderByDateDesc(optional.get(),
+                            TaskStatus.getDefaultClosedStatus());
+        }
+        return new ArrayList<>();
+    }
+
+    private List<Partner> getPartnerByBD(String inn, String guidPartner) {
+        List<Partner> partners = new ArrayList<>();
+        if (inn != null) {
+            return partnerRepository.findByInnIgnoreCase(inn);
+        }
+        if (guidPartner != null) {
+            Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guidPartner);
+            optional.ifPresent(partners::add);
+        }
+        return partners;
+    }
+
+    private <T extends Entity1C,
+            C extends Converter1C,
+            R extends EntityRepository<E>,
+            E extends Entity> DataResponse createEntity(T response, C converter, R repository, String operator) {
+
+        try {
+            E entity = converter.convertToEntity(response);
+            repository.save(entity);
+            return new DataResponse(true, "");
+        } catch (Exception e) {
+            log.error("error when {} a entity: {}{}", operator, System.lineSeparator(), e.getMessage());
+            return new DataResponse(false, e.getMessage());
+        }
+    }
+
+    private <T extends Entity1C,
+            C extends Converter1C,
+            R extends EntityRepository<E>,
+            E extends Entity> DataResponse createEntity(T response, C converter, R repository) {
+
+        return createEntity(response, converter, repository, "creating");
+    }
+
+    private <T extends Entity1C,
+            C extends Converter1C,
+            R extends EntityRepository<E>,
+            E extends Entity> DataResponse updateEntity(T response, C converter, R repository) {
+
+        Optional<E> optional = repository.findBySyncDataNotNullAndSyncData_Guid(response.getGuid());
+        String operator = optional.isEmpty() ? "creating" : "update";
+        return createEntity(response, converter, repository, operator);
+    }
+
+    private <T extends Entity1C,
+            C extends Converter1C,
+            E extends Entity> List<T> getResponses(List<E> list, C converter) {
+
+        List<T> responses = new ArrayList<>();
+        list.forEach(t -> responses.add(converter.convertToResponse(t)));
+        return responses;
+    }
+
+    private <T extends Entity1C,
+            C extends Converter1C,
+            R extends EntityRepository<E>,
+            E extends Entity> T getResponse(String guid, C converter, R repository) {
+
+        Optional<E> optional = repository.findBySyncDataNotNullAndSyncData_Guid(guid);
+        return optional.<T>map(converter::convertToResponse).orElse(null);
+    }
+
+    private <T extends Entity1C, D extends DataResponse> void fillDataResponse(D dataResponse, T response) {
+        dataResponse.setResult(response == null);
+        dataResponse.setError(response == null ? "Data not found" : "");
+    }
+
+    private <T, D extends DataResponse> void fillDataResponse(D dataResponse, List<T> response) {
+        dataResponse.setResult(response == null || response.isEmpty());
+        dataResponse.setError(response == null || response.isEmpty() ? "Data not found" : "");
+    }
+
+    private <D extends DataEntityResponse<T>,
+            T extends Entity1C,
+            E extends Entity,
+            C extends Converter1C,
+            R extends EntityRepository<E>> D getDataResponse(String guid, C converter, R repository, Class<D> classType) {
+
+        T response = getResponse(guid, converter, repository);
+        D dataResponse = createDataResponse(classType);
+        fillDataResponse(dataResponse, response);
+        dataResponse.setEntity(response);
+        return dataResponse;
+    }
+
+    private <D extends DataListResponse<T>,
+            T extends Entity1C,
+            E extends Entity,
+            C extends Converter1C> D getDataListResponse(List<E> list, C converter, Class<D> classType) {
+
+        List<T> responses = getResponses(list, converter);
+        D dataResponse = createDataResponse(classType);
+        fillDataResponse(dataResponse, responses);
+        dataResponse.setList(responses);
+        return dataResponse;
+    }
+
+    private <D extends DataResponse> D createDataResponse(Class<D> classType) {
+        try {
+            return classType.getDeclaredConstructor(String.class).newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchMethodException e) {
+            log.error("Error processing query results: {}{}", System.lineSeparator(), e.getMessage());
+            return (D) new DataResponse(false, "Error processing query results");
+        }
+    }
+
+    private <R extends EntityRepository<E>,
+            E extends Entity> DataResponse delEntity(String guid, R repository) {
+
+        Optional<E> optional = repository.findBySyncDataNotNullAndSyncData_Guid(guid);
+
+        if (optional.isEmpty()) {
+            return new DataResponse(false, "Data not found");
+        }
+
+        E entity = optional.get();
+        entity.setMarkedForDel(true);
+        repository.save(entity);
+
+        return new DataResponse(true, "");
+    }
+
+    private <R extends EntityRepository<E>,
+            E extends Entity> void delEntities(List<E> entities, R repository) {
+
+        entities.forEach(entity -> {
+            entity.setMarkedForDel(true);
+            repository.save(entity);
+        });
     }
 }

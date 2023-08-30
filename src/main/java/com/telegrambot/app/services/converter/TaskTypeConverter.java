@@ -1,11 +1,11 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskTypeResponse;
-import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.DefaultDataResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
 import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.reference.Reference;
-import com.telegrambot.app.repositories.TaskTypeRepository;
+import com.telegrambot.app.repositories.reference.TaskTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,7 @@ public class TaskTypeConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
-        if (dto instanceof TaskTypeResponse response && entity instanceof TaskType entityBD) {
+        if (dto instanceof DefaultDataResponse.TaskTypeResponse response && entity instanceof TaskType entityBD) {
             entityBD.setName(response.getName());
             return entity;
         }

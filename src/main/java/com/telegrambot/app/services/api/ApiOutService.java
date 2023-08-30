@@ -1,12 +1,12 @@
 package com.telegrambot.app.services.api;
 
-import com.telegrambot.app.DTO.api_1C.DefaultDataResponse;
-import com.telegrambot.app.DTO.api_1C.SyncDataResponse;
-import com.telegrambot.app.DTO.api_1C.UserDataResponse;
-import com.telegrambot.app.DTO.api_1C.legal.partner.PartnerDataResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataListResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
+import com.telegrambot.app.DTO.api.DefaultDataResponse;
+import com.telegrambot.app.DTO.api.SyncDataResponse;
+import com.telegrambot.app.DTO.api.UserResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
+import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
 import lombok.NonNull;
 
 public interface ApiOutService {
@@ -19,19 +19,19 @@ public interface ApiOutService {
 
     PartnerDataResponse getPartnerByGuid(@NonNull String guid);
 
-    UserDataResponse getUserData(@NonNull String phone);
+    UserResponse getUserData(@NonNull String phone);
 
-    TaskDataResponse getTaskByGuid(@NonNull String guid);
+    TaskDocDataResponse getTaskByGuid(@NonNull String guid);
 
-    TaskDataResponse getTaskByCode(@NonNull String code);
+    TaskDocDataResponse getTaskByCode(@NonNull String code);
 
-    SyncDataResponse createTask(@NonNull TaskResponse taskResponse);
+    SyncDataResponse createTask(@NonNull TaskDocResponse taskDocResponse);
 
-    TaskDataListResponse getTaskListDataByCompany(String guidPartner);
+    TaskDocDataListResponse getTaskListDataByCompany(String guidPartner);
 
-    TaskDataListResponse getTaskListDataByUser(String guidUser);
+    TaskDocDataListResponse getTaskListDataByUser(String guidUser);
 
-    TaskDataListResponse getTaskListDataByDepartment(String guidDepartment);
+    TaskDocDataListResponse getTaskListDataByDepartment(String guidDepartment);
 
-    TaskDataListResponse getTaskListDataByManager(String guid);
+    TaskDocDataListResponse getTaskListDataByManager(String guid);
 }

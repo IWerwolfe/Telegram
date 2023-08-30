@@ -1,7 +1,7 @@
 package com.telegrambot.app.model.transaction;
 
 import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.model.legalentity.LegalEntity;
+import com.telegrambot.app.model.legalentity.Partner;
 import com.telegrambot.app.model.user.UserBD;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -17,7 +17,7 @@ public class FinTransaction {
     private Long date;
     @ManyToOne
     @JoinColumn(name = "legal_id")
-    private LegalEntity legal;
+    private Partner partner;
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;

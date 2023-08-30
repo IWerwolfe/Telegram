@@ -1,9 +1,8 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.UserDataResponse;
+import com.telegrambot.app.DTO.api.UserResponse;
 import com.telegrambot.app.DTO.types.Gender;
 import com.telegrambot.app.model.documents.docdata.PersonData;
-import com.telegrambot.app.model.user.UserBD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,11 +15,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserBDConverter {
 
-    public UserDataResponse convertToResponse(UserBD entity) {
+    public UserResponse convertToResponse(com.telegrambot.app.model.user.UserBD entity) {
         return null;
     }
 
-    public UserBD updateEntity(UserDataResponse response, UserBD entityBD) {
+    public com.telegrambot.app.model.user.UserBD updateEntity(UserResponse response, com.telegrambot.app.model.user.UserBD entityBD) {
         if (entityBD.getPerson() == null) {
             entityBD.setPerson(new PersonData());
         }

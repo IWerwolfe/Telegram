@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
 public class Contract extends Reference {
 
     private LocalDateTime date;
-    private boolean isBilling;
+    private Boolean isBilling;
     private LocalDateTime startBilling;
     private LocalDateTime stopBilling;
-    private float standardHourlyRate;
+    private Integer standardHourlyRate;
     private BillingType billingType;
     @ManyToOne
     @JoinColumn(name = "partner_id")

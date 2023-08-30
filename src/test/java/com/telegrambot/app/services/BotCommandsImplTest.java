@@ -33,9 +33,9 @@ public class BotCommandsImplTest {
 //    @Mock
 //    private UserBDConverter userConverter;
 //    @Mock
-//    private TaskRepository taskRepository;
+//    private TaskDocRepository taskRepository;
 //    @Mock
-//    private TaskConverter taskConverter;
+//    private TaskDocConverter taskConverter;
 //    @Mock
 //    private CardDocRepository cardDocRepository;
 //    @Mock

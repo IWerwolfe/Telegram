@@ -1,11 +1,11 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.manager.ManagerResponse;
-import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.manager.ManagerResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.reference.Manager;
 import com.telegrambot.app.model.reference.Reference;
-import com.telegrambot.app.repositories.ManagerRepository;
+import com.telegrambot.app.repositories.reference.ManagerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

@@ -1,14 +1,14 @@
 package com.telegrambot.app.services.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.telegrambot.app.DTO.api_1C.DataResponse;
-import com.telegrambot.app.DTO.api_1C.DefaultDataResponse;
-import com.telegrambot.app.DTO.api_1C.SyncDataResponse;
-import com.telegrambot.app.DTO.api_1C.UserDataResponse;
-import com.telegrambot.app.DTO.api_1C.legal.partner.PartnerDataResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataListResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskDataResponse;
-import com.telegrambot.app.DTO.api_1C.taskResponse.TaskResponse;
+import com.telegrambot.app.DTO.api.DataResponse;
+import com.telegrambot.app.DTO.api.DefaultDataResponse;
+import com.telegrambot.app.DTO.api.SyncDataResponse;
+import com.telegrambot.app.DTO.api.UserResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
+import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
+import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
 import com.telegrambot.app.config.Connector1C;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -113,42 +113,42 @@ public class ApiOutServiceImpl implements ApiOutService {
     }
 
     @Override
-    public UserDataResponse getUserData(@NonNull String phone) {
-        return executeGetRequest(UserDataResponse.class, "userdata", "phone=" + phone);
+    public UserResponse getUserData(@NonNull String phone) {
+        return executeGetRequest(UserResponse.class, "userdata", "phone=" + phone);
     }
 
     @Override
-    public TaskDataResponse getTaskByGuid(@NonNull String guid) {
+    public TaskDocDataResponse getTaskByGuid(@NonNull String guid) {
         return getTask("guid=" + guid);
     }
 
     @Override
-    public TaskDataResponse getTaskByCode(@NonNull String code) {
+    public TaskDocDataResponse getTaskByCode(@NonNull String code) {
         return getTask("code=" + code);
     }
 
     @Override
-    public SyncDataResponse createTask(@NonNull TaskResponse taskResponse) {
-        return executePostRequest(taskResponse, SyncDataResponse.class, "task");
+    public SyncDataResponse createTask(@NonNull TaskDocResponse taskDocResponse) {
+        return executePostRequest(taskDocResponse, SyncDataResponse.class, "task");
     }
 
     @Override
-    public TaskDataListResponse getTaskListDataByCompany(String guidPartner) {
+    public TaskDocDataListResponse getTaskListDataByCompany(String guidPartner) {
         return getTaskList("guidPartner=" + guidPartner);
     }
 
     @Override
-    public TaskDataListResponse getTaskListDataByUser(String guidUser) {
+    public TaskDocDataListResponse getTaskListDataByUser(String guidUser) {
         return getTaskList("guidUser=" + guidUser);
     }
 
     @Override
-    public TaskDataListResponse getTaskListDataByManager(String guidUser) {
+    public TaskDocDataListResponse getTaskListDataByManager(String guidUser) {
         return getTaskList("guidManager=" + guidUser);
     }
 
     @Override
-    public TaskDataListResponse getTaskListDataByDepartment(String guidDepartment) {
+    public TaskDocDataListResponse getTaskListDataByDepartment(String guidDepartment) {
         return getTaskList("guidDepartment=" + guidDepartment);
     }
 
@@ -156,12 +156,12 @@ public class ApiOutServiceImpl implements ApiOutService {
         return executeGetRequest(PartnerDataResponse.class, "legal", param);
     }
 
-    private TaskDataResponse getTask(String param) {
-        return executeGetRequest(TaskDataResponse.class, "task", param);
+    private TaskDocDataResponse getTask(String param) {
+        return executeGetRequest(TaskDocDataResponse.class, "task", param);
     }
 
-    private TaskDataListResponse getTaskList(String param) {
-        return executeGetRequest(TaskDataListResponse.class, "taskList", param);
+    private TaskDocDataListResponse getTaskList(String param) {
+        return executeGetRequest(TaskDocDataListResponse.class, "taskList", param);
     }
 
     private String getAbbreviation(String string) {

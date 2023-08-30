@@ -1,7 +1,9 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityDoc1C;
 import com.telegrambot.app.model.Entity;
+import com.telegrambot.app.model.documents.doctype.Document;
 import com.telegrambot.app.model.reference.Reference;
 import com.telegrambot.app.repositories.EntityRepository;
 import lombok.NonNull;
@@ -37,6 +39,28 @@ public abstract class Converter1C {
     public abstract <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto);
 
     public abstract <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved);
+
+    public <E extends Document, T extends EntityDoc1C> void fillDocToResponse(E doc, T response) {
+        response.setDate(convertToDate(doc.getDate()));
+        response.setComment(doc.getComment());
+        response.setGuidCompany(convertToGuid(doc.getCompany()));
+        response.setGuidDepartment(convertToGuid(doc.getDepartment()));
+        response.setGuidContract(convertToGuid(doc.getContract()));
+        response.setGuidDivision(doc.getDivision());
+        response.setGuidManager(convertToGuid(doc.getManager()));
+        response.setGuidPartner(convertToGuid(doc.getPartner()));
+        response.setTotalAmount(doc.getPresentTotalAmount());
+        response.setGuid(convertToGuid(doc));
+        response.setMarkedForDel(doc.getMarkedForDel());
+    }
+
+    public <E extends Document, T extends EntityDoc1C> void fillResponseToDoc(E doc, T response) {
+        doc.setDate(convertToLocalDateTime(response.getDate()));
+        doc.setComment(response.getComment());
+        doc.setDivision(response.getGuidDivision());
+        doc.setTotalAmount(Integer.valueOf(response.getTotalAmount()));
+        doc.setMarkedForDel(response.getMarkedForDel());
+    }
 
     public <T extends Reference, R extends Entity1C> R convertReferenceToResponse(T entity) {
         Entity1C request = new Entity1C();

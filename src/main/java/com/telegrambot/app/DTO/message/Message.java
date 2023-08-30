@@ -1,6 +1,6 @@
 package com.telegrambot.app.DTO.message;
 
-import com.telegrambot.app.model.documents.doc.service.Task;
+import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.documents.doctype.PayDoc;
 import com.telegrambot.app.model.legalentity.LegalEntity;
 import com.telegrambot.app.model.user.UserStatus;
@@ -132,9 +132,9 @@ public abstract class Message {
         return "Произошла ошибка при создании обращения, попробуйте пожалуйста немного позже";
     }
 
-    public static String getSuccessfullyCreatingTask(Task task) {
+    public static String getSuccessfullyCreatingTask(TaskDoc taskDoc) {
         return "Ваше обращение успешно зарегистрировано под номером " +
-                task.getCodeEntity() + DUAL_SEPARATOR +
+                taskDoc.getCodeEntity() + DUAL_SEPARATOR +
                 "Скоро с вами свяжется наш мастер. Спасибо что обратились к нам";
     }
 

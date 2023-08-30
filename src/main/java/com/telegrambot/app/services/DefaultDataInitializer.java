@@ -1,12 +1,17 @@
 package com.telegrambot.app.services;
 
-import com.telegrambot.app.DTO.api_1C.DefaultDataResponse;
-import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.DefaultDataResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
 import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.reference.TaskStatus;
-import com.telegrambot.app.repositories.*;
+import com.telegrambot.app.repositories.CompanyRepository;
+import com.telegrambot.app.repositories.EntityRepository;
+import com.telegrambot.app.repositories.doc.TaskDocRepository;
+import com.telegrambot.app.repositories.reference.ManagerRepository;
+import com.telegrambot.app.repositories.reference.TaskStatusRepository;
+import com.telegrambot.app.repositories.reference.TaskTypeRepository;
 import com.telegrambot.app.services.api.ApiOutServiceImpl;
 import com.telegrambot.app.services.converter.*;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +31,7 @@ public class DefaultDataInitializer implements CommandLineRunner {
     private final CompanyConverter companyConverter;
     private final CompanyRepository companyRepository;
     private final ManagerRepository managerRepository;
-    private final TaskRepository taskRepository;
+    private final TaskDocRepository taskDocRepository;
 
     private final ApiOutServiceImpl api1C;
     private final TaskTypeRepository typeRepository;

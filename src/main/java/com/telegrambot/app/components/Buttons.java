@@ -3,7 +3,7 @@ package com.telegrambot.app.components;    /*
  */
 
 import com.telegrambot.app.DTO.types.FormOfPayment;
-import com.telegrambot.app.model.documents.doc.service.Task;
+import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.model.user.UserType;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -110,23 +110,23 @@ public class Buttons {
         return markupInline;
     }
 
-    public static InlineKeyboardMarkup getInlineMarkupEditTask(Task task) {
+    public static InlineKeyboardMarkup getInlineMarkupEditTask(TaskDoc taskDoc) {
 
-        PAY_TASK.setCallbackData("pay:" + task.getId());
+        PAY_TASK.setCallbackData("pay:" + taskDoc.getId());
         PAY_TASK.setPay(true);
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        boolean isPay = task.getTotalAmount() != null && task.getTotalAmount() > 0;
+        boolean isPay = taskDoc.getTotalAmount() != null && taskDoc.getTotalAmount() > 0;
 
-        if (Objects.equals(task.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId())) {
+        if (Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId())) {
             if (isPay) {
                 List<InlineKeyboardButton> rowLine = List.of(PAY_TASK);
                 rows = List.of(rowLine);
             }
         } else {
-            CANCEL_TASK.setCallbackData("cancel:" + task.getId());
-            EDIT_COMMENT_TASK.setCallbackData("comment:" + task.getId());
-            EDIT_DESCRIPTION_TASK.setCallbackData("descriptor:" + task.getId());
+            CANCEL_TASK.setCallbackData("cancel:" + taskDoc.getId());
+            EDIT_COMMENT_TASK.setCallbackData("comment:" + taskDoc.getId());
+            EDIT_DESCRIPTION_TASK.setCallbackData("descriptor:" + taskDoc.getId());
 
             List<InlineKeyboardButton> row1Line = List.of(EDIT_DESCRIPTION_TASK);
             List<InlineKeyboardButton> row2Line = List.of(EDIT_COMMENT_TASK);
@@ -140,13 +140,13 @@ public class Buttons {
         return markupInline;
     }
 
-    public static InlineKeyboardMarkup getInlineMarkupByTasks(List<Task> tasks) {
+    public static InlineKeyboardMarkup getInlineMarkupByTasks(List<TaskDoc> taskDocs) {
 
         List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
 
-        for (Task task : tasks) {
-            InlineKeyboardButton taskButton = new InlineKeyboardButton(getDescriptorToInline(task));
-            taskButton.setCallbackData("getTask:" + task.getId());
+        for (TaskDoc taskDoc : taskDocs) {
+            InlineKeyboardButton taskButton = new InlineKeyboardButton(getDescriptorToInline(taskDoc));
+            taskButton.setCallbackData("getTask:" + taskDoc.getId());
             List<InlineKeyboardButton> rowInline = List.of(taskButton);
             rowsInLine.add(rowInline);
         }
@@ -167,8 +167,8 @@ public class Buttons {
         return keyboardMarkup;
     }
 
-    public static String getDescriptorToInline(Task task) {
-        String description = convertCode(task.getCodeEntity()) + " > " + convertDescription(task.getDescription());
+    public static String getDescriptorToInline(TaskDoc taskDoc) {
+        String description = convertCode(taskDoc.getCodeEntity()) + " > " + convertDescription(taskDoc.getDescription());
         return description.length() > SIZE_INLINE_BUTTON ?
                 description.substring(0, SIZE_INLINE_BUTTON - 18) :
                 String.format("%-" + SIZE_INLINE_BUTTON + "s", description);

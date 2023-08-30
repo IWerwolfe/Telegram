@@ -1,10 +1,10 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.legal.partner.DepartmentResponse;
-import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.legal.department.DepartmentResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.repositories.DepartmentRepository;
+import com.telegrambot.app.repositories.reference.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,6 +21,16 @@ public class DepartmentConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+        if (entity instanceof Department entityBD) {
+            DepartmentResponse response = convertReferenceToResponse(entityBD);
+            response.setGuidPartner(convertToGuid(entityBD.getPartner()));
+            response.setIsBilling(convertToBoolean(entityBD.getIsBilling()));
+            response.setGuidContract(convertToGuid(entityBD.getContract()));
+            response.setIsExcisableGoods(convertToBoolean(entityBD.getIsExcisableGoods()));
+            response.setIsMarkedGoods(convertToBoolean(entityBD.getIsMarkedGoods()));
+            response.setIsEgais(convertToBoolean(entityBD.getIsEgais()));
+            return (R) response;
+        }
         return null;
     }
 
@@ -28,10 +38,10 @@ public class DepartmentConverter extends Converter1C {
     public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
         if (dto instanceof DepartmentResponse response && entity instanceof Department entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setBilling(convertToBoolean(response.getIsBilling()));
-            entityBD.setExcusableGoods(convertToBoolean(response.getIsExcusableGoods()));
-            entityBD.setMarkedGoods(convertToBoolean(response.getIsMarkedGoods()));
-            entityBD.setEGAIS(convertToBoolean(response.getIsEGAIS()));
+            entityBD.setIsBilling(convertToBoolean(response.getIsBilling()));
+            entityBD.setIsExcisableGoods(convertToBoolean(response.getIsExcisableGoods()));
+            entityBD.setIsMarkedGoods(convertToBoolean(response.getIsMarkedGoods()));
+            entityBD.setIsEgais(convertToBoolean(response.getIsEgais()));
             entityBD.setPartner(legalConverter.getOrCreateEntity(response.getGuidPartner(), true));
             entityBD.setContract(contractConverter.getOrCreateEntity(response.getGuidContract(), true));
             return (T) entityBD;

@@ -1,11 +1,11 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.legal.partner.PartnerResponse;
-import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.legal.partner.PartnerResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
 import com.telegrambot.app.DTO.types.PartnerType;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.legalentity.Partner;
-import com.telegrambot.app.repositories.PartnerRepository;
+import com.telegrambot.app.repositories.reference.PartnerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,6 +20,22 @@ public class PartnerConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+        if (entity instanceof Partner entityBD) {
+            PartnerResponse response = convertReferenceToResponse(entityBD);
+            ;
+            response.setInn(entityBD.getInn());
+            response.setKpp(entityBD.getKpp());
+            response.setGuidBankAccount(entityBD.getBankAccount());
+            response.setComment(entityBD.getComment());
+            response.setOgrn(entityBD.getOGRN());
+            response.setCommencement(convertToDate(entityBD.getCommencement()));
+            response.setCertificate(entityBD.getCertificate());
+            response.setDateCertificate(convertToDate(entityBD.getDateCertificate()));
+            response.setOkpo(entityBD.getOKPO());
+            response.setGuidDefaultContract(convertToGuid(entityBD.getDefaultContract()));
+            response.setPartnerTypeString(entityBD.getPartnerType().toString());
+            return (R) response;
+        }
         return null;
     }
 

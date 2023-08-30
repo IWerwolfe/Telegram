@@ -1,7 +1,7 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api_1C.legal.company.CompanyResponse;
-import com.telegrambot.app.DTO.api_1C.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.legal.company.CompanyResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
 import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.legalentity.Company;
 import com.telegrambot.app.repositories.CompanyRepository;
@@ -19,6 +19,20 @@ public class CompanyConverter extends Converter1C {
 
     @Override
     public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+        if (entity instanceof Company entityBD) {
+            CompanyResponse response = convertReferenceToResponse(entityBD);
+            response.setInn(entityBD.getInn());
+            response.setKpp(entityBD.getKpp());
+            response.setGuidBankAccount(entityBD.getBankAccount());
+            response.setComment(entityBD.getComment());
+            response.setOgrn(entityBD.getOGRN());
+            response.setCommencement(convertToDate(entityBD.getCommencement()));
+            response.setCertificate(entityBD.getCertificate());
+            response.setDateCertificate(convertToDate(entityBD.getDateCertificate()));
+            response.setOkpo(entityBD.getOKPO());
+            response.setGuidDefaultContract(convertToGuid(entityBD.getDefaultContract()));
+            return (R) response;
+        }
         return null;
     }
 

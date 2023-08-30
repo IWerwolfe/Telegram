@@ -1,6 +1,6 @@
 package com.telegrambot.app.model;
 
-import com.telegrambot.app.model.documents.doc.service.Task;
+import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.documents.docdata.PropertyData;
@@ -20,7 +20,7 @@ public class EntityDefaults {
         entity.setDate(LocalDateTime.now());
     }
 
-    public static void initializeDefaultTask(Task entity) {
+    public static void initializeDefaultTask(TaskDoc entity) {
         entity.setPartnerData(new PartnerData());
         entity.setProperties(new PropertyData());
     }
