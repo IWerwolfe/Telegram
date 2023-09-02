@@ -1,14 +1,14 @@
 package com.telegrambot.app.services.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.telegrambot.app.DTO.api.DataResponse;
-import com.telegrambot.app.DTO.api.DefaultDataResponse;
-import com.telegrambot.app.DTO.api.SyncDataResponse;
-import com.telegrambot.app.DTO.api.UserResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
+import com.telegrambot.app.DTO.api.other.SyncDataResponse;
+import com.telegrambot.app.DTO.api.other.UserResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.config.Connector1C;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +42,9 @@ public class ApiOutServiceImpl implements ApiOutService {
             response = getR(responseType, url, httpMethod, requestEntity);
         } catch (Exception e) {
             log.error(e.getMessage());
-            response = (R) new DataResponse(false, "Data not found");
+            response = createEntity(responseType);
+            response.setResult(false);
+            response.setError("Data not found");
         }
         log.info("the user's request was executed for {} ms", System.currentTimeMillis() - start);
         return response;
@@ -164,10 +165,13 @@ public class ApiOutServiceImpl implements ApiOutService {
         return executeGetRequest(TaskDocDataListResponse.class, "taskList", param);
     }
 
-    private String getAbbreviation(String string) {
-        return Arrays.stream(string.split("\\s+"))
-                .filter(s -> s.matches("[a-zA-Zа-яёА-ЯЁ\\-_]{3,}"))
-                .map(s -> String.valueOf(s.charAt(0)).toUpperCase())
-                .collect(Collectors.joining());
+    private static <T> T createEntity(Class<T> entityType) {
+        try {
+            return entityType.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException e) {
+            log.error("Ошибка создания сущности {}: {}", entityType.getSimpleName(), e.getMessage());
+        }
+        return (T) new DataResponse();
     }
 }

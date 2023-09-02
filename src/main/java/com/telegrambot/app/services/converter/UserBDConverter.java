@@ -1,6 +1,6 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api.UserResponse;
+import com.telegrambot.app.DTO.api.other.UserResponse;
 import com.telegrambot.app.DTO.types.Gender;
 import com.telegrambot.app.model.documents.docdata.PersonData;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +23,11 @@ public class UserBDConverter {
         if (entityBD.getPerson() == null) {
             entityBD.setPerson(new PersonData());
         }
-        entityBD.getPerson().setGender(Converter1C.convertToEnum(response.getGender(), Gender.class));
-        entityBD.setNotValid(Converter1C.convertToBoolean(response.getNotValid()));
+        entityBD.getPerson().setGender(Converter.convertToEnum(response.getGender(), Gender.class));
+        entityBD.setNotValid(Converter.convertToBoolean(response.getNotValid()));
 //            entityBD.setIsEmployee(convertToBoolean(response.getIsEmployee()));
-        entityBD.setIsMaster(Converter1C.convertToBoolean(response.getIsMaster()));
-        entityBD.getPerson().setBirthday(Converter1C.convertToLocalDateTime(response.getBirthday()));
+        entityBD.setIsMaster(Converter.convertToBoolean(response.getIsMaster()));
+        entityBD.getPerson().setBirthday(Converter.convertToLocalDateTime(response.getBirthday()));
         updateUserFIO(response.getFio(), entityBD.getPerson());
         return entityBD;
     }

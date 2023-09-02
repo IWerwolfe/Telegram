@@ -1,10 +1,10 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api.legal.company.CompanyResponse;
-import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
-import com.telegrambot.app.model.Entity;
-import com.telegrambot.app.model.legalentity.Company;
-import com.telegrambot.app.repositories.CompanyRepository;
+import com.telegrambot.app.DTO.api.reference.legal.company.CompanyResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.model.reference.legalentity.Company;
+import com.telegrambot.app.model.types.Entity;
+import com.telegrambot.app.repositories.command.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -12,15 +12,15 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class CompanyConverter extends Converter1C {
+public class CompanyConverter extends Converter {
 
     private final Class<Company> classType = Company.class;
     private final CompanyRepository repository;
 
     @Override
-    public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+    public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
         if (entity instanceof Company entityBD) {
-            CompanyResponse response = convertReferenceToResponse(entityBD);
+            CompanyResponse response = convertReferenceToResponse(entityBD, CompanyResponse.class);
             response.setInn(entityBD.getInn());
             response.setKpp(entityBD.getKpp());
             response.setGuidBankAccount(entityBD.getBankAccount());
@@ -37,7 +37,7 @@ public class CompanyConverter extends Converter1C {
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
+    public <T extends Entity, R extends EntityResponse> T updateEntity(R dto, T entity) {
         if (dto instanceof CompanyResponse response && entity instanceof Company entityBD) {
             entityBD.setName(response.getName());
             entityBD.setInn(response.getInn());
@@ -55,12 +55,12 @@ public class CompanyConverter extends Converter1C {
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, repository, classType);
+    public <T extends Entity, R extends EntityResponse> T getOrCreateEntity(R dto) {
+        return (T) Converter.getOrCreateEntity(dto, repository, classType);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, repository, classType, isSaved);
+        return (T) Converter.getOrCreateEntity(guid, repository, classType, isSaved);
     }
 }

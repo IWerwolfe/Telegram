@@ -1,9 +1,9 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api.legal.department.DepartmentResponse;
-import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
-import com.telegrambot.app.model.Entity;
-import com.telegrambot.app.model.legalentity.Department;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.model.reference.legalentity.Department;
+import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.repositories.reference.DepartmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DepartmentConverter extends Converter1C {
+public class DepartmentConverter extends Converter {
 
     private final Class<Department> classType = Department.class;
     private final DepartmentRepository repository;
@@ -20,9 +20,9 @@ public class DepartmentConverter extends Converter1C {
     private final PartnerConverter legalConverter;
 
     @Override
-    public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+    public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
         if (entity instanceof Department entityBD) {
-            DepartmentResponse response = convertReferenceToResponse(entityBD);
+            DepartmentResponse response = convertReferenceToResponse(entityBD, DepartmentResponse.class);
             response.setGuidPartner(convertToGuid(entityBD.getPartner()));
             response.setIsBilling(convertToBoolean(entityBD.getIsBilling()));
             response.setGuidContract(convertToGuid(entityBD.getContract()));
@@ -35,7 +35,7 @@ public class DepartmentConverter extends Converter1C {
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
+    public <T extends Entity, R extends EntityResponse> T updateEntity(R dto, T entity) {
         if (dto instanceof DepartmentResponse response && entity instanceof Department entityBD) {
             entityBD.setName(response.getName());
             entityBD.setIsBilling(convertToBoolean(response.getIsBilling()));
@@ -50,13 +50,13 @@ public class DepartmentConverter extends Converter1C {
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, repository, classType);
+    public <T extends Entity, R extends EntityResponse> T getOrCreateEntity(R dto) {
+        return (T) Converter.getOrCreateEntity(dto, repository, classType);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, repository, classType, isSaved);
+        return (T) Converter.getOrCreateEntity(guid, repository, classType, isSaved);
     }
 }
 

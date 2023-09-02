@@ -1,11 +1,11 @@
 package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
-import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
-import com.telegrambot.app.model.Entity;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.documents.docdata.PropertyData;
-import com.telegrambot.app.model.documents.doctype.Document;
+import com.telegrambot.app.model.types.Document;
+import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.repositories.doc.TaskDocRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class TaskDocConverter extends Converter1C {
+public class TaskDocConverter extends Converter {
 
     private final Class<TaskDoc> classType = TaskDoc.class;
     private final TaskDocRepository repository;
@@ -24,26 +24,25 @@ public class TaskDocConverter extends Converter1C {
     private final ManagerConverter managerConverter;
 
     @Override
-    public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
-        if (entity instanceof TaskDoc doc) {
-            TaskDocResponse response = new TaskDocResponse();
-            fillDocToResponse((Document) entity, response);
-            dataConverter.fillPartnerDataToResponse(doc.getPartnerData(), response);
-            response.setDescription(doc.getDescription());
-            response.setDecision(doc.getDecision());
-            response.setGuidStatus(convertToGuid(doc.getStatus()));
-            response.setClosingDate(convertToDate(doc.getClosingDate()));
-            response.setType(doc.getType().getName());
-            response.setHighPriority(doc.getProperties().getHighPriority());
-            response.setIsOutsourcing(doc.getProperties().getIsOutsourcing());
-            response.setIsBilling(doc.getProperties().getIsBilling());
+    public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
+        if (entity instanceof TaskDoc entityBD) {
+            TaskDocResponse response = convertDocToResponse((Document) entityBD, TaskDocResponse.class);
+            dataConverter.fillPartnerDataToResponse(entityBD.getPartnerData(), response);
+            response.setDescription(entityBD.getDescription());
+            response.setDecision(entityBD.getDecision());
+            response.setGuidStatus(convertToGuid(entityBD.getStatus()));
+            response.setClosingDate(convertToDate(entityBD.getClosingDate()));
+            response.setType(convertToGuid(entityBD.getType()));
+            response.setHighPriority(entityBD.getProperties().getHighPriority());
+            response.setIsOutsourcing(entityBD.getProperties().getIsOutsourcing());
+            response.setIsBilling(entityBD.getProperties().getIsBilling());
             return (R) response;
         }
         return null;
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
+    public <T extends Entity, R extends EntityResponse> T updateEntity(R dto, T entity) {
         if (dto instanceof TaskDocResponse response && entity instanceof TaskDoc entityBD) {
 //            entityBD.setName(response.getName());
             fillResponseToDoc(entityBD, response);
@@ -72,12 +71,12 @@ public class TaskDocConverter extends Converter1C {
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, repository, classType);
+    public <T extends Entity, R extends EntityResponse> T getOrCreateEntity(R dto) {
+        return (T) Converter.getOrCreateEntity(dto, repository, classType);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, repository, classType);
+        return (T) Converter.getOrCreateEntity(guid, repository, classType);
     }
 }

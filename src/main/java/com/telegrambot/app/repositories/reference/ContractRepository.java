@@ -1,7 +1,7 @@
 package com.telegrambot.app.repositories.reference;
 
-import com.telegrambot.app.model.legalentity.Contract;
-import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.legalentity.Contract;
+import com.telegrambot.app.model.reference.legalentity.Partner;
 import com.telegrambot.app.repositories.EntityRepository;
 import org.springframework.data.jpa.repository.Query;
 

@@ -1,0 +1,21 @@
+{
+  "result": true,
+  "error": "",
+  "list": [
+    {
+      "DATE_PATTERN": "yyyy-MM-dd'T'HH:mm:ss",
+      "code": null,
+      "guid": "c0122903-5427-11e9-a640-002522819b2d",
+      "name": "№ 1КС-2019-07 от 18.02.2019 (руб.) (Б)",
+      "markedForDel": false,
+      "guidPartner": "c0122904-5427-11e9-a640-002522819b2d",
+      "startBilling": "2019-02-18T00:00:00",
+      "date": "2019-02-18T00:00:00",
+      "stopBilling": null,
+      "standardHourlyRate": "1000",
+      "isBilling": true,
+      "billingTypeString": "null",
+      "date_PATTERN": "yyyy-MM-dd'T'HH:mm:ss"
+    }
+  ]
+}

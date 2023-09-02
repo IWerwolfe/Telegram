@@ -1,6 +1,6 @@
 package com.telegrambot.app.repositories.reference;
 
-import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.legalentity.Partner;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 

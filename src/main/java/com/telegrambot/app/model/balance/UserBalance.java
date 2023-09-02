@@ -1,5 +1,6 @@
 package com.telegrambot.app.model.balance;
 
+import com.telegrambot.app.model.types.Balance;
 import com.telegrambot.app.model.user.UserBD;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;

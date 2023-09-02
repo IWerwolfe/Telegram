@@ -2,16 +2,16 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.SubCommandInfo;
 import com.telegrambot.app.DTO.TaskListToSend;
-import com.telegrambot.app.DTO.api.SyncDataResponse;
-import com.telegrambot.app.DTO.api.UserResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
-import com.telegrambot.app.DTO.api.legal.contract.ContractResponse;
-import com.telegrambot.app.DTO.api.legal.department.DepartmentResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerListData;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerResponse;
+import com.telegrambot.app.DTO.api.other.SyncDataResponse;
+import com.telegrambot.app.DTO.api.other.UserResponse;
+import com.telegrambot.app.DTO.api.reference.legal.contract.ContractResponse;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerListData;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerResponse;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
 import com.telegrambot.app.DTO.types.Currency;
@@ -20,7 +20,6 @@ import com.telegrambot.app.DTO.types.SortingTaskType;
 import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.config.BotConfig;
-import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.EntitySavedEvent;
 import com.telegrambot.app.model.balance.PartnerBalance;
 import com.telegrambot.app.model.balance.UserBalance;
@@ -31,21 +30,27 @@ import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.documents.docdata.SyncData;
-import com.telegrambot.app.model.legalentity.Contract;
-import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.model.legalentity.LegalEntity;
-import com.telegrambot.app.model.legalentity.Partner;
 import com.telegrambot.app.model.reference.Manager;
-import com.telegrambot.app.model.reference.Reference;
 import com.telegrambot.app.model.reference.TaskStatus;
+import com.telegrambot.app.model.reference.legalentity.Contract;
+import com.telegrambot.app.model.reference.legalentity.Department;
+import com.telegrambot.app.model.reference.legalentity.LegalEntity;
+import com.telegrambot.app.model.reference.legalentity.Partner;
+import com.telegrambot.app.model.types.Entity;
+import com.telegrambot.app.model.types.Reference;
 import com.telegrambot.app.model.user.UserStatus;
 import com.telegrambot.app.model.user.UserType;
-import com.telegrambot.app.repositories.*;
+import com.telegrambot.app.repositories.balance.PartnerBalanceRepository;
+import com.telegrambot.app.repositories.balance.UserBalanceRepository;
+import com.telegrambot.app.repositories.command.CommandCacheRepository;
+import com.telegrambot.app.repositories.command.CommandRepository;
 import com.telegrambot.app.repositories.doc.CardDocRepository;
 import com.telegrambot.app.repositories.doc.TaskDocRepository;
 import com.telegrambot.app.repositories.reference.ContractRepository;
 import com.telegrambot.app.repositories.reference.DepartmentRepository;
 import com.telegrambot.app.repositories.reference.PartnerRepository;
+import com.telegrambot.app.repositories.user.UserRepository;
+import com.telegrambot.app.repositories.user.UserStatusRepository;
 import com.telegrambot.app.services.api.ApiOutServiceImpl;
 import com.telegrambot.app.services.api.DaDataService;
 import com.telegrambot.app.services.converter.*;
@@ -519,7 +524,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private List<TaskDoc> getTaskListByApiByCompany(LegalEntity legal) {
-        TaskDocDataListResponse response = api1C.getTaskListDataByCompany(Converter1C.convertToGuid(legal));
+        TaskDocDataListResponse response = api1C.getTaskListDataByCompany(Converter.convertToGuid(legal));
         if (response == null || !response.isResult()) {
             return taskDocRepository.findByPartnerDataNotNullAndPartnerData_PartnerAndStatusNotOrderByDateAsc((Partner) legal,
                     TaskStatus.getDefaultClosedStatus());
@@ -528,7 +533,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private List<TaskDoc> getTaskListByApiByDepartment(Department department) {
-        TaskDocDataListResponse response = api1C.getTaskListDataByDepartment(Converter1C.convertToGuid(department));
+        TaskDocDataListResponse response = api1C.getTaskListDataByDepartment(Converter.convertToGuid(department));
         if (response == null || !response.isResult()) {
             return taskDocRepository.findByPartnerDataNotNullAndPartnerData_DepartmentAndStatusNotOrderByDateAsc(department,
                     TaskStatus.getDefaultClosedStatus());
@@ -853,8 +858,8 @@ public class BotCommandsImpl implements BotCommands {
             partner.setName(data.getName().getShortWithOpf());
             partner.setKpp(data.getKpp());
             partner.setOGRN(data.getOgrn());
-            partner.setCommencement(Converter1C.convertLongToLocalDateTime(data.getState().getRegistrationDate()));
-            partner.setDateCertificate(Converter1C.convertLongToLocalDateTime(data.getOgrnDate()));
+            partner.setCommencement(Converter.convertLongToLocalDateTime(data.getState().getRegistrationDate()));
+            partner.setDateCertificate(Converter.convertLongToLocalDateTime(data.getOgrnDate()));
             partner.setOKPO(data.getOkpo());
         }
         return partner;

@@ -1,12 +1,12 @@
 package com.telegrambot.app.DTO.api.doc.cardDoc;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.telegrambot.app.DTO.api.typeОbjects.EntityDoc1C;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityDocResponse;
 import lombok.Data;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class CardDocResponse extends EntityDoc1C {
+public class CardDocResponse extends EntityDocResponse {
     private String guidBankAccount;
     private String paymentTerminal;
     private String cashDeskKkm;

@@ -1,7 +1,7 @@
 package com.telegrambot.app.model.user;
 
-import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.model.legalentity.LegalEntity;
+import com.telegrambot.app.model.reference.legalentity.Department;
+import com.telegrambot.app.model.reference.legalentity.LegalEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 

@@ -1,7 +1,7 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.model.EntitySavedEvent;
-import com.telegrambot.app.model.documents.doctype.Document;
+import com.telegrambot.app.model.types.Document;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

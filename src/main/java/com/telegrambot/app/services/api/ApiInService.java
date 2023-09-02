@@ -1,6 +1,5 @@
 package com.telegrambot.app.services.api;
 
-import com.telegrambot.app.DTO.api.DataResponse;
 import com.telegrambot.app.DTO.api.balance.BalanceDataListResponse;
 import com.telegrambot.app.DTO.api.balance.BalanceResponse;
 import com.telegrambot.app.DTO.api.doc.bankDoc.BankDocDataListResponse;
@@ -15,20 +14,24 @@ import com.telegrambot.app.DTO.api.doc.cashDoc.CashDocResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
-import com.telegrambot.app.DTO.api.legal.contract.ContractDataListResponse;
-import com.telegrambot.app.DTO.api.legal.contract.ContractDataResponse;
-import com.telegrambot.app.DTO.api.legal.contract.ContractResponse;
-import com.telegrambot.app.DTO.api.legal.department.DepartmentDataListResponse;
-import com.telegrambot.app.DTO.api.legal.department.DepartmentDataResponse;
-import com.telegrambot.app.DTO.api.legal.department.DepartmentResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerResponse;
-import com.telegrambot.app.DTO.api.manager.ManagerDataListResponse;
-import com.telegrambot.app.DTO.api.manager.ManagerDataResponse;
-import com.telegrambot.app.DTO.api.manager.ManagerResponse;
-import com.telegrambot.app.DTO.api.taskStatus.TaskStatusDataListResponse;
-import com.telegrambot.app.DTO.api.taskStatus.TaskStatusDataResponse;
-import com.telegrambot.app.DTO.api.taskStatus.TaskStatusResponse;
+import com.telegrambot.app.DTO.api.reference.legal.contract.ContractDataListResponse;
+import com.telegrambot.app.DTO.api.reference.legal.contract.ContractDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.contract.ContractResponse;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentDataListResponse;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerResponse;
+import com.telegrambot.app.DTO.api.reference.manager.ManagerDataListResponse;
+import com.telegrambot.app.DTO.api.reference.manager.ManagerDataResponse;
+import com.telegrambot.app.DTO.api.reference.manager.ManagerResponse;
+import com.telegrambot.app.DTO.api.reference.taskStatus.TaskStatusDataListResponse;
+import com.telegrambot.app.DTO.api.reference.taskStatus.TaskStatusDataResponse;
+import com.telegrambot.app.DTO.api.reference.taskStatus.TaskStatusResponse;
+import com.telegrambot.app.DTO.api.reference.taskType.TaskTypeDataListResponse;
+import com.telegrambot.app.DTO.api.reference.taskType.TaskTypeDataResponse;
+import com.telegrambot.app.DTO.api.reference.taskType.TaskTypeResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 
 public interface ApiInService {
 
@@ -95,6 +98,19 @@ public interface ApiInService {
     DataResponse updateManager(ManagerResponse response);
 
     DataResponse delManager(String guid);
+
+
+    TaskTypeDataResponse getTaskType(String guid);
+
+    TaskTypeDataListResponse getTaskTypes();
+
+    TaskTypeDataListResponse getNotSyncTaskTypes();
+
+    DataResponse createTaskType(TaskTypeResponse response);
+
+    DataResponse updateTaskType(TaskTypeResponse response);
+
+    DataResponse delTaskType(String guid);
 
 
     TaskStatusDataResponse getTaskStatus(String guid);

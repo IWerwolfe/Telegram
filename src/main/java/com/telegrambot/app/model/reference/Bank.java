@@ -1,5 +1,6 @@
 package com.telegrambot.app.model.reference;
 
+import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;

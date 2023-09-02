@@ -1,8 +1,8 @@
 package com.telegrambot.app.model.documents.doc.payment;
 
 import com.telegrambot.app.model.documents.docdata.IncomingData;
-import com.telegrambot.app.model.documents.doctype.PayDoc;
 import com.telegrambot.app.model.reference.BankAccount;
+import com.telegrambot.app.model.types.doctype.PayDoc;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;

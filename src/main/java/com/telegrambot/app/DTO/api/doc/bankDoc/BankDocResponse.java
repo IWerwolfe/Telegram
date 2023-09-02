@@ -2,14 +2,14 @@ package com.telegrambot.app.DTO.api.doc.bankDoc;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.telegrambot.app.DTO.api.typeОbjects.EntityDoc1C;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityDocResponse;
 import lombok.Data;
 
 import java.util.Date;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class BankDocResponse extends EntityDoc1C {
+public class BankDocResponse extends EntityDocResponse {
     private String guidBankAccount;
     private String guidPayerBankAccount;
     @JsonFormat(pattern = DATE_PATTERN)

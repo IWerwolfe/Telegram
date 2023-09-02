@@ -1,13 +1,13 @@
 package com.telegrambot.app.services;
 
-import com.telegrambot.app.DTO.api.DefaultDataResponse;
-import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
 import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.components.Buttons;
-import com.telegrambot.app.model.Entity;
 import com.telegrambot.app.model.reference.TaskStatus;
-import com.telegrambot.app.repositories.CompanyRepository;
+import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.repositories.EntityRepository;
+import com.telegrambot.app.repositories.command.CompanyRepository;
 import com.telegrambot.app.repositories.doc.TaskDocRepository;
 import com.telegrambot.app.repositories.reference.ManagerRepository;
 import com.telegrambot.app.repositories.reference.TaskStatusRepository;
@@ -96,9 +96,9 @@ public class DefaultDataInitializer implements CommandLineRunner {
         return optional.orElseGet(() -> typeRepository.save(new TaskType(null, DEFAULT_NAME_TYPE)));
     }
 
-    private <T extends Entity1C, E extends Entity, R extends EntityRepository<E>, C extends Converter1C> void updateEntity(List<T> list,
-                                                                                                                           R repository,
-                                                                                                                           C converter) {
+    private <T extends EntityResponse, E extends Entity, R extends EntityRepository<E>, C extends Converter> void updateEntity(List<T> list,
+                                                                                                                               R repository,
+                                                                                                                               C converter) {
         if (list == null || list.isEmpty()) return;
         List<E> entityList = new ArrayList<>();
         for (T response : list) {

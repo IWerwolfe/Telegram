@@ -1,6 +1,6 @@
 package com.telegrambot.app.repositories;
 
-import com.telegrambot.app.model.Entity;
+import com.telegrambot.app.model.types.Entity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 

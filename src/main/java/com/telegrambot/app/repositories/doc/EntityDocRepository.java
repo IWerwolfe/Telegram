@@ -1,7 +1,7 @@
 package com.telegrambot.app.repositories.doc;
 
-import com.telegrambot.app.model.documents.doctype.Document;
-import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.legalentity.Partner;
+import com.telegrambot.app.model.types.Document;
 import com.telegrambot.app.repositories.EntityRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 

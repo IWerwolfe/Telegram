@@ -1,10 +1,10 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api.typeОbjects.EntityDoc1C;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityDocResponse;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
-import com.telegrambot.app.model.legalentity.Contract;
-import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.legalentity.Contract;
+import com.telegrambot.app.model.reference.legalentity.Department;
+import com.telegrambot.app.model.reference.legalentity.Partner;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -31,18 +31,18 @@ public class DataConverter {
         return null;
     }
 
-    public <R extends EntityDoc1C> PartnerData getPartnerData(R response) {
+    public <R extends EntityDocResponse> PartnerData getPartnerData(R response) {
         Partner partner = partnerConverter.getOrCreateEntity(response.getGuidPartner(), true);
         Department department = departmentConverter.getOrCreateEntity(response.getGuidDepartment(), true);
         Contract contract = contractConverter.getOrCreateEntity(response.getGuidContract(), true);
         return new PartnerData(partner, department, contract);
     }
 
-    public <R extends EntityDoc1C> void fillPartnerDataToResponse(PartnerData partnerData, R response) {
+    public <R extends EntityDocResponse> void fillPartnerDataToResponse(PartnerData partnerData, R response) {
         if (partnerData != null) {
-            response.setGuidPartner(Converter1C.convertToGuid(partnerData.getPartner()));
-            response.setGuidContract(Converter1C.convertToGuid(partnerData.getContract()));
-            response.setGuidDepartment(Converter1C.convertToGuid(partnerData.getDepartment()));
+            response.setGuidPartner(Converter.convertToGuid(partnerData.getPartner()));
+            response.setGuidContract(Converter.convertToGuid(partnerData.getContract()));
+            response.setGuidDepartment(Converter.convertToGuid(partnerData.getDepartment()));
         }
     }
 }

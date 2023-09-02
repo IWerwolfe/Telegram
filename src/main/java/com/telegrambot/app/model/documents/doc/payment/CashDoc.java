@@ -1,7 +1,7 @@
 package com.telegrambot.app.model.documents.doc.payment;
 
 import com.telegrambot.app.model.documents.docdata.FiscalData;
-import com.telegrambot.app.model.documents.doctype.PayDoc;
+import com.telegrambot.app.model.types.doctype.PayDoc;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;

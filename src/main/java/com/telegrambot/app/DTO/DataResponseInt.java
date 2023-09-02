@@ -1,8 +1,8 @@
 package com.telegrambot.app.DTO;
 
-import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
 
 public interface DataResponseInt {
 
-    <E extends Entity1C> void setEntity(E entity);
+    <E extends EntityResponse> void setEntity(E entity);
 }

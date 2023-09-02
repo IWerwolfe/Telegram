@@ -1,6 +1,7 @@
 package com.telegrambot.app.model.balance;
 
-import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.legalentity.Partner;
+import com.telegrambot.app.model.types.Balance;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;

@@ -1,8 +1,5 @@
 package com.telegrambot.app.services.api;
 
-import com.telegrambot.app.DTO.api.DataEntityResponse;
-import com.telegrambot.app.DTO.api.DataListResponse;
-import com.telegrambot.app.DTO.api.DataResponse;
 import com.telegrambot.app.DTO.api.balance.BalanceDataListResponse;
 import com.telegrambot.app.DTO.api.balance.BalanceResponse;
 import com.telegrambot.app.DTO.api.doc.bankDoc.BankDocDataListResponse;
@@ -17,34 +14,41 @@ import com.telegrambot.app.DTO.api.doc.cashDoc.CashDocResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
-import com.telegrambot.app.DTO.api.legal.contract.ContractDataListResponse;
-import com.telegrambot.app.DTO.api.legal.contract.ContractDataResponse;
-import com.telegrambot.app.DTO.api.legal.contract.ContractResponse;
-import com.telegrambot.app.DTO.api.legal.department.DepartmentDataListResponse;
-import com.telegrambot.app.DTO.api.legal.department.DepartmentDataResponse;
-import com.telegrambot.app.DTO.api.legal.department.DepartmentResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerResponse;
-import com.telegrambot.app.DTO.api.manager.ManagerDataListResponse;
-import com.telegrambot.app.DTO.api.manager.ManagerDataResponse;
-import com.telegrambot.app.DTO.api.manager.ManagerResponse;
-import com.telegrambot.app.DTO.api.taskStatus.TaskStatusDataListResponse;
-import com.telegrambot.app.DTO.api.taskStatus.TaskStatusDataResponse;
-import com.telegrambot.app.DTO.api.taskStatus.TaskStatusResponse;
-import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
-import com.telegrambot.app.model.Entity;
+import com.telegrambot.app.DTO.api.reference.legal.contract.ContractDataListResponse;
+import com.telegrambot.app.DTO.api.reference.legal.contract.ContractDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.contract.ContractResponse;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentDataListResponse;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerResponse;
+import com.telegrambot.app.DTO.api.reference.manager.ManagerDataListResponse;
+import com.telegrambot.app.DTO.api.reference.manager.ManagerDataResponse;
+import com.telegrambot.app.DTO.api.reference.manager.ManagerResponse;
+import com.telegrambot.app.DTO.api.reference.taskStatus.TaskStatusDataListResponse;
+import com.telegrambot.app.DTO.api.reference.taskStatus.TaskStatusDataResponse;
+import com.telegrambot.app.DTO.api.reference.taskStatus.TaskStatusResponse;
+import com.telegrambot.app.DTO.api.reference.taskType.TaskTypeDataListResponse;
+import com.telegrambot.app.DTO.api.reference.taskType.TaskTypeDataResponse;
+import com.telegrambot.app.DTO.api.reference.taskType.TaskTypeResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.DataEntityResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.DataListResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.model.balance.PartnerBalance;
 import com.telegrambot.app.model.documents.doc.payment.BankDoc;
 import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.doc.payment.CashDoc;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
-import com.telegrambot.app.model.legalentity.Contract;
-import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.model.legalentity.Partner;
 import com.telegrambot.app.model.reference.Manager;
 import com.telegrambot.app.model.reference.TaskStatus;
+import com.telegrambot.app.model.reference.legalentity.Contract;
+import com.telegrambot.app.model.reference.legalentity.Department;
+import com.telegrambot.app.model.reference.legalentity.Partner;
+import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.repositories.EntityRepository;
-import com.telegrambot.app.repositories.PartnerBalanceRepository;
+import com.telegrambot.app.repositories.balance.PartnerBalanceRepository;
 import com.telegrambot.app.repositories.doc.BankDocRepository;
 import com.telegrambot.app.repositories.doc.CardDocRepository;
 import com.telegrambot.app.repositories.doc.CashDocRepository;
@@ -55,7 +59,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -74,6 +77,7 @@ public class ApiInServiceImpl implements ApiInService {
     private final PartnerRepository partnerRepository;
     private final ManagerRepository managerRepository;
     private final TaskDocRepository taskDocRepository;
+    private final TaskTypeRepository taskTypeRepository;
 
 
     private final PartnerConverter partnerConverter;
@@ -86,6 +90,7 @@ public class ApiInServiceImpl implements ApiInService {
     private final BankDocConverter bankDocConverter;
     private final CashDocConverter cashDocConverter;
     private final BalanceConverter balanceConverter;
+    private final TaskTypeConverter taskTypeConverter;
 
     @Override
     public TaskDocDataResponse getTask(String guid) {
@@ -93,8 +98,8 @@ public class ApiInServiceImpl implements ApiInService {
     }
 
     @Override
-    public TaskDocDataListResponse getTasks(String guidManager, String guidCompany, String guidDepartment) {
-        List<TaskDoc> list = getTaskList(guidManager, guidCompany, guidDepartment);
+    public TaskDocDataListResponse getTasks(String guidManager, String guidPartner, String guidDepartment) {
+        List<TaskDoc> list = getTaskList(guidManager, guidPartner, guidDepartment);
         return getDataListResponse(list, taskDocConverter, TaskDocDataListResponse.class);
     }
 
@@ -272,6 +277,40 @@ public class ApiInServiceImpl implements ApiInService {
     @Override
     public DataResponse delManager(String guid) {
         return delEntity(guid, managerRepository);
+    }
+
+    @Override
+    public TaskTypeDataResponse getTaskType(String guid) {
+        return getDataResponse(guid, taskTypeConverter, taskTypeRepository, TaskTypeDataResponse.class);
+    }
+
+    @Override
+    public TaskTypeDataListResponse getTaskTypes() {
+        return getDataListResponse(
+                taskTypeRepository.findAll(),
+                taskTypeConverter,
+                TaskTypeDataListResponse.class);
+    }
+
+    @Override
+    public TaskTypeDataListResponse getNotSyncTaskTypes() {
+        List<TaskType> list = taskTypeRepository.findBySyncDataNull();
+        return getDataListResponse(list, taskTypeConverter, TaskTypeDataListResponse.class);
+    }
+
+    @Override
+    public DataResponse createTaskType(TaskTypeResponse response) {
+        return createEntity(response, taskTypeConverter, taskTypeRepository);
+    }
+
+    @Override
+    public DataResponse updateTaskType(TaskTypeResponse response) {
+        return updateEntity(response, taskTypeConverter, taskTypeRepository);
+    }
+
+    @Override
+    public DataResponse delTaskType(String guid) {
+        return delEntity(guid, taskTypeRepository);
     }
 
     @Override
@@ -462,12 +501,12 @@ public class ApiInServiceImpl implements ApiInService {
         return response;
     }
 
-    private List<TaskDoc> getTaskList(String guidManager, String guidCompany, String guidDepartment) {
+    private List<TaskDoc> getTaskList(String guidManager, String guidPartner, String guidDepartment) {
         if (guidIsCorrect(guidManager)) {
             return getTasksByGuidManager(guidManager);
         }
-        if (guidIsCorrect(guidCompany)) {
-            return getTasksByGuidCompany(guidCompany);
+        if (guidIsCorrect(guidPartner)) {
+            return getTasksByGuidCompany(guidPartner);
         }
         if (guidIsCorrect(guidDepartment)) {
             return getTasksByGuidDepartment(guidDepartment);
@@ -479,8 +518,8 @@ public class ApiInServiceImpl implements ApiInService {
         return guid != null && !guid.isEmpty();
     }
 
-    private List<TaskDoc> getTasksByGuidDepartment(String guidDepartment) {
-        Optional<Department> optional = departmentRepository.findBySyncDataNotNullAndSyncData_Guid(guidDepartment);
+    private List<TaskDoc> getTasksByGuidDepartment(String guid) {
+        Optional<Department> optional = departmentRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         if (optional.isPresent()) {
             return taskDocRepository
                     .findByPartnerDataNotNullAndPartnerData_DepartmentAndStatusOrderByStatusDesc(optional.get(),
@@ -489,8 +528,8 @@ public class ApiInServiceImpl implements ApiInService {
         return new ArrayList<>();
     }
 
-    private List<TaskDoc> getTasksByGuidCompany(String guidCompany) {
-        Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guidCompany);
+    private List<TaskDoc> getTasksByGuidCompany(String guid) {
+        Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         if (optional.isPresent()) {
             return taskDocRepository
                     .findByPartnerDataNotNullAndPartnerData_PartnerAndStatusOrderByDateDesc(optional.get(),
@@ -499,8 +538,8 @@ public class ApiInServiceImpl implements ApiInService {
         return new ArrayList<>();
     }
 
-    private List<TaskDoc> getTasksByGuidManager(String guidManager) {
-        Optional<Manager> optional = managerRepository.findBySyncDataNotNullAndSyncData_Guid(guidManager);
+    private List<TaskDoc> getTasksByGuidManager(String guid) {
+        Optional<Manager> optional = managerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
         if (optional.isPresent()) {
             return taskDocRepository
                     .findByManagerAndStatusOrderByDateDesc(optional.get(),
@@ -511,18 +550,18 @@ public class ApiInServiceImpl implements ApiInService {
 
     private List<Partner> getPartnerByBD(String inn, String guidPartner) {
         List<Partner> partners = new ArrayList<>();
-        if (inn != null) {
+        if (guidIsCorrect(inn)) {
             return partnerRepository.findByInnIgnoreCase(inn);
         }
-        if (guidPartner != null) {
+        if (guidIsCorrect(guidPartner)) {
             Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guidPartner);
             optional.ifPresent(partners::add);
         }
         return partners;
     }
 
-    private <T extends Entity1C,
-            C extends Converter1C,
+    private <T extends EntityResponse,
+            C extends Converter,
             R extends EntityRepository<E>,
             E extends Entity> DataResponse createEntity(T response, C converter, R repository, String operator) {
 
@@ -536,16 +575,16 @@ public class ApiInServiceImpl implements ApiInService {
         }
     }
 
-    private <T extends Entity1C,
-            C extends Converter1C,
+    private <T extends EntityResponse,
+            C extends Converter,
             R extends EntityRepository<E>,
             E extends Entity> DataResponse createEntity(T response, C converter, R repository) {
 
         return createEntity(response, converter, repository, "creating");
     }
 
-    private <T extends Entity1C,
-            C extends Converter1C,
+    private <T extends EntityResponse,
+            C extends Converter,
             R extends EntityRepository<E>,
             E extends Entity> DataResponse updateEntity(T response, C converter, R repository) {
 
@@ -554,8 +593,8 @@ public class ApiInServiceImpl implements ApiInService {
         return createEntity(response, converter, repository, operator);
     }
 
-    private <T extends Entity1C,
-            C extends Converter1C,
+    private <T extends EntityResponse,
+            C extends Converter,
             E extends Entity> List<T> getResponses(List<E> list, C converter) {
 
         List<T> responses = new ArrayList<>();
@@ -563,8 +602,8 @@ public class ApiInServiceImpl implements ApiInService {
         return responses;
     }
 
-    private <T extends Entity1C,
-            C extends Converter1C,
+    private <T extends EntityResponse,
+            C extends Converter,
             R extends EntityRepository<E>,
             E extends Entity> T getResponse(String guid, C converter, R repository) {
 
@@ -572,20 +611,25 @@ public class ApiInServiceImpl implements ApiInService {
         return optional.<T>map(converter::convertToResponse).orElse(null);
     }
 
-    private <T extends Entity1C, D extends DataResponse> void fillDataResponse(D dataResponse, T response) {
-        dataResponse.setResult(response == null);
-        dataResponse.setError(response == null ? "Data not found" : "");
+    private <T extends EntityResponse, D extends DataResponse> void fillDataResponse(D dataResponse, T response) {
+        boolean result = (response != null);
+        fillDataResponse(dataResponse, result);
     }
 
     private <T, D extends DataResponse> void fillDataResponse(D dataResponse, List<T> response) {
-        dataResponse.setResult(response == null || response.isEmpty());
-        dataResponse.setError(response == null || response.isEmpty() ? "Data not found" : "");
+        boolean result = !(response == null || response.isEmpty());
+        fillDataResponse(dataResponse, result);
+    }
+
+    private <D extends DataResponse> void fillDataResponse(D dataResponse, boolean result) {
+        dataResponse.setResult(result);
+        dataResponse.setError(result ? "" : "Data not found");
     }
 
     private <D extends DataEntityResponse<T>,
-            T extends Entity1C,
+            T extends EntityResponse,
             E extends Entity,
-            C extends Converter1C,
+            C extends Converter,
             R extends EntityRepository<E>> D getDataResponse(String guid, C converter, R repository, Class<D> classType) {
 
         T response = getResponse(guid, converter, repository);
@@ -596,9 +640,9 @@ public class ApiInServiceImpl implements ApiInService {
     }
 
     private <D extends DataListResponse<T>,
-            T extends Entity1C,
+            T extends EntityResponse,
             E extends Entity,
-            C extends Converter1C> D getDataListResponse(List<E> list, C converter, Class<D> classType) {
+            C extends Converter> D getDataListResponse(List<E> list, C converter, Class<D> classType) {
 
         List<T> responses = getResponses(list, converter);
         D dataResponse = createDataResponse(classType);
@@ -609,9 +653,8 @@ public class ApiInServiceImpl implements ApiInService {
 
     private <D extends DataResponse> D createDataResponse(Class<D> classType) {
         try {
-            return classType.getDeclaredConstructor(String.class).newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-                 NoSuchMethodException e) {
+            return classType.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
             log.error("Error processing query results: {}{}", System.lineSeparator(), e.getMessage());
             return (D) new DataResponse(false, "Error processing query results");
         }

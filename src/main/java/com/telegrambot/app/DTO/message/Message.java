@@ -1,8 +1,8 @@
 package com.telegrambot.app.DTO.message;
 
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
-import com.telegrambot.app.model.documents.doctype.PayDoc;
-import com.telegrambot.app.model.legalentity.LegalEntity;
+import com.telegrambot.app.model.reference.legalentity.LegalEntity;
+import com.telegrambot.app.model.types.doctype.PayDoc;
 import com.telegrambot.app.model.user.UserStatus;
 import lombok.Data;
 

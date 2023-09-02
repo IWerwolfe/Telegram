@@ -1,12 +1,12 @@
 package com.telegrambot.app.services.api;
 
-import com.telegrambot.app.DTO.api.DefaultDataResponse;
-import com.telegrambot.app.DTO.api.SyncDataResponse;
-import com.telegrambot.app.DTO.api.UserResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
-import com.telegrambot.app.DTO.api.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
+import com.telegrambot.app.DTO.api.other.SyncDataResponse;
+import com.telegrambot.app.DTO.api.other.UserResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
 import lombok.NonNull;
 
 public interface ApiOutService {

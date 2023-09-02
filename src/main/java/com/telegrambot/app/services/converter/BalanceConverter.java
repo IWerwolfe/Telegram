@@ -2,8 +2,8 @@ package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api.balance.BalanceResponse;
 import com.telegrambot.app.model.balance.PartnerBalance;
-import com.telegrambot.app.model.legalentity.Partner;
-import com.telegrambot.app.repositories.PartnerBalanceRepository;
+import com.telegrambot.app.model.reference.legalentity.Partner;
+import com.telegrambot.app.repositories.balance.PartnerBalanceRepository;
 import com.telegrambot.app.repositories.reference.PartnerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

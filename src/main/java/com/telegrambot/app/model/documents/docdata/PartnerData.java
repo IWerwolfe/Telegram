@@ -1,8 +1,8 @@
 package com.telegrambot.app.model.documents.docdata;
 
-import com.telegrambot.app.model.legalentity.Contract;
-import com.telegrambot.app.model.legalentity.Department;
-import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.legalentity.Contract;
+import com.telegrambot.app.model.reference.legalentity.Department;
+import com.telegrambot.app.model.reference.legalentity.Partner;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;

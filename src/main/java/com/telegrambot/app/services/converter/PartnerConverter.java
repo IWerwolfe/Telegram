@@ -1,10 +1,10 @@
 package com.telegrambot.app.services.converter;
 
-import com.telegrambot.app.DTO.api.legal.partner.PartnerResponse;
-import com.telegrambot.app.DTO.api.typeОbjects.Entity1C;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerResponse;
+import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
 import com.telegrambot.app.DTO.types.PartnerType;
-import com.telegrambot.app.model.Entity;
-import com.telegrambot.app.model.legalentity.Partner;
+import com.telegrambot.app.model.reference.legalentity.Partner;
+import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.repositories.reference.PartnerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,16 +13,15 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class PartnerConverter extends Converter1C {
+public class PartnerConverter extends Converter {
 
     private final Class<Partner> classType = Partner.class;
     private final PartnerRepository repository;
 
     @Override
-    public <T extends Entity, R extends Entity1C> R convertToResponse(T entity) {
+    public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
         if (entity instanceof Partner entityBD) {
-            PartnerResponse response = convertReferenceToResponse(entityBD);
-            ;
+            PartnerResponse response = convertReferenceToResponse(entityBD, PartnerResponse.class);
             response.setInn(entityBD.getInn());
             response.setKpp(entityBD.getKpp());
             response.setGuidBankAccount(entityBD.getBankAccount());
@@ -40,7 +39,7 @@ public class PartnerConverter extends Converter1C {
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T updateEntity(R dto, T entity) {
+    public <T extends Entity, R extends EntityResponse> T updateEntity(R dto, T entity) {
         if (dto instanceof PartnerResponse response && entity instanceof Partner entityBD) {
             entityBD.setName(response.getName());
             entityBD.setInn(response.getInn());
@@ -59,12 +58,12 @@ public class PartnerConverter extends Converter1C {
     }
 
     @Override
-    public <T extends Entity, R extends Entity1C> T getOrCreateEntity(R dto) {
-        return (T) Converter1C.getOrCreateEntity(dto, repository, classType);
+    public <T extends Entity, R extends EntityResponse> T getOrCreateEntity(R dto) {
+        return (T) Converter.getOrCreateEntity(dto, repository, classType);
     }
 
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
-        return (T) Converter1C.getOrCreateEntity(guid, repository, classType, isSaved);
+        return (T) Converter.getOrCreateEntity(guid, repository, classType, isSaved);
     }
 }
