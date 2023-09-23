@@ -23,4 +23,5 @@ public abstract class LegalEntityResponse extends EntityResponse {
     private String okpo;
     private String guidDefaultContract;
     private String partnerTypeString;
+
 }

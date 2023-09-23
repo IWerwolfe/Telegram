@@ -115,15 +115,12 @@ public abstract class Converter {
     }
 
     private static <T extends Entity> T createEntity(String guid, Class<T> entityType) {
-        try {
-            T entity = entityType.getDeclaredConstructor().newInstance(guid);
+        T entity = createEntity(entityType);
+        if (entity != null) {
+            entity.setSyncData(guid, "");
             addEntityForRequest(guid, entityType.getName());
-            return entity;
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
-                 InvocationTargetException e) {
-            log.error("Ошибка создания сущности {}: {}", entityType.getSimpleName(), e.getMessage());
         }
-        return null;
+        return entity;
     }
 
     private static <T> T createEntity(Class<T> entityType) {

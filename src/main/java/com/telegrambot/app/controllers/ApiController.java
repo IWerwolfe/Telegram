@@ -250,7 +250,7 @@ public class ApiController {
     }
 
     @PutMapping("/balance")
-    public ResponseEntity<DataResponse> updateBalance(BalanceResponse response) {
+    public ResponseEntity<DataResponse> updateBalance(@RequestBody BalanceResponse response) {
         return ResponseEntity.ok(api.updateBalance(response));
     }
 

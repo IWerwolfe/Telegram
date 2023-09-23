@@ -1,5 +1,6 @@
 package com.telegrambot.app.DTO.api.reference.legal.contract;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
@@ -8,9 +9,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ContractResponse extends EntityResponse {
     private String guidPartner;
     @JsonFormat(pattern = DATE_PATTERN)
@@ -22,4 +23,9 @@ public class ContractResponse extends EntityResponse {
     private String standardHourlyRate;
     private Boolean isBilling;
     private String billingTypeString;
+
+    @JsonCreator
+    public ContractResponse(String json) {
+        createToJson(json, ContractResponse.class, this);
+    }
 }

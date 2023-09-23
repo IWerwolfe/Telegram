@@ -1,11 +1,14 @@
 package com.telegrambot.app.DTO.api.reference.legal.department;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DepartmentResponse extends EntityResponse {
     private String guidPartner;
     private String guidContract;
@@ -13,4 +16,9 @@ public class DepartmentResponse extends EntityResponse {
     private Boolean isExcisableGoods;
     private Boolean isMarkedGoods;
     private Boolean isEgais;
+
+    @JsonCreator
+    public DepartmentResponse(String json) {
+        createToJson(json, DepartmentResponse.class, this);
+    }
 }
