@@ -27,6 +27,7 @@ import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethodMess
 import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Contact;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.payments.PreCheckoutQuery;
@@ -63,7 +64,7 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         if (update.hasPreCheckoutQuery() && update.getPreCheckoutQuery().getId() != null) {
             PreCheckoutQuery checkoutQuery = update.getPreCheckoutQuery();
             AnswerPreCheckoutQuery query = new AnswerPreCheckoutQuery(checkoutQuery.getId(), true);
-            sendMassage(query);
+            sendMessage(query);
             return;
         }
 
@@ -114,24 +115,24 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     }
 
 
-    public void sendMassage(BotApiMethodMessage message) {
+    public void sendMessage(BotApiMethodMessage message) {
         try {
-            execute(message);
+            Message reply = execute(message);
             if (message instanceof SendMessage send) {
-                saveTransaction(send);
+                saveTransaction(send, reply.getMessageId());
             }
             if (message instanceof SendInvoice invoice) {
-                saveTransaction(invoice.getTitle());
+                saveTransaction(invoice.getTitle(), reply.getMessageId());
             }
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
         }
     }
 
-    public void sendMassage(BotApiMethodBoolean message) {
+    public void sendMessage(BotApiMethodBoolean message) {
         try {
             execute(message);
-            saveTransaction("Подтверждение оплаты");
+            saveTransaction("Подтверждение оплаты", getMessageId());
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
         }
@@ -222,24 +223,24 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     }
 
     private void saveTransaction(boolean isCommand) {
-        saveTransaction(getReceivedMessage(), isCommand);
+        saveTransaction(getReceivedMessage(), isCommand, getMessageId(), getTransactionTypeFromMessage());
     }
 
-    private void saveTransaction(SendMessage sendMessage) {
-        saveTransaction(sendMessage.getText());
+    private void saveTransaction(SendMessage sendMessage, long idMessage) {
+        saveTransaction(sendMessage.getText(), idMessage);
     }
 
-    private void saveTransaction(String text) {
-        saveTransaction(text, false);
+    private void saveTransaction(String text, long idMessage) {
+        saveTransaction(text, false, idMessage, TransactionType.BOT_MESSAGE);
     }
 
-    private void saveTransaction(String text, boolean isCommand) {
+    private void saveTransaction(String text, boolean isCommand, long idMessage, TransactionType type) {
         Transaction transaction = new Transaction();
         transaction.setUserBD(user);
         transaction.setDate(LocalDateTime.now());
         transaction.setText(text);
-        transaction.setIdMessage((int) getMessageId());
-        transaction.setTransactionType(TransactionType.BOT_MESSAGE);
+        transaction.setIdMessage((int) idMessage);
+        transaction.setTransactionType(type);
         transaction.setCommand(isCommand);
         transactionRepository.save(transaction);
     }

@@ -5,6 +5,7 @@ package com.telegrambot.app.components;    /*
 import com.telegrambot.app.DTO.types.FormOfPayment;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.reference.TaskStatus;
+import com.telegrambot.app.model.types.Reference;
 import com.telegrambot.app.model.user.UserType;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -12,17 +13,15 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Buttons {
 
     private static final int SIZE_INLINE_BUTTON = 64;
     private static final InlineKeyboardButton START_BUTTON = new InlineKeyboardButton("Start");
     private static final InlineKeyboardButton HELP_BUTTON = new InlineKeyboardButton("Справка");
-    private static final InlineKeyboardButton NEED_HELP = new InlineKeyboardButton("Нужна помощь");
+    private static final InlineKeyboardButton NEED_HELP = new InlineKeyboardButton("Создать обращение");
     private static final InlineKeyboardButton BUY = new InlineKeyboardButton("Купить");
     private static final InlineKeyboardButton CANCEL_TASK = new InlineKeyboardButton("Отменить");
     private static final InlineKeyboardButton CLOSE_TASK = new InlineKeyboardButton("Закрыть");
@@ -54,60 +53,48 @@ public class Buttons {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         switch (userType) {
-
             case USER -> {
-                List<InlineKeyboardButton> row1Line = List.of(BUY, CREATE_TASK);
-                List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, GET_BALANCE);
-                List<InlineKeyboardButton> row3Line = List.of(ADD_BALANCE);
-                rows.add(row1Line);
-                rows.add(row2Line);
-                rows.add(row3Line);
+                rows.add(List.of(BUY, CREATE_TASK));
+                rows.add(List.of(GET_TASKS, GET_BALANCE));
+                rows.add(List.of(ADD_BALANCE));
             }
             case ADMINISTRATOR -> {
+                rows.add(List.of(BUY, CREATE_TASK));
+                rows.add(List.of(GET_TASKS));
+                rows.add(List.of(GET_BALANCE, ADD_BALANCE));
             }
             case DIRECTOR -> {
-                List<InlineKeyboardButton> row1Line = List.of(BUY, CREATE_TASK);
-                List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, GET_BALANCE);
-                rows.add(row1Line);
-                rows.add(row2Line);
+                rows.add(List.of(BUY, CREATE_TASK));
+                rows.add(List.of(GET_TASKS, GET_BALANCE));
             }
             default -> {
-                List<InlineKeyboardButton> row1Line = List.of(BUY, NEED_HELP);
-                List<InlineKeyboardButton> row2Line = List.of(GET_TASKS, SEND_CONTACT);
-                List<InlineKeyboardButton> row3Line = List.of(ADD_BALANCE, GET_BALANCE);
-                rows.add(row1Line);
-                rows.add(row2Line);
-                rows.add(row3Line);
+                rows.add(List.of(BUY, NEED_HELP));
+                rows.add(List.of(GET_TASKS, SEND_CONTACT));
+                rows.add(List.of(ADD_BALANCE, GET_BALANCE));
             }
         }
 
-        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-        markupInline.setKeyboard(rows);
-        return markupInline;
+        return getInlineKeyboardMarkup(rows);
     }
 
     public static InlineKeyboardMarkup getInlineByEnumFormOfPay(String command) {
+        List<List<InlineKeyboardButton>> rowsInLine = Arrays.stream(FormOfPayment.values())
+                .map(field -> getInlineKeyboardButton(field.name(), command + ":" + field))
+                .collect(Collectors.toList());
+        return getInlineKeyboardMarkup(rowsInLine);
+    }
 
-        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-
-        for (FormOfPayment field : FormOfPayment.values()) {
-            InlineKeyboardButton taskButton = new InlineKeyboardButton(field.getLabel());
-            taskButton.setCallbackData(command + ":" + field.name());
-            List<InlineKeyboardButton> rowInline = List.of(taskButton);
-            rowsInLine.add(rowInline);
-        }
-        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-        markupInline.setKeyboard(rowsInLine);
-        return markupInline;
+    public static <E extends Reference> InlineKeyboardMarkup getInlineByRef(String command, List<E> list) {
+        List<List<InlineKeyboardButton>> rowsInLine = list.stream()
+                .map(field -> getInlineKeyboardButton(field, command))
+                .collect(Collectors.toList());
+        return getInlineKeyboardMarkup(rowsInLine);
     }
 
     public static InlineKeyboardMarkup inlineMarkup() {
         List<InlineKeyboardButton> rowInline = List.of(START_BUTTON, HELP_BUTTON, SEND_CONTACT);
         List<List<InlineKeyboardButton>> rowsInLine = List.of(rowInline);
-
-        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-        markupInline.setKeyboard(rowsInLine);
-        return markupInline;
+        return getInlineKeyboardMarkup(rowsInLine);
     }
 
     public static InlineKeyboardMarkup getInlineMarkupEditTask(TaskDoc taskDoc) {
@@ -117,43 +104,33 @@ public class Buttons {
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         boolean isPay = taskDoc.getTotalAmount() != null && taskDoc.getTotalAmount() > 0;
+        boolean isClosed = Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId());
 
-        if (Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId())) {
-            if (isPay) {
-                List<InlineKeyboardButton> rowLine = List.of(PAY_TASK);
-                rows = List.of(rowLine);
-            }
-        } else {
-            CANCEL_TASK.setCallbackData("cancel:" + taskDoc.getId());
-            EDIT_COMMENT_TASK.setCallbackData("comment:" + taskDoc.getId());
-            EDIT_DESCRIPTION_TASK.setCallbackData("descriptor:" + taskDoc.getId());
-
-            List<InlineKeyboardButton> row1Line = List.of(EDIT_DESCRIPTION_TASK);
-            List<InlineKeyboardButton> row2Line = List.of(EDIT_COMMENT_TASK);
-            List<InlineKeyboardButton> row3Line = isPay ? List.of(CANCEL_TASK, PAY_TASK) : List.of(CANCEL_TASK);
-            rows.add(row1Line);
-            rows.add(row2Line);
-            rows.add(row3Line);
+        if (isPay && isClosed) {
+            rows.add(List.of(PAY_TASK));
+            return getInlineKeyboardMarkup(rows);
         }
-        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-        markupInline.setKeyboard(rows);
-        return markupInline;
+
+        CANCEL_TASK.setCallbackData("cancel:" + taskDoc.getId());
+        EDIT_COMMENT_TASK.setCallbackData("comment:" + taskDoc.getId());
+        EDIT_DESCRIPTION_TASK.setCallbackData("descriptor:" + taskDoc.getId());
+
+        rows.add(List.of(EDIT_DESCRIPTION_TASK));
+        rows.add(List.of(EDIT_COMMENT_TASK));
+        rows.add(isPay ? List.of(CANCEL_TASK, PAY_TASK) : List.of(CANCEL_TASK));
+
+        return getInlineKeyboardMarkup(rows);
     }
 
     public static InlineKeyboardMarkup getInlineMarkupByTasks(List<TaskDoc> taskDocs) {
-
-        List<List<InlineKeyboardButton>> rowsInLine = new ArrayList<>();
-
-        for (TaskDoc taskDoc : taskDocs) {
-            InlineKeyboardButton taskButton = new InlineKeyboardButton(getDescriptorToInline(taskDoc));
-            taskButton.setCallbackData("getTask:" + taskDoc.getId());
-            List<InlineKeyboardButton> rowInline = List.of(taskButton);
-            rowsInLine.add(rowInline);
-        }
-
-        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
-        markupInline.setKeyboard(rowsInLine);
-        return markupInline;
+        List<List<InlineKeyboardButton>> rowsInLine = taskDocs.stream()
+                .map(taskDoc -> {
+                    String name = getDescriptorToInline(taskDoc);
+                    String command = "getTask:" + taskDoc.getId();
+                    return getInlineKeyboardButton(name, command);
+                })
+                .toList();
+        return getInlineKeyboardMarkup(rowsInLine);
     }
 
     public static ReplyKeyboardMarkup getContact() {
@@ -165,6 +142,16 @@ public class Buttons {
         row.add(GET_CONTACT);
         keyboardMarkup.setKeyboard(Collections.singletonList(row));
         return keyboardMarkup;
+    }
+
+    private static List<InlineKeyboardButton> getInlineKeyboardButton(String label, String command) {
+        InlineKeyboardButton taskButton = new InlineKeyboardButton(label);
+        taskButton.setCallbackData(command);
+        return List.of(taskButton);
+    }
+
+    private static List<InlineKeyboardButton> getInlineKeyboardButton(Reference ref, String command) {
+        return getInlineKeyboardButton(ref.getName(), command + ":" + ref.getId());
     }
 
     public static String getDescriptorToInline(TaskDoc taskDoc) {
@@ -184,15 +171,9 @@ public class Buttons {
         return code.replaceAll(REGEX_CODE, "").trim();
     }
 
-    private static InlineKeyboardButton getButtonInline(String descriptor, String command) {
-        InlineKeyboardButton button = new InlineKeyboardButton(descriptor);
-        button.setCallbackData(command);
-        return button;
-    }
-
-    private static InlineKeyboardButton getButtonInline(String descriptor, String command, String code) {
-        InlineKeyboardButton button = new InlineKeyboardButton(descriptor);
-        button.setCallbackData(command + ":" + code);
-        return button;
+    private static InlineKeyboardMarkup getInlineKeyboardMarkup(List<List<InlineKeyboardButton>> rows) {
+        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        markupInline.setKeyboard(rows);
+        return markupInline;
     }
 }

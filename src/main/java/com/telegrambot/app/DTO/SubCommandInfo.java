@@ -7,8 +7,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 @Data
 @AllArgsConstructor
 public class SubCommandInfo {
-    private final String startMessage;
-    private final Runnable parent;
+    private String startMessage;
+    private Runnable parent;
     private String errorMessage;
     private String nextSumCommand;
     private String regex;
@@ -58,5 +58,9 @@ public class SubCommandInfo {
         this.nextSumCommand = nextSumCommand;
         this.regex = regex;
         this.keyboard = keyboard;
+    }
+
+    public SubCommandInfo(Runnable parent) {
+        this.parent = parent;
     }
 }

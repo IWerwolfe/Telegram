@@ -21,4 +21,12 @@ public class CommandCache {
     @JoinColumn(name = "user_id")
     private UserBD userBD;
     private Long countStep;
+
+    public void increment() {
+        this.countStep++;
+    }
+
+    public void decrement() {
+        this.countStep--;
+    }
 }

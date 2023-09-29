@@ -1,5 +1,6 @@
 package com.telegrambot.app.services.api;
 
+import com.telegrambot.app.DTO.api.doc.cardDoc.CardDocResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
@@ -26,6 +27,10 @@ public interface ApiOutService {
     TaskDocDataResponse getTaskByCode(@NonNull String code);
 
     SyncDataResponse createTask(@NonNull TaskDocResponse taskDocResponse);
+
+    SyncDataResponse createCardDoc(@NonNull CardDocResponse cardDocResponse);
+
+    SyncDataResponse updateTask(@NonNull TaskDocResponse taskDocResponse);
 
     TaskDocDataListResponse getTaskListDataByCompany(String guidPartner);
 

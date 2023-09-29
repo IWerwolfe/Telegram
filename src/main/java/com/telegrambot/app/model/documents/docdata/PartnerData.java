@@ -29,22 +29,22 @@ public class PartnerData {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
 
-        if (partner != null) {
-            builder.append(partner);
-            builder.append(System.lineSeparator())
-                    .append("Договор: ")
-                    .append(contract == null ? "Основной" : contract.toString());
-
-            if (department != null) {
-                builder.append(System.lineSeparator())
-                        .append(department);
-            }
-
-        } else {
-            builder.append("Контрагент не указан");
+        if (partner == null) {
+            return "Контрагент не указан";
         }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(partner);
+        builder.append(System.lineSeparator())
+                .append("Договор: ")
+                .append(contract == null ? "Основной" : contract.toString());
+
+        if (department != null) {
+            builder.append(System.lineSeparator())
+                    .append(department);
+        }
+
         return builder.toString();
     }
 }

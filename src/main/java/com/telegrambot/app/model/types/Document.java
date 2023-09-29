@@ -56,9 +56,14 @@ public abstract class Document extends Entity {
     }
 
     public void setPartnerData(Partner partner) {
+        setPartnerData(partner, null);
+    }
+
+    public void setPartnerData(Partner partner, Department department) {
         PartnerData partnerData = getPartnerData() == null ? new PartnerData() : getPartnerData();
         partnerData.setPartner(partner);
         partnerData.setContract(partner.getDefaultContract());
+        partnerData.setDepartment(department);
         this.partnerData = partnerData;
     }
 

@@ -1,6 +1,7 @@
 package com.telegrambot.app.services.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.telegrambot.app.DTO.api.doc.cardDoc.CardDocResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
@@ -32,7 +33,7 @@ public class ApiOutServiceImpl implements ApiOutService {
 
     private final Connector1C connector1C;
 
-    public <T, R extends DataResponse> R executeRequest(T requestBody, Class<R> responseType, String method, String param, HttpMethod httpMethod) {
+    private <T, R extends DataResponse> R executeRequest(T requestBody, Class<R> responseType, String method, String param, HttpMethod httpMethod) {
         long start = System.currentTimeMillis();
         HttpHeaders headers = getHttpHeaders();
         HttpEntity<T> requestEntity = new HttpEntity<>(requestBody, headers);
@@ -84,11 +85,11 @@ public class ApiOutServiceImpl implements ApiOutService {
         return request;
     }
 
-    public <R extends DataResponse> R executeGetRequest(Class<R> responseType, String method, String param) {
+    private <R extends DataResponse> R executeGetRequest(Class<R> responseType, String method, String param) {
         return executeRequest(null, responseType, method, param, HttpMethod.GET);
     }
 
-    public <T, R extends DataResponse> R executePostRequest(T requestBody, Class<R> responseType, String method) {
+    private <T, R extends DataResponse> R executePostRequest(T requestBody, Class<R> responseType, String method) {
         return executeRequest(requestBody, responseType, method, "", HttpMethod.POST);
     }
 
@@ -131,6 +132,16 @@ public class ApiOutServiceImpl implements ApiOutService {
     @Override
     public SyncDataResponse createTask(@NonNull TaskDocResponse taskDocResponse) {
         return executePostRequest(taskDocResponse, SyncDataResponse.class, "task");
+    }
+
+    @Override
+    public SyncDataResponse createCardDoc(@NonNull CardDocResponse cardDocResponse) {
+        return executePostRequest(cardDocResponse, SyncDataResponse.class, "cardDoc");
+    }
+
+    @Override
+    public SyncDataResponse updateTask(@NonNull TaskDocResponse taskDocResponse) {
+        return executeRequest(taskDocResponse, SyncDataResponse.class, "task", "", HttpMethod.PUT);
     }
 
     @Override

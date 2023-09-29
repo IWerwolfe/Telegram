@@ -64,7 +64,7 @@ public abstract class Message {
         return "Ваш телефон не найден";
     }
 
-    public static String getStartUserName() {
+    public static String getStarFIO() {
         return "Укажите ваше полное ФИО";
     }
 
@@ -72,7 +72,7 @@ public abstract class Message {
         return "Укажите вашу должность";
     }
 
-    public static String getUnCorrectUserName() {
+    public static String getUnCorrectFIO() {
         return "Ваше ФИО указано некорректно";
     }
 
@@ -117,9 +117,9 @@ public abstract class Message {
     public static String getStartCreateAssistance(String name) {
         return name + ", спасибо что обратились к нам. Мы зададим вам несколько вопросов чтобы уточнить все детали." + DUAL_SEPARATOR +
                 "Постарайтесь точно описать проблему, избегая общих формулировок типа: " + DUAL_SEPARATOR +
-                "\t -\"Не включается\"" + SEPARATOR +
-                "\t -\"показывает черный экран\"" + SEPARATOR +
-                "\t -\"не работает касса\", " + DUAL_SEPARATOR +
+                "\t - Не включается" + SEPARATOR +
+                "\t - показывает черный экран" + SEPARATOR +
+                "\t - не работает касса, " + DUAL_SEPARATOR +
                 "Нам очень поможет если вы укажите модель оборудования и/или название установленного у вас програмного обеспечения " +
                 "и что предшествовало проблеме";
     }
@@ -186,4 +186,25 @@ public abstract class Message {
                 " составляет " + (sum / 100.00) + " руб.";
     }
 
+    public static String getPartnersByList() {
+        return "Выберите организацию из списка";
+    }
+
+    public static String getDepartmentsByList() {
+        return "Выберите торговую точку из списка";
+    }
+
+    public static String getSuccessfullyEditTask(TaskDoc taskDoc) {
+        return "Задача № " + taskDoc.getCodeEntity() + " успешно отредактирована";
+    }
+
+    public static String getSuccessfullyRegister(String firstName) {
+        return firstName + ", вы успешно зарегистрировались. " + SEPARATOR +
+                "Для повышения вашего статуса в системе вам необходимо обратиться к нам в офис " +
+                "либо по телефону.";
+    }
+
+    public static String getErrorToEditUserInfo() {
+        return "Произошла ошибка при редактировании информации, попробуйте повторить позже";
+    }
 }
