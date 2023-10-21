@@ -2,13 +2,16 @@ package com.telegrambot.app.model.user;    /*
  *created by WerWolfe on UserResponse
  */
 
+import com.telegrambot.app.model.balance.UserBalance;
 import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.documents.docdata.SyncData;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.telegram.telegrambots.meta.api.objects.User;
+
+import java.util.List;
 
 @Data
 @Entity
@@ -33,6 +36,35 @@ public class UserBD {
     private PersonData person;
     private SyncData syncData;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<UserStatus> statuses;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private UserBalance userBalance;
+
+    public UserBD(User user) {
+        BeanUtils.copyProperties(user, this);
+        this.person = new PersonData(user.getFirstName(), user.getLastName());
+        this.statuses = List.of(new UserStatus(this));
+        this.userBalance = new UserBalance(this);
+    }
+
+    public UserType getUserType() {
+        return statuses.isEmpty() ? UserType.UNAUTHORIZED : statuses.get(0).getUserType();
+    }
+
+    public int getBalance() {
+        return userBalance.getAmount();
+    }
+
+    public void setBalance(int balance) {
+        userBalance.setAmount(balance);
+    }
+
+    public void updateBalance(int sum) {
+        userBalance.setAmount(userBalance.getAmount() + sum);
+    }
+
     public String getGuidEntity() {
         return this.getSyncData() == null ? null :
                 this.getSyncData().getGuid();
@@ -44,10 +76,8 @@ public class UserBD {
         }
     }
 
-//    private String guid;
-//    private List<UserStatus> statuses;
-
-    public UserBD(String phone) {
-        this.phone = phone;
+    @Override
+    public String toString() {
+        return person.getFirstName() + " " + person.getLastName();
     }
 }

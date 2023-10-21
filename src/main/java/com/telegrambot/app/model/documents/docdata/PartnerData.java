@@ -17,15 +17,24 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PartnerData {
-    @ManyToOne
+
+    @ManyToOne()
     @JoinColumn(name = "partner_id")
     private Partner partner;
-    @ManyToOne
+
+    @ManyToOne()
     @JoinColumn(name = "department_id")
     private Department department;
-    @ManyToOne
+
+    @ManyToOne()
     @JoinColumn(name = "contract_id")
     private Contract contract;
+
+    public PartnerData(Partner partner) {
+        this.partner = partner;
+        this.contract = partner.getDefaultContract();
+        this.department = partner.getDepartments().size() == 1 ? partner.getDepartments().get(0) : null;
+    }
 
     @Override
     public String toString() {

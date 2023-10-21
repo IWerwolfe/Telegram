@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -19,6 +21,7 @@ public class BankDocConverter extends Converter {
     private final BankDocRepository repository;
     private final DataConverter dataConverter;
     private final ManagerConverter managerConverter;
+    private final DivisionConverter divisionConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
@@ -41,7 +44,7 @@ public class BankDocConverter extends Converter {
             fillResponseToDoc(entityBD, response);
             entityBD.setManager(managerConverter.getOrCreateEntity(response.getGuidManager(), true));
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
-            entityBD.setDivision(response.getGuidDivision());
+            entityBD.setDivision(divisionConverter.getOrCreateEntity(response.getGuidDivision(), true));
             entityBD.setPartnerData(dataConverter.getPartnerData(response));
 
             //TODO дописать конвертацию
@@ -59,5 +62,11 @@ public class BankDocConverter extends Converter {
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
         return (T) Converter.getOrCreateEntity(guid, repository, classType);
+    }
+
+    @Override
+    public <T extends Entity, S extends EntityResponse> List<T> convertToEntityList(List<S> list, boolean isSaved) {
+        return (List<T>) (isSaved ? convertToEntityListIsSave(list, this, repository) :
+                convertToEntityList(list, this));
     }
 }

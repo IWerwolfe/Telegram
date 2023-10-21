@@ -128,6 +128,11 @@ public abstract class Message {
         return "Выполнение команды " + command + " успешно завершено";
     }
 
+    public static String getExitToErrors() {
+        return "Произошла ошибка при выполнении команды и мы уже разбираемся как ее устранить, " +
+                "попробуйте пожалуйста немного позже";
+    }
+
     public static String getIncorrectTask() {
         return "Произошла ошибка при создании обращения, попробуйте пожалуйста немного позже";
     }

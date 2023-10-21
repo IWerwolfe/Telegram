@@ -19,9 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 public class TaskStatus extends Reference {
 
     @Transient
-    private static TaskStatus defaultClosedStatus;
+    private static TaskStatus closedStatus;
     @Transient
-    private static TaskStatus defaultInitialStatus;
+    private static TaskStatus initialStatus;
 
     public TaskStatus(String guid) {
         this.setSyncData(new SyncData(guid));
@@ -32,20 +32,20 @@ public class TaskStatus extends Reference {
         setName(name);
     }
 
-    public static TaskStatus getDefaultClosedStatus() {
-        return defaultClosedStatus;
+    public static TaskStatus getClosedStatus() {
+        return closedStatus;
     }
 
-    public static void setDefaultClosedStatus(TaskStatus defaultClosedStatus) {
-        TaskStatus.defaultClosedStatus = defaultClosedStatus;
+    public static void setClosedStatus(TaskStatus closedStatus) {
+        TaskStatus.closedStatus = closedStatus;
     }
 
-    public static TaskStatus getDefaultInitialStatus() {
-        return defaultInitialStatus;
+    public static TaskStatus getInitialStatus() {
+        return initialStatus;
     }
 
-    public static void setDefaultInitialStatus(TaskStatus defaultInitialStatus) {
-        TaskStatus.defaultInitialStatus = defaultInitialStatus;
+    public static void setInitialStatus(TaskStatus initialStatus) {
+        TaskStatus.initialStatus = initialStatus;
     }
 
     @Override

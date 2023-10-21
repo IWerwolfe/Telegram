@@ -19,9 +19,19 @@ import java.util.stream.Collectors;
 public class Buttons {
 
     private static final int SIZE_INLINE_BUTTON = 64;
+
+    private static final KeyboardButton NEED_HELP = new KeyboardButton("Создать обращение");
+    private static final KeyboardButton GET_TASKS = new KeyboardButton("Посмотреть задачи");
+    private static final KeyboardButton CREATE_TASK = new KeyboardButton("Создать задачу");
+    private static final KeyboardButton GET_BALANCE = new KeyboardButton("Проверить баланс");
+    private static final KeyboardButton SEND_CONTACT = new KeyboardButton("Зарегистрироваться");
+    private static final KeyboardButton ADD_BALANCE = new KeyboardButton("Пополнить баланс");
+    private static final KeyboardButton GET_CONTACT = new KeyboardButton("Отправить номер телефона");
+    private static final KeyboardButton EXIT = new KeyboardButton("Отмена");
+
+
     private static final InlineKeyboardButton START_BUTTON = new InlineKeyboardButton("Start");
     private static final InlineKeyboardButton HELP_BUTTON = new InlineKeyboardButton("Справка");
-    private static final InlineKeyboardButton NEED_HELP = new InlineKeyboardButton("Создать обращение");
     private static final InlineKeyboardButton BUY = new InlineKeyboardButton("Купить");
     private static final InlineKeyboardButton CANCEL_TASK = new InlineKeyboardButton("Отменить");
     private static final InlineKeyboardButton CLOSE_TASK = new InlineKeyboardButton("Закрыть");
@@ -29,52 +39,49 @@ public class Buttons {
     private static final InlineKeyboardButton PAY_TASK = new InlineKeyboardButton("Оплатить");
     private static final InlineKeyboardButton EDIT_COMMENT_TASK = new InlineKeyboardButton("Редактировать комментарий");
     private static final InlineKeyboardButton EDIT_DESCRIPTION_TASK = new InlineKeyboardButton("Редактировать описание");
-    private static final InlineKeyboardButton GET_TASKS = new InlineKeyboardButton("Посмотреть задачи");
-    private static final InlineKeyboardButton GET_BALANCE = new InlineKeyboardButton("Проверить баланс");
-    private static final InlineKeyboardButton CREATE_TASK = new InlineKeyboardButton("Создать задачу");
-    private static final InlineKeyboardButton SEND_CONTACT = new InlineKeyboardButton("Зарегистрироваться");
-    private static final InlineKeyboardButton ADD_BALANCE = new InlineKeyboardButton("Пополнить баланс");
-    private static final KeyboardButton GET_CONTACT = new KeyboardButton("Отправить номер телефона");
+
 
     public static void init() {
-        GET_TASKS.setCallbackData("/get_task");
-        GET_BALANCE.setCallbackData("/get_balance");
-        CREATE_TASK.setCallbackData("/create_task");
         BUY.setCallbackData("/buy");
-        ADD_BALANCE.setCallbackData("/add_balance");
-        NEED_HELP.setCallbackData("/need_help");
-        SEND_CONTACT.setCallbackData("/send_contact");
         START_BUTTON.setCallbackData("/start");
         HELP_BUTTON.setCallbackData("/help");
     }
 
-    public static InlineKeyboardMarkup inlineMarkupDefault(UserType userType) {
+    public static ReplyKeyboardMarkup keyboardMarkupDefault(UserType userType) {
 
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<KeyboardRow> rows = new ArrayList<>();
 
         switch (userType) {
-            case USER -> {
-                rows.add(List.of(BUY, CREATE_TASK));
-                rows.add(List.of(GET_TASKS, GET_BALANCE));
-                rows.add(List.of(ADD_BALANCE));
-            }
-            case ADMINISTRATOR -> {
-                rows.add(List.of(BUY, CREATE_TASK));
-                rows.add(List.of(GET_TASKS));
-                rows.add(List.of(GET_BALANCE, ADD_BALANCE));
-            }
-            case DIRECTOR -> {
-                rows.add(List.of(BUY, CREATE_TASK));
-                rows.add(List.of(GET_TASKS, GET_BALANCE));
+            case USER, ADMINISTRATOR, DIRECTOR -> {
+                rows.add(new KeyboardRow(List.of(GET_TASKS, CREATE_TASK)));
+                rows.add(new KeyboardRow(List.of(GET_BALANCE, ADD_BALANCE)));
             }
             default -> {
-                rows.add(List.of(BUY, NEED_HELP));
-                rows.add(List.of(GET_TASKS, SEND_CONTACT));
-                rows.add(List.of(ADD_BALANCE, GET_BALANCE));
+                rows.add(new KeyboardRow(List.of(GET_TASKS, NEED_HELP)));
+                rows.add(new KeyboardRow(List.of(ADD_BALANCE, GET_BALANCE)));
+                rows.add(new KeyboardRow(List.of(SEND_CONTACT)));
             }
         }
 
-        return getInlineKeyboardMarkup(rows);
+        return createReplyKeyboardMarkup(rows);
+    }
+
+    public static ReplyKeyboardMarkup keyboardMarkupCommands() {
+        KeyboardRow row = new KeyboardRow();
+        row.add(EXIT);
+        return createReplyKeyboardMarkup(List.of(row), false);
+    }
+
+    private static ReplyKeyboardMarkup createReplyKeyboardMarkup(List<KeyboardRow> rows, boolean oneTimeKeyboard) {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
+        keyboardMarkup.setOneTimeKeyboard(oneTimeKeyboard);
+        keyboardMarkup.setKeyboard(rows);
+        return keyboardMarkup;
+    }
+
+    private static ReplyKeyboardMarkup createReplyKeyboardMarkup(List<KeyboardRow> rows) {
+        return createReplyKeyboardMarkup(rows, true);
     }
 
     public static InlineKeyboardMarkup getInlineByEnumFormOfPay(String command) {
@@ -91,12 +98,6 @@ public class Buttons {
         return getInlineKeyboardMarkup(rowsInLine);
     }
 
-    public static InlineKeyboardMarkup inlineMarkup() {
-        List<InlineKeyboardButton> rowInline = List.of(START_BUTTON, HELP_BUTTON, SEND_CONTACT);
-        List<List<InlineKeyboardButton>> rowsInLine = List.of(rowInline);
-        return getInlineKeyboardMarkup(rowsInLine);
-    }
-
     public static InlineKeyboardMarkup getInlineMarkupEditTask(TaskDoc taskDoc) {
 
         PAY_TASK.setCallbackData("pay:" + taskDoc.getId());
@@ -104,7 +105,7 @@ public class Buttons {
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         boolean isPay = taskDoc.getTotalAmount() != null && taskDoc.getTotalAmount() > 0;
-        boolean isClosed = Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getDefaultClosedStatus().getId());
+        boolean isClosed = Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getClosedStatus().getId());
 
         if (isPay && isClosed) {
             rows.add(List.of(PAY_TASK));

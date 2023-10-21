@@ -1,15 +1,11 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.config.BotConfig;
-import com.telegrambot.app.model.balance.UserBalance;
 import com.telegrambot.app.model.command.CommandCache;
-import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.transaction.Transaction;
 import com.telegrambot.app.model.transaction.TransactionType;
 import com.telegrambot.app.model.user.UserActivity;
 import com.telegrambot.app.model.user.UserBD;
-import com.telegrambot.app.model.user.UserStatus;
-import com.telegrambot.app.model.user.UserType;
 import com.telegrambot.app.repositories.balance.UserBalanceRepository;
 import com.telegrambot.app.repositories.command.CommandCacheRepository;
 import com.telegrambot.app.repositories.transaction.TransactionRepository;
@@ -18,7 +14,6 @@ import com.telegrambot.app.repositories.user.UserRepository;
 import com.telegrambot.app.repositories.user.UserStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerPreCheckoutQuery;
@@ -72,7 +67,7 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         if (commandCache.size() > 0) {
             botCommands.botAnswerUtils(commandCache, getReceivedMessage(), getChatId(), user);
             isCommand = false;
-            log.info("The text command processing mode is set");
+//            log.info("The text command processing mode is set");
         }
 
         if (update.hasMessage() && update.getMessage().hasContact()) {
@@ -209,17 +204,9 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     }
 
     private UserBD createUserBD(User user) {
-        UserBD userBD = new UserBD();
-        BeanUtils.copyProperties(user, userBD);
-        PersonData person = new PersonData(user.getFirstName(), user.getLastName());
-        userBD.setPerson(person);
-
-        userRepository.save(userBD);
-        updateUserStatus(userBD, UserType.UNAUTHORIZED);
-        userBalanceRepository.save(new UserBalance(userBD));
-
+        UserBD userBD = new UserBD(user);
         log.info("Create new telegram user {} {}", userBD.getPerson().getFirstName(), userBD.getUserName());
-        return userBD;
+        return userRepository.save(userBD);
     }
 
     private void saveTransaction(boolean isCommand) {
@@ -253,14 +240,5 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         }
         activity.setLastActivityDate(LocalDateTime.now());
         activityRepository.save(activity);
-    }
-
-    private void updateUserStatus(UserBD userBD, UserType type) {
-        UserStatus status = new UserStatus();
-        status.setUserType(type);
-        status.setUserBD(userBD);
-        status.setLastUpdate(LocalDateTime.now());
-        statusRepository.save(status);
-        log.info("Update telegram userBD {} status on {}", userBD.getPerson().getFirstName(), status.getUserType());
     }
 }

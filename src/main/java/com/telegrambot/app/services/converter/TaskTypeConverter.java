@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -43,5 +45,11 @@ public class TaskTypeConverter extends Converter {
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
         return (T) Converter.getOrCreateEntity(guid, repository, classType, isSaved);
+    }
+
+    @Override
+    public <T extends Entity, S extends EntityResponse> List<T> convertToEntityList(List<S> list, boolean isSaved) {
+        return (List<T>) (isSaved ? convertToEntityListIsSave(list, this, repository) :
+                convertToEntityList(list, this));
     }
 }

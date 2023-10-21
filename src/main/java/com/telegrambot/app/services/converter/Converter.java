@@ -13,9 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 public abstract class Converter {
@@ -40,6 +38,8 @@ public abstract class Converter {
 
     public abstract <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved);
 
+    public abstract <T extends Entity, S extends EntityResponse> List<T> convertToEntityList(List<S> list, boolean isSaved);
+
     public <E extends Document, T extends EntityDocResponse> T convertDocToResponse(E doc, Class<T> entityType) {
         T request = createEntity(entityType);
         if (request != null) {
@@ -48,7 +48,7 @@ public abstract class Converter {
             request.setGuidCompany(convertToGuid(doc.getCompany()));
             request.setGuidDepartment(convertToGuid(doc.getDepartment()));
             request.setGuidContract(convertToGuid(doc.getContract()));
-            request.setGuidDivision(doc.getDivision());
+            request.setGuidDivision(convertToGuid(doc.getDivision()));
             request.setGuidManager(convertToGuid(doc.getManager()));
             request.setGuidPartner(convertToGuid(doc.getPartner()));
             request.setTotalAmount(doc.getPresentTotalAmount());
@@ -61,7 +61,6 @@ public abstract class Converter {
     public <E extends Document, T extends EntityDocResponse> void fillResponseToDoc(E doc, T response) {
         doc.setDate(convertToLocalDateTime(response.getDate()));
         doc.setComment(response.getComment());
-        doc.setDivision(response.getGuidDivision());
         doc.setTotalAmount(Integer.valueOf(response.getTotalAmount()));
         doc.setMarkedForDel(response.getMarkedForDel());
     }
@@ -80,6 +79,25 @@ public abstract class Converter {
         T entity = getOrCreateEntity(dto);
         entity.setSyncData(dto.getGuid(), dto.getCode());
         return updateEntity(dto, entity);
+    }
+
+    public static <T extends Entity,
+            S extends EntityResponse,
+            R extends EntityRepository<T>,
+            C extends Converter> List<T> convertToEntityList(List<S> list,
+                                                             C converter) {
+        return list == null || list.isEmpty() ?
+                new ArrayList<>() :
+                list.stream().map(response -> (T) converter.convertToEntity(response)).toList();
+    }
+
+    public static <T extends Entity,
+            S extends EntityResponse,
+            R extends EntityRepository<T>,
+            C extends Converter> List<T> convertToEntityListIsSave(List<S> list,
+                                                                   C converter,
+                                                                   R repository) {
+        return repository.saveAllAndFlush(convertToEntityList(list, converter));
     }
 
     public static <T extends Entity, S extends EntityResponse, R extends EntityRepository<T>> T getOrCreateEntity(S dto,

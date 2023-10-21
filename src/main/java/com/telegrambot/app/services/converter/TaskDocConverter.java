@@ -11,17 +11,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class TaskDocConverter extends Converter {
-
     private final Class<TaskDoc> classType = TaskDoc.class;
     private final TaskDocRepository repository;
     private final TaskTypeConverter typeConverter;
     private final TaskStatusConverter statusConverter;
     private final DataConverter dataConverter;
     private final ManagerConverter managerConverter;
+    private final DivisionConverter divisionConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
@@ -51,7 +53,7 @@ public class TaskDocConverter extends Converter {
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setDescription(response.getDescription());
             entityBD.setDecision(response.getDecision());
-            entityBD.setDivision(response.getGuidDivision());
+            entityBD.setDivision(divisionConverter.getOrCreateEntity(response.getGuidDivision(), true));
             entityBD.setStatus(statusConverter.getOrCreateEntity(response.getGuidStatus(), true));
             entityBD.setPartnerData(dataConverter.getPartnerData(response));
             entityBD.setClosingDate(convertToLocalDateTime(response.getClosingDate()));
@@ -78,5 +80,11 @@ public class TaskDocConverter extends Converter {
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
         return (T) Converter.getOrCreateEntity(guid, repository, classType);
+    }
+
+    @Override
+    public <T extends Entity, S extends EntityResponse> List<T> convertToEntityList(List<S> list, boolean isSaved) {
+        return (List<T>) (isSaved ? convertToEntityListIsSave(list, this, repository) :
+                convertToEntityList(list, this));
     }
 }

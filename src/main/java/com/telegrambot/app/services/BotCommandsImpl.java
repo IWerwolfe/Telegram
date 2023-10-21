@@ -2,28 +2,24 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.SubCommandInfo;
 import com.telegrambot.app.DTO.TaskListToSend;
+import com.telegrambot.app.DTO.api.balance.BalanceResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataListResponse;
 import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocDataResponse;
-import com.telegrambot.app.DTO.api.doc.taskDoc.TaskDocResponse;
 import com.telegrambot.app.DTO.api.other.SyncDataResponse;
 import com.telegrambot.app.DTO.api.other.UserResponse;
-import com.telegrambot.app.DTO.api.reference.legal.contract.ContractResponse;
-import com.telegrambot.app.DTO.api.reference.legal.department.DepartmentResponse;
 import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
 import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerListData;
-import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
 import com.telegrambot.app.DTO.types.Currency;
 import com.telegrambot.app.DTO.types.PaymentType;
 import com.telegrambot.app.DTO.types.SortingTaskType;
-import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.config.BotConfig;
+import com.telegrambot.app.model.EntityDefaults;
 import com.telegrambot.app.model.EntitySavedEvent;
 import com.telegrambot.app.model.balance.PartnerBalance;
-import com.telegrambot.app.model.balance.UserBalance;
 import com.telegrambot.app.model.command.Command;
 import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.command.CommandStatus;
@@ -39,10 +35,10 @@ import com.telegrambot.app.model.reference.legalentity.LegalEntity;
 import com.telegrambot.app.model.reference.legalentity.Partner;
 import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.model.types.Reference;
+import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.model.user.UserStatus;
 import com.telegrambot.app.model.user.UserType;
 import com.telegrambot.app.repositories.balance.PartnerBalanceRepository;
-import com.telegrambot.app.repositories.balance.UserBalanceRepository;
 import com.telegrambot.app.repositories.command.CommandCacheRepository;
 import com.telegrambot.app.repositories.command.CommandRepository;
 import com.telegrambot.app.repositories.doc.CardDocRepository;
@@ -51,10 +47,10 @@ import com.telegrambot.app.repositories.reference.ContractRepository;
 import com.telegrambot.app.repositories.reference.DepartmentRepository;
 import com.telegrambot.app.repositories.reference.PartnerRepository;
 import com.telegrambot.app.repositories.user.UserRepository;
-import com.telegrambot.app.repositories.user.UserStatusRepository;
+import com.telegrambot.app.services.api.ApiDaDataService;
 import com.telegrambot.app.services.api.ApiOutServiceImpl;
-import com.telegrambot.app.services.api.DaDataService;
 import com.telegrambot.app.services.converter.*;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -74,20 +70,19 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class BotCommandsImpl implements BotCommands {
+
     private final PartnerBalanceRepository partnerBalanceRepository;
-    private final UserBalanceRepository userBalanceRepository;
 
     private final CardDocRepository cardDocRepository;
     private final TaskDocRepository taskDocRepository;
     private final UserRepository userRepository;
-    private final UserStatusRepository statusRepository;
     private final PartnerRepository partnerRepository;
     private final DepartmentRepository departmentRepository;
     private final ContractRepository contractRepository;
     private final CommandCacheRepository commandCacheRepository;
     private final CommandRepository commandRepository;
     private final ApiOutServiceImpl api1C;
-    private final DaDataService daDataService;
+    private final ApiDaDataService apiDaDataService;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -98,7 +93,9 @@ public class BotCommandsImpl implements BotCommands {
     private final UserBDConverter userConverter;
     private final TaskDocConverter taskDocConverter;
     private final ToStringServices toStringServices;
+
     private final BalanceService balanceService;
+    private final EntityDefaults entityDefaults;
 
     private final BotConfig bot;
 
@@ -110,62 +107,66 @@ public class BotCommandsImpl implements BotCommands {
     private TelegramBotServices parent;
     private List<CommandCache> commandCacheList = new ArrayList<>();
     private String text;
+    private String nameCommand;
     private long chatId;
-    private com.telegrambot.app.model.user.UserBD user;
+    private UserBD user;
 
-    public void botAnswerUtils(String receivedMessage, long chatId, com.telegrambot.app.model.user.UserBD userBD) {
+    public void botAnswerUtils(String receivedMessage, long chatId, UserBD userBD) {
+
         this.chatId = chatId;
         this.user = userBD;
-        botAnswerUtils(receivedMessage);
-    }
+        this.nameCommand = receivedMessage.trim();
 
-    public void botAnswerUtils(List<CommandCache> commandCacheList, String text, long chatId, com.telegrambot.app.model.user.UserBD userBD) {
-        this.commandCacheList = commandCacheList;
-        this.text = text;
-        this.user = userBD;
-        this.chatId = chatId;
-
-        if (text != null && text.equals("/exit")) {
-            comExit(Message.getExitCommand(getCommandCache().getCommand()));
-        } else {
-            botAnswerUtils(getCommandCache().getCommand());
-        }
-        if (!commandCacheList.isEmpty()) {
-            commandCacheRepository.saveAll(commandCacheList);
-        }
-    }
-
-    public void botAnswerUtils(String receivedMessage) {
-
-        if (receivedMessage == null) {
+        if (text != null && (text.equals("/exit") || text.equals("Отмена"))) {
+            comExit(Message.getExitCommand(nameCommand));
             return;
         }
 
-        String[] param = receivedMessage.split(":");
-        receivedMessage = param.length > 0 ? param[0] : receivedMessage;
+        try {
+            botAnswerUtils();
+        } catch (Exception e) {
+            log.error("Ошибка при выполнении команды: {}{}{}", nameCommand, SEPARATOR, e.getMessage());
+            comExit(Message.getExitToErrors());
+        }
+    }
+
+    public void botAnswerUtils(List<CommandCache> commandCacheList, String text, long chatId, UserBD userBD) {
+        this.commandCacheList = commandCacheList;
+        this.text = text;
+        botAnswerUtils(getCommandCache().getCommand(), chatId, userBD);
+    }
+
+    public void botAnswerUtils() {
+
+        if (nameCommand == null) {
+            return;
+        }
+
+        String[] param = nameCommand.split(":");
+        nameCommand = param.length > 0 ? param[0] : nameCommand;
         text = param.length > 1 && text == null ? param[1] : text;
 
-        switch (receivedMessage) {
+        switch (nameCommand) {
             case "/start" -> comStartBot();
             case "/help" -> comSendHelpText();
-            case "/send_contact" -> comGetContact();
+            case "/send_contact", "Зарегистрироваться" -> comGetContact();
             case "/afterRegistered" -> comAfterRegistered();
             case "/registrationSurvey" -> comRegistrationSurvey();
             case "/getUserByPhone" -> comGetUserByPhone();
             case "/getByInn" -> comGetByInn();
-            case "/get_task" -> comGetTask();
-            case "/need_help" -> comCreateAssistance();
-            case "/create_task" -> comCreateTask();
+            case "/get_task", "Посмотреть задачи" -> comGetTask();
+            case "/need_help", "Создать обращение" -> comCreateAssistance();
+            case "/create_task", "Создать задачу" -> comCreateTask();
             case "getTask" -> comTaskPresentation();
             case "descriptor" -> editDescriptionTask();
             case "comment" -> comEditCommentTask();
             case "cancel" -> comEditCancelTask();
-            case "/add_balance" -> comAddBalance();
-            case "/get_balance" -> comGetBalance();
+            case "/add_balance", "Пополнить баланс" -> comAddBalance();
+            case "/get_balance", "Проверить баланс" -> comGetBalance();
             case "pay" -> comPayTask();
 //            case "/need_help" -> createAssistance();
-            case "/exit" -> comExit();
-            default -> comSendDefault(receivedMessage);
+            case "/exit", "Отмена" -> comExit();
+            default -> comSendDefault();
         }
         if (!commandCacheList.isEmpty()) {
             commandCacheRepository.saveAll(commandCacheList);
@@ -176,16 +177,18 @@ public class BotCommandsImpl implements BotCommands {
     //Command
     private void comStartBot() {
 
-        UserStatus status = statusRepository.findFirstByUserBDOrderByLastUpdateDesc(user);
-        boolean nonRegistered = (status == null || status.getUserType() == UserType.UNAUTHORIZED);
+        boolean nonRegistered = (user.getUserType() == UserType.UNAUTHORIZED);
         boolean phoneFilled = (user.getPhone() != null && !user.getPhone().isEmpty());
 
         if (nonRegistered && phoneFilled) {
-            List<UserStatus> statuses = subUpdateUserByAPI();
-            status = statuses.isEmpty() ? null : statuses.get(0);
+            subUpdateUserByAPI();
         }
-        UserType type = status == null ? UserType.UNAUTHORIZED : status.getUserType();
-        sendMessage(Message.getWelcomeMessage(), Buttons.inlineMarkupDefault(type));
+        sendMessage(Message.getWelcomeMessage(), Buttons.keyboardMarkupDefault(user.getUserType()));
+
+        if (user.getUserType() != UserType.UNAUTHORIZED) {
+            String message = Message.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
+            sendMessage(message, Buttons.keyboardMarkupDefault(user.getUserType()));
+        }
     }
 
     private void comSendHelpText() {
@@ -197,20 +200,20 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comAfterRegistered() {
-        List<UserStatus> statusList = subUpdateUserByAPI();
-        UserType type = statusList.isEmpty() ? UserType.UNAUTHORIZED : statusList.get(0).getUserType();
 
-        if (type == UserType.UNAUTHORIZED) {
+        subUpdateUserByAPI();
+
+        if (user.getUserType() == UserType.UNAUTHORIZED) {
             comRegistrationSurvey();
             return;
         }
 
-        String message = Message.getAfterSendingPhone(user.getPerson().getFirstName(), statusList);
-        sendMessage(message, Buttons.inlineMarkupDefault(type));
+        String message = Message.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
+        sendMessage(message, Buttons.keyboardMarkupDefault(user.getUserType()));
     }
 
     private void comRegistrationSurvey() {
-        CommandCache command = getCommandCache(Message.getBeforeSurvey(), "/registrationSurvey", "getInn");
+        CommandCache command = getCommandCache(Message.getBeforeSurvey(), "getInn");
         SubCommandInfo info = new SubCommandInfo(this::comRegistrationSurvey);
         switch (command.getSubCommand()) {
             case "getInn" -> subGetInn(command, info, "getUserName");
@@ -218,12 +221,12 @@ public class BotCommandsImpl implements BotCommands {
             case "getPost" -> subGetPost(command, info, "update");
             case "update" -> subUpdateUserInfo();
             case "end" -> subEnd();
-            default -> comSendDefault("");
+            default -> comSendDefault();
         }
     }
 
     private void comGetUserByPhone() {
-        CommandCache command = getCommandCache("/getUserByPhone", "getPhone");
+        CommandCache command = getCommandCache("getPhone");
         SubCommandInfo info = new SubCommandInfo(this::comGetUserByPhone);
         switch (command.getSubCommand()) {
             case "getPhone" -> subGetPhone(command, info, "getUserData");
@@ -237,17 +240,17 @@ public class BotCommandsImpl implements BotCommands {
                 comGetUserByPhone();
             }
             case "end" -> subEnd();
-            default -> comSendDefault("");
+            default -> comSendDefault();
         }
     }
 
     private void comGetByInn() {
-        CommandCache command = getCommandCache("/getByInn", "getInn");
+        CommandCache command = getCommandCache("getInn");
         SubCommandInfo info = new SubCommandInfo(this::comGetByInn);
         switch (command.getSubCommand()) {
             case "getInn" -> subGetInn(command, info, "getPartnerData");
             case "getPartnerData" -> {
-                DaDataParty daDataParty = daDataService.getCompanyDataByINN(text);
+                DaDataParty daDataParty = apiDaDataService.getCompanyDataByINN(text);
                 String message = daDataParty != null ?
                         toStringServices.toStringNonNullFields(daDataParty, true) :
                         Message.getNonFindPhone();
@@ -256,12 +259,12 @@ public class BotCommandsImpl implements BotCommands {
                 comGetByInn();
             }
             case "end" -> subEnd();
-            default -> comSendDefault("");
+            default -> comSendDefault();
         }
     }
 
     private void comGetTask() {
-        List<UserStatus> statuses = statusRepository.findByUserBDOrderByLastUpdateDesc(user);
+        List<UserStatus> statuses = user.getStatuses();
         switch (statuses.size()) {
             case 0 -> sendMessage(Message.getSearchErrors());
             case 1 -> subSendTaskList(getSortedTask(getTaskListToSend(statuses.get(0))));
@@ -275,7 +278,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private void comCreateAssistance() {
         String message = Message.getStartCreateAssistance(user.getPerson().getFirstName());
-        CommandCache command = getCommandCache(message, "/need_help", "getTopic");
+        CommandCache command = getCommandCache(message, "getTopic");
         SubCommandInfo info = new SubCommandInfo(this::comCreateAssistance);
         switch (command.getSubCommand()) {
             case "getTopic" -> {
@@ -288,20 +291,21 @@ public class BotCommandsImpl implements BotCommands {
             case "getUserName" -> subGetName(command, info, "createTask");
             case "createTask" -> subCreateTask();
             case "end" -> subEnd();
-            default -> comSendDefault("");
+            default -> comSendDefault();
         }
     }
 
     private void comCreateTask() {
         String message = Message.getStartCreateAssistance(user.getPerson().getFirstName());
-        CommandCache command = getCommandCache(message, "/create_task", "getPartner");
+        CommandCache command = getCommandCache(message, "getPartner");
+        SubCommandInfo info = new SubCommandInfo(this::comCreateTask);
         switch (command.getSubCommand()) {
             case "getPartner" -> subGetPartner(command, this::comCreateTask);
             case "getDepartment" -> subGetDepartment(command, this::comCreateTask);
-            case "getDescription" -> subGetDescription(command, "createTask", this::comCreateTask);
+            case "getDescription" -> subGetDescription(command, info, "createTask");
             case "createTask" -> subCreateTask();
             case "end" -> subEnd();
-            default -> comSendDefault("");
+            default -> comSendDefault();
         }
     }
 
@@ -321,24 +325,25 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comAddBalance() {
-        CommandCache command = getCommandCache("", "/add_balance", "getSum");
-        if (command.getSubCommand().equalsIgnoreCase("getSum")) {
-            SubCommandInfo info = new SubCommandInfo(Message.getInputSum(),
-                    Message.errorWhenEditTask(),
-                    this::comAddBalance,
-                    "getFormOfPayment",
-                    "[0-9]{3,}",
-                    this::convertSumTo);
-            subGetTextInfo(command, info);
-            return;
+        CommandCache command = getCommandCache("getSum");
+        switch (command.getSubCommand()) {
+            case "getSum" -> {
+                SubCommandInfo info = new SubCommandInfo(Message.getInputSum(),
+                        Message.errorWhenEditTask(),
+                        this::comAddBalance,
+                        "getFormOfPayment",
+                        "[0-9]{3,}",
+                        this::convertSumTo);
+                subGetTextInfo(command, info);
+            }
+            default -> addPayment(command, this::comAddBalance, "Внесение денег на баланс", "id: " + user.getId());
         }
-        addPayment(command, this::comAddBalance, "Внесение денег на баланс", "id: " + user.getId());
     }
 
     private void comGetBalance() {
         List<PartnerBalance> balances = getBalances();
         if (balances == null || balances.isEmpty()) {
-            sendMessage(Message.getBalanceUser(getBalanceByUser()));
+            sendMessage(Message.getBalanceUser(user.getBalance()));
             return;
         }
         StringBuilder text = new StringBuilder();
@@ -350,17 +355,18 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comPayTask() {
-        CommandCache command = getCommandCache("", "pay", "getSum");
-        if (command.getSubCommand().equalsIgnoreCase("getSum")) {
+        CommandCache command = getCommandCache("getSum");
+        switch (command.getSubCommand()) {
+            case "getSum" -> {
+                TaskDoc taskDoc = subGetTaskDoc(text);
+                if (taskDoc == null) return;
 
-            TaskDoc taskDoc = subGetTaskDoc(text);
-            if (taskDoc == null) return;
-
-            addNewSubCommand("pay", "taskCode", text);
-            completeSubCommand(command, "getFormOfPayment", String.valueOf(taskDoc.getTotalAmount()));
-            command = getCommandCache();
+                addNewSubCommand("taskCode", text);
+                completeSubCommand(command, "getFormOfPayment", String.valueOf(taskDoc.getTotalAmount()));
+                comPayTask();
+            }
+            default -> addPayment(command, this::comPayTask, "Оплата здачи", getResultSubCommandFromCache("taskCode"));
         }
-        addPayment(command, this::comPayTask, "Оплата здачи", getResultSubCommandFromCache("taskCode"));
     }
 
     private void comExit() {
@@ -371,34 +377,34 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comExit(String message) {
-        UserStatus status = statusRepository.findFirstByUserBDOrderByLastUpdateDesc(user);
-        sendMessage(message, Buttons.inlineMarkupDefault(status == null ? UserType.UNAUTHORIZED : status.getUserType()));
+        sendMessage(message, Buttons.keyboardMarkupDefault(user.getUserType()));
         comExit();
     }
 
-    private void comSendDefault(String receivedMessage) {
-        if (receivedMessage.matches(REGEX_INN)) {
-            PartnerDataResponse response = api1C.getPartnerData(receivedMessage);
-            PartnerListData data = createDataByPartnerDataResponse(response);
-            sendMessage(toStringServices.toStringNonNullFields(data));
-            return;
+    private void comSendDefault() {
+        if (nameCommand.matches(REGEX_INN)) {
+            PartnerDataResponse response = api1C.getPartnerData(nameCommand);
+            if (isCompleted(response)) {
+                PartnerListData data = createDataByPartnerDataResponse(response);
+                sendMessage(toStringServices.toStringNonNullFields(data));
+                return;
+            }
         }
-        if (receivedMessage.matches(REGEX_PHONE)) {
+        if (nameCommand.matches(REGEX_PHONE)) {
 //            UserResponse userDataResponse = api1C.getUserData(receivedMessage);
 //            userConverter.updateEntity(userDataResponse, user);
 //            userRepository.save(user);
-            Optional<com.telegrambot.app.model.user.UserBD> optional = userRepository.findByPhone(receivedMessage);
+            Optional<UserBD> optional = userRepository.findByPhone(nameCommand);
             if (optional.isPresent()) {
-                List<UserStatus> statusList = statusRepository.findByUserBDOrderByLastUpdateDesc(optional.get());
                 String string = toStringServices.toStringNonNullFields(optional.get()) +
                         SEPARATOR + SEPARATOR + "Statuses: " +
-                        toStringServices.toStringIterableNonNull(statusList, false);
+                        toStringServices.toStringIterableNonNull(optional.get().getStatuses(), false);
                 sendMessage(string);
                 return;
             }
         }
-        if (receivedMessage.matches("000[0-9]{6}")) {
-            TaskDocDataResponse response = api1C.getTaskByCode(receivedMessage);
+        if (nameCommand.matches("000[0-9]{6}")) {
+            TaskDocDataResponse response = api1C.getTaskByCode(nameCommand);
             if (isCompleted(response)) {
                 TaskDoc taskDoc = taskDocConverter.convertToEntity(response.getEntity());
                 taskDocRepository.save(taskDoc);
@@ -410,7 +416,8 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void editTask(String message, String nameCommand, Runnable parent) {
-        CommandCache command = getCommandCache("", nameCommand + ":", "code");
+        this.nameCommand = nameCommand + ":";
+        CommandCache command = getCommandCache("code");
         String subCommand = "edit" + nameCommand;
         switch (command.getSubCommand()) {
             case "code" -> {
@@ -448,7 +455,7 @@ public class BotCommandsImpl implements BotCommands {
             }
             case "createPayDoc" -> subCreatePayDoc();
             case "end" -> subEnd();
-            default -> comSendDefault("");
+            default -> comSendDefault();
         }
     }
 
@@ -467,15 +474,15 @@ public class BotCommandsImpl implements BotCommands {
         String fio = getResultSubCommandFromCache("getUserName");
         String post = getResultSubCommandFromCache("getPost");
 
-        statusRepository.deleteByUserBD(user);
         PartnerData partnerData = getPartnerDateByAPI(inn);
-        createUserStatus(UserType.USER, partnerData.getPartner(), post);
+        UserStatus status = new UserStatus(user, UserType.USER, partnerData.getPartner(), post);
 
+        user.setStatuses(List.of(status));
         UserBDConverter.updateUserFIO(fio, user.getPerson());
         userRepository.save(user);
 
         String message = Message.getSuccessfullyRegister(user.getPerson().getFirstName());
-        sendMessage(message, Buttons.inlineMarkupDefault(UserType.USER));
+        sendMessage(message);
 
         completeSubCommand(getCommandCache(), "end");
         comRegistrationSurvey();
@@ -487,11 +494,8 @@ public class BotCommandsImpl implements BotCommands {
             return;
         }
         TaskDoc doc = new TaskDoc();
-        doc.setCreator(user);
-        doc.setAuthor(user.getGuidEntity());
-        doc.setStatus(TaskStatus.getDefaultInitialStatus());
+        entityDefaults.fillDefaultData(doc);
         doc.setDescription(getDescriptionBySubCommand());
-        doc.setType(TaskType.getDefaultType());
         fillPartnerData(doc);
 
         SyncDataResponse createResponse = api1C.createTask(taskDocConverter.convertToResponse(doc));
@@ -544,32 +548,34 @@ public class BotCommandsImpl implements BotCommands {
         subGetTextInfo(command, info);
     }
 
-    private List<UserStatus> subUpdateUserByAPI() {
+    private void subUpdateUserByAPI() {
 
         UserResponse userData = api1C.getUserData(user.getPhone());
         if (!isCompleted(userData)) {
-            return statusRepository.findByUserBDAndLegalNotNull(user);
+            return;
+        }
+
+        if (!userData.getStatusList().isEmpty()) {
+            updateUserStatus(userData);
         }
 
         userConverter.updateEntity(userData, user);
         userRepository.save(user);
 
-        createTasks(userData.getTaskList());
-        createDataByPartnerDataResponse(userData.getPartnerListData());
+        taskDocConverter.convertToEntityList(userData.getTaskList(), true);
 
-        if (userData.getStatusList() == null || userData.getStatusList().isEmpty()) {
-            return statusRepository.findByUserBDAndLegalNotNull(user);
+        if (isCompleted(userData.getPartnerListData())) {
+            createDataByPartnerDataResponse(userData.getPartnerListData());
         }
+    }
 
-        statusRepository.deleteByUserBD(user);
-        return userData.getStatusList().stream()
-                .map(statusResponse -> {
-                    Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(statusResponse.getGuid());
-                    Partner partner = optional.orElseGet(() -> getLegalEntityByGuid(statusResponse.getGuid()));
-                    String post = statusResponse.getPost();
-                    return createUserStatus(getUserTypeByPost(post), partner, post);
-                })
-                .collect(Collectors.toList());
+    private void updateUserStatus(UserResponse userData) {
+        List<UserStatus> statuses = userData.getStatusList()
+                .stream()
+                .map(statusResponse ->
+                        new UserStatus(user, getPartnerByGuid(statusResponse.getGuid()), statusResponse.getPost()))
+                .toList();
+        user.setStatuses(statuses);
     }
 
     private void subEnd(CommandStatus status) {
@@ -582,18 +588,15 @@ public class BotCommandsImpl implements BotCommands {
             command.setDateComplete(LocalDateTime.now());
             commandRepository.save(command);
 
-            log.info(toStringServices.toStringNonNullFields(commandCacheList, true));
             commandCacheRepository.deleteByUserBD(user);
             commandCacheList.clear();
             text = null;
-//            chatId = 0L;
-//            user = null;
         }
     }
 
     private void subEnd() {
         subEnd(CommandStatus.COMPLETE);
-        sendMessage("Команда упешно обработана");
+        sendMessage("Команда упешно обработана", Buttons.keyboardMarkupDefault(user.getUserType()));
     }
 
     private void subSendTaskList(Map<String, List<TaskDoc>> sortedTask) {
@@ -635,11 +638,6 @@ public class BotCommandsImpl implements BotCommands {
         subGetTextInfo(command, info);
     }
 
-    private void subGetDescription(CommandCache command, String nextCommand, Runnable parent) {
-        SubCommandInfo info = new SubCommandInfo(parent);
-        subGetDescription(command, info, nextCommand);
-    }
-
     private void subGetPartner(CommandCache command, Runnable parent) {
 
         List<Partner> partners = getPartnerByUserStatus();
@@ -663,12 +661,8 @@ public class BotCommandsImpl implements BotCommands {
 
         String result = getResultSubCommandFromCache("getPartner");
 
-        if (result == null) {
-            return;
-        }
-
         Partner partner = partnerRepository.getReferenceById(Long.parseLong(result));
-        List<Department> departments = getDepartmentsByUser(partner);
+        List<Department> departments = partner.getDepartments();
 
         if (departments.size() > 1) {
             SubCommandInfo info = new SubCommandInfo(parent);
@@ -680,7 +674,7 @@ public class BotCommandsImpl implements BotCommands {
             return;
         }
 
-        String value = departments.size() == 1 ? String.valueOf(departments.get(0).getId()) : null;
+        String value = departments.size() == 1 ? String.valueOf(departments.get(0).getId()) : "";
         completeSubCommand(command, "getDescription", value);
         runHandler(parent);
     }
@@ -712,16 +706,15 @@ public class BotCommandsImpl implements BotCommands {
         Partner partner = partners.isEmpty() ? null : partners.get(0);
 
         CardDoc cardDoc = new CardDoc();
+        entityDefaults.fillDefaultData(cardDoc);
         cardDoc.setTotalAmount(Integer.valueOf(getResultSubCommandFromCache("getSum")));
         cardDoc.setPartnerData(partner);
         cardDoc.setReferenceNumber(ref);
-        cardDoc.setAuthor(user.getGuidEntity());
-        cardDoc.setCreator(user);
         cardDoc.setPaymentType(PaymentType.INCOMING);
         cardDocRepository.save(cardDoc);
         eventPublisher.publishEvent(new EntitySavedEvent(cardDoc));
 
-        SyncDataResponse createResponse = api1C.updateTask(cardDocConverter.convertToResponse(cardDoc));
+        SyncDataResponse createResponse = api1C.createCardDoc(cardDocConverter.convertToResponse(cardDoc));
         if (isCompleted(createResponse)) {
             cardDoc.setSyncData(new SyncData(createResponse.getGuid(), createResponse.getCode()));
         }
@@ -773,38 +766,25 @@ public class BotCommandsImpl implements BotCommands {
         return null;
     }
 
-    private List<TaskDoc> createTasks(List<TaskDocResponse> list) {
-        return list == null || list.isEmpty() ?
-                new ArrayList<>() :
-                taskDocRepository.saveAll(
-                        list.stream()
-                                .map(response -> (TaskDoc) taskDocConverter.convertToEntity(response)).toList());
-    }
-
     private List<PartnerBalance> getBalances() {
         List<Partner> partners = getPartnerByUserStatus();
         return partnerBalanceRepository.findByPartnerInOrderByPartner_NameAsc(partners);
     }
 
-    private int getBalanceByUser() {
-        Optional<UserBalance> optional = userBalanceRepository.findByUser(user);
-        return optional.isEmpty() ? 0 : optional.get().getAmount();
+    private List<UserStatus> getUserStatusByPartner(Partner partner) {
+        return user.getStatuses()
+                .stream()
+                .filter(p -> p.getLegal() == partner)
+                .toList();
     }
 
     private List<Partner> getPartnerByUserStatus() {
-        List<UserStatus> userStatuses = statusRepository.findByUserBD(user);
-        return userStatuses.stream().map(status -> (Partner) status.getLegal()).toList();
-    }
-
-    private List<Department> getDepartmentsByUser(Partner partner) {
-        List<UserStatus> userStatuses = statusRepository.findByUserBDAndLegal(user, partner);
-        List<Department> departments = userStatuses.stream()
-                .map(UserStatus::getDepartment)
+        return user.getStatuses()
+                .stream()
+                .map(status -> (Partner) status.getLegal())
                 .filter(Objects::nonNull)
                 .toList();
-        return departments.isEmpty() ? departmentRepository.findByPartner(partner) : departments;
     }
-
 
     private String getResultFromSubCommand(String nameSubCommand, String field, String prefix) {
         String message = getResultSubCommandFromCache(nameSubCommand);
@@ -815,7 +795,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void closingTask(TaskDoc taskDoc, String message, boolean successfully) {
-        taskDoc.setStatus(TaskStatus.getDefaultClosedStatus());
+        taskDoc.setStatus(TaskStatus.getClosedStatus());
         taskDoc.setClosingDate(LocalDateTime.now());
         taskDoc.setSuccessfully(successfully);
         String decision = taskDoc.getDecision();
@@ -831,7 +811,6 @@ public class BotCommandsImpl implements BotCommands {
         return "0".repeat(9 - text.length()) + text;
     }
 
-
     private Map<String, List<TaskDoc>> getSortedTask(TaskListToSend taskListToSend) {
         return taskListToSend.getTaskDocs().stream()
                 .collect(Collectors.groupingBy(task -> getStringSorting(taskListToSend, task)));
@@ -840,17 +819,17 @@ public class BotCommandsImpl implements BotCommands {
     private String getStringSorting(TaskListToSend taskListToSend, TaskDoc taskDoc) {
         return switch (taskListToSend.getSorting()) {
             case STATUS -> getNameEntity(taskDoc.getStatus());
-            case PARTNER -> getNameEntity(taskDoc.getPartnerData().getPartner());
-            default -> getNameEntity(taskDoc.getPartnerData().getDepartment());
+            case PARTNER -> getNamePartner(taskDoc);
+            default -> getNameDepartment(taskDoc);
         };
     }
 
-    private TaskListToSend getTaskListToSend(UserStatus status) {
+    private TaskListToSend getTaskListToSend(@NonNull UserStatus status) {
         List<TaskDoc> taskDocs = new ArrayList<>();
         SortingTaskType sortingType = SortingTaskType.DEPARTMENT;
         switch (status.getUserType()) {
             case UNAUTHORIZED, USER -> {
-                if (TaskStatus.getDefaultClosedStatus() != null) {
+                if (TaskStatus.getClosedStatus() != null) {
                     taskDocs = getTaskListByApiByUser();
                 }
             }
@@ -872,36 +851,36 @@ public class BotCommandsImpl implements BotCommands {
     private List<TaskDoc> getTaskListByApiByManager(Manager manager) {
         TaskDocDataListResponse response = api1C.getTaskListDataByManager(user.getGuidEntity());
         return isCompleted(response) ?
-                createTasks(response.getList()) :
-                taskDocRepository.findByManagerAndStatusNotOrderByDateAsc(manager, TaskStatus.getDefaultClosedStatus());
+                taskDocConverter.convertToEntityList(response.getList(), true) :
+                taskDocRepository.findByManagerAndStatusNotOrderByDateAsc(manager, TaskStatus.getClosedStatus());
     }
 
     private List<TaskDoc> getTaskListByApiByCompany(LegalEntity legal) {
         TaskDocDataListResponse response = api1C.getTaskListDataByCompany(Converter.convertToGuid(legal));
         return isCompleted(response) ?
-                createTasks(response.getList()) :
+                taskDocConverter.convertToEntityList(response.getList(), true) :
                 taskDocRepository.findByPartnerDataNotNullAndPartnerData_PartnerAndStatusNotOrderByDateAsc((Partner) legal,
-                        TaskStatus.getDefaultClosedStatus());
+                        TaskStatus.getClosedStatus());
     }
 
     private List<TaskDoc> getTaskListByApiByDepartment(Department department) {
         TaskDocDataListResponse response = api1C.getTaskListDataByDepartment(Converter.convertToGuid(department));
         return isCompleted(response) ?
-                createTasks(response.getList()) :
+                taskDocConverter.convertToEntityList(response.getList(), true) :
                 taskDocRepository.findByPartnerDataNotNullAndPartnerData_DepartmentAndStatusNotOrderByDateAsc(department,
-                        TaskStatus.getDefaultClosedStatus());
+                        TaskStatus.getClosedStatus());
     }
 
     private List<TaskDoc> getTaskListByApiByUser() {
         if (user.getGuidEntity() == null) {
             return taskDocRepository.
-                    findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
+                    findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getClosedStatus());
         }
         TaskDocDataListResponse response = api1C.getTaskListDataByUser(user.getGuidEntity());
         return isCompleted(response) ?
-                createTasks(response.getList()) :
+                Converter.convertToEntityListIsSave(response.getList(), taskDocConverter, taskDocRepository) :
                 taskDocRepository.
-                        findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getDefaultClosedStatus());
+                        findByCreatorAndStatusNotOrderByDateAsc(user, TaskStatus.getClosedStatus());
     }
 
     private String getNameEntity(Entity entity) {
@@ -912,6 +891,14 @@ public class BotCommandsImpl implements BotCommands {
             return ref.toString();
         }
         return entity.getClass().getSimpleName();
+    }
+
+    private String getNamePartner(TaskDoc taskDoc) {
+        return taskDoc.getPartnerData() == null ? "-" : getNameEntity(taskDoc.getPartnerData().getPartner());
+    }
+
+    private String getNameDepartment(TaskDoc taskDoc) {
+        return taskDoc.getPartnerData() == null ? "-" : getNameEntity(taskDoc.getPartnerData().getDepartment());
     }
 
     private void fillPartnerData(TaskDoc doc) {
@@ -929,10 +916,19 @@ public class BotCommandsImpl implements BotCommands {
 
         Partner partner = partnerRepository.findById(Long.valueOf(idPartner)).orElse(null);
         String idDepartment = getResultSubCommandFromCache("getDepartment");
-        Department department = idDepartment.isEmpty() ?
-                null :
-                departmentRepository.findById(Long.valueOf(idDepartment)).orElse(null);
+        Department department = getDepartmentById(partner, idDepartment);
         doc.setPartnerData(partner, department);
+    }
+
+    private Department getDepartmentById(Partner partner, String idDep) {
+        if (partner == null || partner.getDepartments() == null || partner.getDepartments().isEmpty() || idDep.isEmpty()) {
+            return null;
+        }
+        long id = Long.parseLong(idDep);
+        return partner.getDepartments().stream()
+                .filter(d -> d.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     private String getResultSubCommandFromCache(String subCommand) {
@@ -945,7 +941,6 @@ public class BotCommandsImpl implements BotCommands {
     private void convertSumTo() {
         text = text + "00";
     }
-
 
     private String getStringSubCommand() {
         StringBuilder builder = new StringBuilder();
@@ -960,89 +955,46 @@ public class BotCommandsImpl implements BotCommands {
         return builder.toString();
     }
 
-    private PartnerData getPartnerDateByAPI(String text) {
-
+    private @NonNull PartnerData getPartnerDateByAPI(String text) {
         PartnerDataResponse response = api1C.getPartnerData(text);
-        PartnerData partnerData = new PartnerData();
-
-        if (isCompleted(response)) {
-            PartnerListData data = createDataByPartnerDataResponse(response);
-            Partner partner = data.getPartners().get(0);
-            partnerData.setPartner(partner);
-            partnerData.setContract(data.getContracts().isEmpty() ? contractRepository.save(new Contract(partner)) : data.getContracts().get(0));
-            partnerData.setDepartment(data.getDepartments().size() == 1 ? data.getDepartments().get(0) : null);
-            return partnerData;
-        }
-
-        Partner partner = createLegalByInnFromDaData();
-        partnerData.setPartner(partnerRepository.save(partner));
-        partnerData.setContract(contractRepository.save(new Contract(partner)));
-        return partnerData;
+        Partner partner = isCompleted(response) ?
+                createDataByPartnerDataResponse(response).getPartners().get(0) :
+                createLegalByInnFromDaData();
+        return new PartnerData(partner);
     }
 
-    private Partner getLegalEntityByGuid(String guid) {
+    private Partner getPartnerByGuid(String guid) {
+
+        Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(guid);
+        if (optional.isPresent()) {
+            return optional.get();
+        }
+
         PartnerDataResponse dataResponse = api1C.getPartnerByGuid(guid);
-        PartnerListData data = createDataByPartnerDataResponse(dataResponse);
-        return data.getPartners().isEmpty() ? null : data.getPartners().get(0);
+
+        if (isCompleted(dataResponse)) {
+            PartnerListData data = createDataByPartnerDataResponse(dataResponse);
+            return data.getPartners().isEmpty() ? null : data.getPartners().get(0);
+        }
+
+        return null;
     }
 
     private PartnerListData createDataByPartnerDataResponse(PartnerDataResponse dataResponse) {
-        PartnerListData data = new PartnerListData();
-        if (isCompleted(dataResponse)) {
-            data.setPartners(createLegalEntities(dataResponse.getPartners()));
-            data.setDepartments(createDepartments(dataResponse.getDepartments()));
-            data.setContracts(createContracts(dataResponse.getContracts()));
-            data.setBalances(updateBalance(dataResponse.getBalance()));
-        }
-        return data;
+        List<Partner> partners = Converter.convertToEntityListIsSave(dataResponse.getPartners(), partnerConverter, partnerRepository);
+        List<Department> departments = Converter.convertToEntityListIsSave(dataResponse.getDepartments(), departmentConverter, departmentRepository);
+        List<Contract> contracts = Converter.convertToEntityListIsSave(dataResponse.getContracts(), contractConverter, contractRepository);
+        List<PartnerBalance> balances = updateBalance(dataResponse.getBalance());
+
+        return new PartnerListData(partners, departments, contracts, balances);
     }
-
-    private List<Contract> createContracts(List<ContractResponse> list) {
-        Map<String, List<ContractResponse>> groupedByGuidPartner = list.stream()
-                .collect(Collectors.groupingBy(ContractResponse::getGuidPartner));
-        List<Contract> saveContracts = new ArrayList<>();
-
-        for (String key : groupedByGuidPartner.keySet()) {
-
-            Optional<Partner> optional = partnerRepository.findBySyncDataNotNullAndSyncData_Guid(key);
-            if (optional.isEmpty()) {
-                continue;
-            }
-            Partner partner = optional.get();
-            List<Contract> contracts = contractRepository.findByPartnerOrderByIdAsc(partner);
-            List<ContractResponse> contractResponses = groupedByGuidPartner.get(key);
-
-            for (int i = 0; i < contractResponses.size(); i++) {
-                Contract contract = contracts.size() < i ?
-                        contractConverter.updateEntity(contractResponses.get(i), contracts.get(i)) :
-                        contractConverter.convertToEntity(contractResponses.get(i));
-                saveContracts.add(contract);
-            }
-        }
-        contractRepository.saveAll(saveContracts);
-        return saveContracts;
-    }
-
-    private List<Department> createDepartments(List<DepartmentResponse> list) {
-        return list.stream()
-                .map(departmentConverter::convertToEntity)
-                .map(department -> departmentRepository.save((Department) department))
-                .collect(Collectors.toList());
-    }
-
-    private List<Partner> createLegalEntities(List<PartnerResponse> list) {
-        return list.stream()
-                .map(partnerConverter::convertToEntity)
-                .map(partner -> partnerRepository.save((Partner) partner))
-                .collect(Collectors.toList());
-    }
-
 
     private Partner createLegalByInnFromDaData() {
-        DaDataParty data = daDataService.getCompanyDataByINN(text);
+        DaDataParty data = apiDaDataService.getCompanyDataByINN(text);
         Partner partner = new Partner();
         partner.setInn(text);
         partner.setComment("created automatically on " + LocalDateTime.now().format(formatter));
+
         if (data != null) {
             partner.setName(data.getName().getShortWithOpf());
             partner.setKpp(data.getKpp());
@@ -1051,7 +1003,12 @@ public class BotCommandsImpl implements BotCommands {
             partner.setDateCertificate(Converter.convertLongToLocalDateTime(data.getOgrnDate()));
             partner.setOKPO(data.getOkpo());
         }
-        return partner;
+
+        Contract contract = new Contract(partner);
+        partner.setDefaultContract(contract);
+        partner.setContracts(List.of(contract));
+
+        return partnerRepository.save(partner);
     }
 
     private String getDescriptionBySubCommand() {
@@ -1080,48 +1037,44 @@ public class BotCommandsImpl implements BotCommands {
         sendMessage(message, null);
     }
 
-    private void sendMessage(String message, ReplyKeyboard keyboard) {
-        try {
-            SendMessage sendMessage = createMessage(message, keyboard);
-            parent.sendMessage(sendMessage);
-        } catch (Exception e) {
-            log.error("an error occurred while sending a message to the user {} \r\nError: {}",
-                    user.getId(),
-                    e.getMessage());
+    private void sendMessage(@NonNull String message, ReplyKeyboard keyboard) {
+        if (message.trim().isEmpty()) {
+            return;
         }
+        SendMessage sendMessage = createMessage(message, keyboard);
+        parent.sendMessage(sendMessage);
     }
 
     private CommandCache getCommandCache() {
         return commandCacheList.isEmpty() ?
-                new CommandCache() :
+                new CommandCache(nameCommand, user) :
                 commandCacheList.get(commandCacheList.size() - 1);
     }
 
-    private CommandCache getCommandCache(String message, String nameCommand, String nameSubCommand) {
+    private CommandCache getCommandCache(String message, String nameSubCommand) {
         if (commandCacheList.isEmpty()) {
-            addNewSubCommand(nameCommand, nameSubCommand);
             sendMessage(message);
+            return addNewSubCommand(nameSubCommand, null);
         }
         return commandCacheList.get(commandCacheList.size() - 1);
     }
 
-    private CommandCache getCommandCache(String nameCommand, String nameSubCommand) {
+    private CommandCache getCommandCache(String nameSubCommand) {
         return commandCacheList.isEmpty() ?
-                addNewSubCommand(nameCommand, nameSubCommand) :
+                addNewSubCommand(nameSubCommand, null) :
                 commandCacheList.get(commandCacheList.size() - 1);
     }
 
     private void completeSubCommand(CommandCache command, String nextSubCommand, String result) {
-
-        CommandCache commandCache = new CommandCache();
-        commandCache.setSubCommand(nextSubCommand);
-        commandCache.setUserBD(user);
-        commandCache.setCommand(command.getCommand());
-        commandCache.setCountStep(0L);
-        commandCacheList.add(commandCache);
-
+        addNewSubCommand(nextSubCommand, null);
         command.setComplete(true);
         command.setResult(result);
+    }
+
+    private CommandCache addNewSubCommand(String subCommand, String result) {
+        CommandCache command = new CommandCache(nameCommand, subCommand, user, result);
+        commandCacheList.add(command);
+        return command;
     }
 
     private void completeSubCommand(CommandCache command, String subCommand) {
@@ -1144,58 +1097,14 @@ public class BotCommandsImpl implements BotCommands {
         parent.sendMessage(message);
     }
 
-
-    private UserStatus createUserStatus(UserType userType, LegalEntity legalEntity, String post) {
-        UserStatus userStatus = new UserStatus();
-        userStatus.setUserBD(user);
-        userStatus.setUserType(userType);
-        userStatus.setLastUpdate(LocalDateTime.now());
-        userStatus.setLegal(legalEntity);
-        userStatus.setPost(post);
-        return statusRepository.save(userStatus);
-    }
-
-    public UserType getUserTypeByPost(String post) {
-        String REGEX_DiRECTOR = ".*\\B(президент|директор|ректор|глава|председатель|предприниматель|управляющий)\\B.*|\\Bип\s+\\B.*|ип";
-        String REGEX_ADMIN = ".*\\B(бухгалтер|администратор)\\B.*";
-
-        if (post == null) {
-            return UserType.USER;
-        }
-        post = post.toLowerCase();
-        if (post.matches(REGEX_DiRECTOR)) {
-            return UserType.DIRECTOR;
-        }
-        if (post.matches(REGEX_ADMIN)) {
-            return UserType.ADMINISTRATOR;
-        }
-        return UserType.USER;
-    }
-
-    private List<PartnerBalance> updateBalance(List<com.telegrambot.app.DTO.api.balance.BalanceResponse> list) {
+    private List<PartnerBalance> updateBalance(List<BalanceResponse> list) {
         return list.stream()
                 .map(balanceService::updateLegalBalance)
                 .collect(Collectors.toList());
     }
 
-
     private static <R extends DataResponse> boolean isCompleted(R response) {
         return response != null && response.isResult();
-    }
-
-    private CommandCache addNewSubCommand(String name, String subCommand, String result) {
-        CommandCache command = new CommandCache();
-        command.setCommand(name);
-        command.setSubCommand(subCommand);
-        command.setUserBD(user);
-        command.setCountStep(0L);
-        command.setResult(result);
-        commandCacheList.add(command);
-        return command;
-    }
-
-    private CommandCache addNewSubCommand(String name, String subCommand) {
-        return addNewSubCommand(name, subCommand, null);
     }
 
     public void setParent(TelegramBotServices parent) {
@@ -1204,7 +1113,6 @@ public class BotCommandsImpl implements BotCommands {
 
     private static void runHandler(Runnable handler) {
         if (handler == null) {
-            log.error("Trying to execute an empty handler");
             return;
         }
         try {

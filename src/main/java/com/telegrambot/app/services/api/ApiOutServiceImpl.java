@@ -89,8 +89,8 @@ public class ApiOutServiceImpl implements ApiOutService {
         return executeRequest(null, responseType, method, param, HttpMethod.GET);
     }
 
-    private <T, R extends DataResponse> R executePostRequest(T requestBody, Class<R> responseType, String method) {
-        return executeRequest(requestBody, responseType, method, "", HttpMethod.POST);
+    private <T, R extends DataResponse> R executePostRequest(T requestBody, String method) {
+        return executeRequest(requestBody, (Class<R>) SyncDataResponse.class, method, "", HttpMethod.POST);
     }
 
     @Override
@@ -131,17 +131,22 @@ public class ApiOutServiceImpl implements ApiOutService {
 
     @Override
     public SyncDataResponse createTask(@NonNull TaskDocResponse taskDocResponse) {
-        return executePostRequest(taskDocResponse, SyncDataResponse.class, "task");
+        return executePostRequest(taskDocResponse, "task");
     }
 
     @Override
     public SyncDataResponse createCardDoc(@NonNull CardDocResponse cardDocResponse) {
-        return executePostRequest(cardDocResponse, SyncDataResponse.class, "cardDoc");
+        return executePostRequest(cardDocResponse, "cardDoc");
     }
 
     @Override
     public SyncDataResponse updateTask(@NonNull TaskDocResponse taskDocResponse) {
         return executeRequest(taskDocResponse, SyncDataResponse.class, "task", "", HttpMethod.PUT);
+    }
+
+    @Override
+    public SyncDataResponse updateCardDoc(@NonNull CardDocResponse cardDocResponse) {
+        return executeRequest(cardDocResponse, SyncDataResponse.class, "cardDoc", "", HttpMethod.PUT);
     }
 
     @Override

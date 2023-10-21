@@ -4,6 +4,7 @@ import com.telegrambot.app.model.balance.PartnerBalance;
 import com.telegrambot.app.model.reference.legalentity.Contract;
 import com.telegrambot.app.model.reference.legalentity.Department;
 import com.telegrambot.app.model.reference.legalentity.Partner;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class PartnerListData {
     private List<Partner> partners;
     private List<Department> departments;

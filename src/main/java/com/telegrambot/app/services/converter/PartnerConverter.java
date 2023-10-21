@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -17,6 +19,8 @@ public class PartnerConverter extends Converter {
 
     private final Class<Partner> classType = Partner.class;
     private final PartnerRepository repository;
+    private final BankAccountConverter bankAccountConverter;
+    private final ContractConverter contractConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
@@ -24,7 +28,7 @@ public class PartnerConverter extends Converter {
             PartnerResponse response = convertReferenceToResponse(entityBD, PartnerResponse.class);
             response.setInn(entityBD.getInn());
             response.setKpp(entityBD.getKpp());
-            response.setGuidBankAccount(entityBD.getBankAccount());
+            response.setGuidBankAccount(convertToGuid(entityBD.getBankAccount()));
             response.setComment(entityBD.getComment());
             response.setOgrn(entityBD.getOGRN());
             response.setCommencement(convertToDate(entityBD.getCommencement()));
@@ -44,7 +48,7 @@ public class PartnerConverter extends Converter {
             entityBD.setName(response.getName());
             entityBD.setInn(response.getInn());
             entityBD.setKpp(response.getKpp());
-            entityBD.setBankAccount(response.getGuidBankAccount());
+            entityBD.setBankAccount(bankAccountConverter.getOrCreateEntity(response.getGuidBankAccount(), true));
             entityBD.setComment(response.getComment());
             entityBD.setOGRN(response.getOgrn());
             entityBD.setCommencement(convertToLocalDateTime(response.getCommencement()));
@@ -52,6 +56,7 @@ public class PartnerConverter extends Converter {
             entityBD.setDateCertificate(convertToLocalDateTime(response.getDateCertificate()));
             entityBD.setOKPO(response.getOkpo());
             entityBD.setPartnerType(convertToEnum(response.getPartnerTypeString(), PartnerType.class));
+            entityBD.setDefaultContract(contractConverter.getOrCreateEntity(response.getGuidDefaultContract(), true));
             return (T) entityBD;
         }
         return null;
@@ -65,5 +70,11 @@ public class PartnerConverter extends Converter {
     @Override
     public <T extends Entity> T getOrCreateEntity(String guid, boolean isSaved) {
         return (T) Converter.getOrCreateEntity(guid, repository, classType, isSaved);
+    }
+
+    @Override
+    public <T extends Entity, S extends EntityResponse> List<T> convertToEntityList(List<S> list, boolean isSaved) {
+        return (List<T>) (isSaved ? convertToEntityListIsSave(list, this, repository) :
+                convertToEntityList(list, this));
     }
 }

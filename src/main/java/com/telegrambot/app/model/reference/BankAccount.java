@@ -1,6 +1,7 @@
 package com.telegrambot.app.model.reference;
 
 import com.telegrambot.app.DTO.types.BankAccountType;
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -37,4 +38,13 @@ public class BankAccount extends Reference {
     private LocalDateTime openingDate;
     @JoinColumn(name = "closing_date")
     private LocalDateTime closingDate;
+
+    public BankAccount(String guid) {
+        this.setSyncData(new SyncData(guid));
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

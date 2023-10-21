@@ -18,6 +18,7 @@ public class Contract extends Reference {
 
     private LocalDateTime date;
     private Boolean isBilling;
+    private Boolean isDefault;
     private LocalDateTime startBilling;
     private LocalDateTime stopBilling;
     private Integer standardHourlyRate;

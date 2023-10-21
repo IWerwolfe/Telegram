@@ -523,7 +523,7 @@ public class ApiInServiceImpl implements ApiInService {
         if (optional.isPresent()) {
             return taskDocRepository
                     .findByPartnerDataNotNullAndPartnerData_DepartmentAndStatusOrderByStatusDesc(optional.get(),
-                            TaskStatus.getDefaultClosedStatus());
+                            TaskStatus.getClosedStatus());
         }
         return new ArrayList<>();
     }
@@ -533,7 +533,7 @@ public class ApiInServiceImpl implements ApiInService {
         if (optional.isPresent()) {
             return taskDocRepository
                     .findByPartnerDataNotNullAndPartnerData_PartnerAndStatusOrderByDateDesc(optional.get(),
-                            TaskStatus.getDefaultClosedStatus());
+                            TaskStatus.getClosedStatus());
         }
         return new ArrayList<>();
     }
@@ -543,7 +543,7 @@ public class ApiInServiceImpl implements ApiInService {
         if (optional.isPresent()) {
             return taskDocRepository
                     .findByManagerAndStatusOrderByDateDesc(optional.get(),
-                            TaskStatus.getDefaultClosedStatus());
+                            TaskStatus.getClosedStatus());
         }
         return new ArrayList<>();
     }

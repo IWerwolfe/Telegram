@@ -12,6 +12,12 @@ public class PropertyData {
     private Boolean highPriority;
     private Boolean isBilling;
 
+    public PropertyData() {
+        this.isOutsourcing = false;
+        this.highPriority = false;
+        this.isBilling = false;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

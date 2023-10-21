@@ -1,6 +1,7 @@
 package com.telegrambot.app.model.reference.legalentity;
 
 import com.telegrambot.app.model.documents.docdata.SyncData;
+import com.telegrambot.app.model.reference.BankAccount;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -19,7 +20,9 @@ public abstract class LegalEntity extends Reference {
 
     private String inn;
     private String kpp;
-    private String bankAccount;
+    @ManyToOne
+    @JoinColumn(name = "bank_account_id")
+    private BankAccount bankAccount;
     private String comment;
     private String OGRN;
     private LocalDateTime commencement;

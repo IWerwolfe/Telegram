@@ -1,7 +1,7 @@
 package com.telegrambot.app.model.documents.doc.service;
 
 import com.telegrambot.app.DTO.types.TaskType;
-import com.telegrambot.app.model.EntityDefaults;
+import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.documents.docdata.PropertyData;
 import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.TaskStatus;
@@ -37,7 +37,8 @@ public class TaskDoc extends SalesDoc {
     }
 
     public TaskDoc() {
-        EntityDefaults.initializeDefaultTask(this);
+        this.setPartnerData(new PartnerData());
+        this.setProperties(new PropertyData());
     }
 
     public String toString(boolean full) {

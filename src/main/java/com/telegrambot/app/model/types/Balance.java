@@ -17,4 +17,9 @@ public abstract class Balance {
     private Long id;
     private Long date;
     private Integer amount = 0;
+
+    public void setAmount(Integer amount) {
+        this.amount = amount;
+        this.setDate(System.currentTimeMillis());
+    }
 }

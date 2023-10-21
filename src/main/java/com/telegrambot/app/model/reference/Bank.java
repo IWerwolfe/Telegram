@@ -1,5 +1,6 @@
 package com.telegrambot.app.model.reference;
 
+import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -22,4 +23,13 @@ public class Bank extends Reference {
     private String phone;
     private String swift;
     private String country;
+
+    public Bank(String guid) {
+        this.setSyncData(new SyncData(guid));
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
 }

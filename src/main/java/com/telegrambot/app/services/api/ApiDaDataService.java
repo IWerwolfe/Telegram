@@ -14,7 +14,7 @@ import java.util.Objects;
 
 @Service
 @Slf4j
-public class DaDataService {
+public class ApiDaDataService {
 
     private static final String URL_DADATA_PARTY = "https://suggestions.dadata.ru/suggestions/api/4_1/rs/findById/party";
     @Value("${dadata.api.key}")

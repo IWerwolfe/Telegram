@@ -32,6 +32,8 @@ public interface ApiOutService {
 
     SyncDataResponse updateTask(@NonNull TaskDocResponse taskDocResponse);
 
+    SyncDataResponse updateCardDoc(@NonNull CardDocResponse cardDocResponse);
+
     TaskDocDataListResponse getTaskListDataByCompany(String guidPartner);
 
     TaskDocDataListResponse getTaskListDataByUser(String guidUser);

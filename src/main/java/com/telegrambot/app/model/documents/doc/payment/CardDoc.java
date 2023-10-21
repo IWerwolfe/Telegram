@@ -3,6 +3,7 @@ package com.telegrambot.app.model.documents.doc.payment;
 import com.telegrambot.app.model.documents.docdata.CardData;
 import com.telegrambot.app.model.documents.docdata.FiscalData;
 import com.telegrambot.app.model.reference.BankAccount;
+import com.telegrambot.app.model.reference.PayTerminal;
 import com.telegrambot.app.model.types.doctype.PayDoc;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -22,8 +23,9 @@ public class CardDoc extends PayDoc {
     @ManyToOne
     @JoinColumn(name = "bank_account_id")
     private BankAccount bankAccount;
+    @ManyToOne
     @JoinColumn(name = "payment_terminal")
-    private String paymentTerminal;
+    private PayTerminal payTerminal;
     @JoinColumn(name = "fiscal_data")
     private FiscalData fiscalData;
     @JoinColumn(name = "ticket_number")
