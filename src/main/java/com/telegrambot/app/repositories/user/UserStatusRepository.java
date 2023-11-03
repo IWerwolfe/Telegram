@@ -10,20 +10,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface UserStatusRepository extends CrudRepository<UserStatus, Long> {
-    @Query("select u from UserStatus u where u.userBD = ?1 and u.legal = ?2")
-    List<UserStatus> findByUserBDAndLegal(UserBD userBD, LegalEntity legal);
+    @Query("select u from UserStatus u where u.user = ?1 and u.legal = ?2")
+    List<UserStatus> findByUserAndLegal(UserBD user, LegalEntity legal);
 
-    @Query("select u from UserStatus u where u.userBD = ?1")
-    List<UserStatus> findByUserBD(UserBD userBD);
+    @Query("select u from UserStatus u where u.user = ?1")
+    List<UserStatus> findByUser(UserBD user);
 
-    List<UserStatus> findByUserBDAndLegalNotNull(UserBD userBD);
+    List<UserStatus> findByUserAndLegalNotNull(UserBD user);
 
     @Transactional
-    void deleteByUserBD(UserBD userBD);
+    void deleteByUser(UserBD user);
 
-    List<UserStatus> findByUserBDOrderByLastUpdateDesc(UserBD userBD);
+    List<UserStatus> findByUserOrderByLastUpdateDesc(UserBD user);
 
-    UserStatus findFirstByUserBDOrderByLastUpdateDesc(UserBD userBD);
+    UserStatus findFirstByUserOrderByLastUpdateDesc(UserBD user);
 
     void deleteByIdAllIgnoreCase(Long id);
 

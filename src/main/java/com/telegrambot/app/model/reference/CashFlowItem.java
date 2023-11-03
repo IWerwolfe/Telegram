@@ -1,6 +1,5 @@
 package com.telegrambot.app.model.reference;
 
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -16,7 +15,11 @@ import lombok.Setter;
 public class CashFlowItem extends Reference {
 
     public CashFlowItem(String guid) {
-        this.setSyncData(new SyncData(guid));
+        super(guid);
+    }
+
+    public CashFlowItem(String guid, String code) {
+        super(guid, code);
     }
 
     @Override

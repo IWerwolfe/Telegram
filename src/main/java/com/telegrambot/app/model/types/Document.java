@@ -35,7 +35,7 @@ public abstract class Document extends Entity {
     private Integer totalAmount = 0;
     //    @Column(name = "parent_doc")
 //    private Document parentDoc;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "creator_id")
     private UserBD creator;
 

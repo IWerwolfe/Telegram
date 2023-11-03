@@ -1,6 +1,5 @@
 package com.telegrambot.app.model.reference;
 
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -16,8 +15,8 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Bank extends Reference {
 
-    @JoinColumn(name = "correspondent_account")
-    private Long correspondentAccount;
+    @JoinColumn(name = "corr_account")
+    private String corrAccount;
     private String city;
     private String address;
     private String phone;
@@ -25,7 +24,11 @@ public class Bank extends Reference {
     private String country;
 
     public Bank(String guid) {
-        this.setSyncData(new SyncData(guid));
+        super(guid);
+    }
+
+    public Bank(String guid, String code) {
+        super(guid, code);
     }
 
     @Override

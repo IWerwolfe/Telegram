@@ -1,10 +1,11 @@
 package com.telegrambot.app.model.reference.legalentity;
 
 import com.telegrambot.app.DTO.types.BillingType;
-import com.telegrambot.app.model.EntityDefaults;
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,20 +30,20 @@ public class Contract extends Reference {
 
     public Contract() {
         this.date = LocalDateTime.now();
-        setName("Основной");
+        setName("Основной.");
+        this.isBilling = false;
+    }
+
+    public Contract(String guid) {
+        super(guid);
+    }
+
+    public Contract(String guid, String code) {
+        super(guid, code);
     }
 
     public Contract(Partner partner) {
         this();
         this.partner = partner;
-    }
-
-    @PrePersist
-    private void prePersist() {
-        EntityDefaults.initializeDefaultContract(this);
-    }
-
-    public Contract(String guid) {
-        this.setSyncData(new SyncData(guid));
     }
 }

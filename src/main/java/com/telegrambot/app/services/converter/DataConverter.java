@@ -1,7 +1,11 @@
 package com.telegrambot.app.services.converter;
 
+import com.telegrambot.app.DTO.api.doc.cardDoc.CardDocResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityDocResponse;
+import com.telegrambot.app.model.documents.docdata.CardData;
+import com.telegrambot.app.model.documents.docdata.FiscalData;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
+import com.telegrambot.app.model.reference.CashDeskKkm;
 import com.telegrambot.app.model.reference.legalentity.Contract;
 import com.telegrambot.app.model.reference.legalentity.Department;
 import com.telegrambot.app.model.reference.legalentity.Partner;
@@ -19,6 +23,8 @@ public class DataConverter {
     private final PartnerConverter partnerConverter;
     private final ContractConverter contractConverter;
     private final DepartmentConverter departmentConverter;
+
+    private final CashDeskKkmConverter cashDeskKkmConverter;
 
     public String getFieldValue(Object object, String fieldName) {
         try {
@@ -44,5 +50,17 @@ public class DataConverter {
             response.setGuidContract(Converter.convertToGuid(partnerData.getContract()));
             response.setGuidDepartment(Converter.convertToGuid(partnerData.getDepartment()));
         }
+    }
+
+    public FiscalData getFiscalData(CardDocResponse response) {
+        CashDeskKkm deskKkm = cashDeskKkmConverter.getOrCreateEntity(response.getGuidCashDeskKkm(), true);
+        String shiftNum = response.getCashShiftNumber();
+        String receiptNum = response.getReceiptNumber();
+        String shift = response.getGuidCashShift();
+        return new FiscalData(deskKkm, shiftNum, receiptNum, shift);
+    }
+
+    public CardData getCardData(CardDocResponse response) {
+        return new CardData(response.getCardNumber(), response.getCardType());
     }
 }

@@ -212,4 +212,14 @@ public abstract class Message {
     public static String getErrorToEditUserInfo() {
         return "Произошла ошибка при редактировании информации, попробуйте повторить позже";
     }
+
+    public static String getToPaySBP(String sbpStatic) {
+        return "Для оплаты по СБП необходимо:" + DUAL_SEPARATOR +
+                "1. перейти по ссылке, указанной ниже;" + SEPARATOR +
+                "2. выбрать банк, через который будете оплачивать;" + SEPARATOR +
+                "3. указать сумму оплаты;" + SEPARATOR +
+                "4. в приложении банка подтвердить оплату;" + DUAL_SEPARATOR +
+                "Деньги поступят на баланс в течение 3 рабочих дней, после этого обновится информация в телеграм боте" + DUAL_SEPARATOR +
+                "Ссылка для оплаты через БСП: " + sbpStatic;
+    }
 }

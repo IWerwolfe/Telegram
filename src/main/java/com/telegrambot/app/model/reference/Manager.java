@@ -1,6 +1,5 @@
 package com.telegrambot.app.model.reference;
 
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -16,10 +15,10 @@ import lombok.Setter;
 public class Manager extends Reference {
 
     public Manager(String guid) {
-        setSyncData(new SyncData(guid));
+        super(guid);
     }
 
     public Manager(String guid, String code) {
-        setSyncData(new SyncData(guid, code));
+        super(guid, code);
     }
 }

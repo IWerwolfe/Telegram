@@ -1,20 +1,26 @@
 package com.telegrambot.app.DTO.types;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
 public enum BankAccountType {
-    CHECKING("Checking Account"),
-    SAVINGS("Savings Account"),
-    MONEY_MARKET("Money Market Account"),
-    CERTIFICATE_OF_DEPOSIT("Certificate of Deposit"),
-    LOAN("Loan Account"),
-    CREDIT_CARD("Credit Card Account");
+    Checking("Сберегательный счёт"),
+    Savings("Вклад"),
+    CreditCard("Кредитная карта"),
+    DebitCard("Дебетовая карта"),
+    MoneyMarket("Маржинальный счёт"),
+    BusinessChecking("Бизнес-счёт"),
+    BusinessSavings("Бизнес-вклад"),
+    BusinessCreditCard("Бизнес-кредитная карта"),
+    BusinessDebitCard("Бизнес-дебетовая карта"),
+    BusinessMoneyMarket("Бизнес-маржинальный счёт");
 
-    private final String label;
+    private String label;
 
-    BankAccountType(String label) {
-        this.label = label;
-    }
-
-    public String getLabel() {
-        return label;
+    @Override
+    public String toString() {
+        return getLabel();
     }
 }

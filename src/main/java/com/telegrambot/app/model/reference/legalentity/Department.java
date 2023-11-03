@@ -1,6 +1,5 @@
 package com.telegrambot.app.model.reference.legalentity;
 
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -33,7 +32,11 @@ public class Department extends Reference {
     private Boolean isEgais = false;
 
     public Department(String guid) {
-        this.setSyncData(new SyncData(guid));
+        super(guid);
+    }
+
+    public Department(String guid, String code) {
+        super(guid, code);
     }
 
     @Override

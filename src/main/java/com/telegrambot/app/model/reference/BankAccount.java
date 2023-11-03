@@ -1,7 +1,7 @@
 package com.telegrambot.app.model.reference;
 
 import com.telegrambot.app.DTO.types.BankAccountType;
-import com.telegrambot.app.model.documents.docdata.SyncData;
+import com.telegrambot.app.model.reference.legalentity.LegalEntity;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -20,6 +20,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class BankAccount extends Reference {
 
+    @ManyToOne
+    @JoinColumn(name = "legal_id")
+    private LegalEntity legal;
     private String currency;
     @ManyToOne
     @JoinColumn(name = "bank_id")
@@ -27,7 +30,7 @@ public class BankAccount extends Reference {
     @ManyToOne
     @JoinColumn(name = "payment_bank_id")
     private Bank paymentBank;
-    private Long number;
+    private String number;
     private BankAccountType type;
     private String correspondent;
     @JoinColumn(name = "payment_purpose")
@@ -40,7 +43,11 @@ public class BankAccount extends Reference {
     private LocalDateTime closingDate;
 
     public BankAccount(String guid) {
-        this.setSyncData(new SyncData(guid));
+        super(guid);
+    }
+
+    public BankAccount(String guid, String code) {
+        super(guid, code);
     }
 
     @Override

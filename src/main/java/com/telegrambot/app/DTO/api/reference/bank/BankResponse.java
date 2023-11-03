@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BankResponse extends EntityResponse {
 
-    private String correspondentAccount;
+    private String corrAccount;
     private String city;
     private String address;
     private String phone;

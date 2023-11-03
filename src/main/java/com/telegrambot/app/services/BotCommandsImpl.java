@@ -25,6 +25,7 @@ import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.command.CommandStatus;
 import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
+import com.telegrambot.app.model.documents.docdata.CardData;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.Manager;
@@ -53,6 +54,7 @@ import com.telegrambot.app.services.converter.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
@@ -98,6 +100,9 @@ public class BotCommandsImpl implements BotCommands {
     private final EntityDefaults entityDefaults;
 
     private final BotConfig bot;
+
+    @Value("${pay.sbpStatic}")
+    private String sbpStatic;
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
     private final String REGEX_INN = "^[0-9]{10}|[0-9]{12}$";
@@ -449,9 +454,7 @@ public class BotCommandsImpl implements BotCommands {
                 subGetTextInfo(command, info);
             }
             case "getPay" -> {
-                SendInvoice invoice = subGetSendInvoice(title, explanation);
-                parent.sendMessage(invoice);
-                completeSubCommand(command, "createPayDoc");
+                subGetPay(command, title, explanation);
             }
             case "createPayDoc" -> subCreatePayDoc();
             case "end" -> subEnd();
@@ -486,6 +489,25 @@ public class BotCommandsImpl implements BotCommands {
 
         completeSubCommand(getCommandCache(), "end");
         comRegistrationSurvey();
+    }
+
+    private void subGetPay(CommandCache command, String title, String explanation) {
+        String formOfPay = getResultSubCommandFromCache("getFormOfPayment");
+        switch (formOfPay) {
+            case "SBP" -> {
+                sendMessage(Message.getToPaySBP(sbpStatic));
+                completeSubCommand(command, "end");
+                comAddBalance();
+            }
+            case "CARD" -> {
+                SendInvoice invoice = subGetSendInvoice(title, explanation);
+                parent.sendMessage(invoice);
+                completeSubCommand(command, "createPayDoc");
+            }
+            case "INVOICE" -> {
+            }
+            default -> comExit();
+        }
     }
 
     private void subCreateTask() {
@@ -684,7 +706,7 @@ public class BotCommandsImpl implements BotCommands {
         invoice.setChatId(chatId);
         invoice.setTitle(title);
         invoice.setCurrency(Currency.RUB.name());
-        invoice.setPayload("U:" + user.getGuidEntity());
+        invoice.setPayload("balance:" + user.getId());
         invoice.setProviderToken(bot.getPayment());
         invoice.setDescription("Для продолжения следуйте подсказкам системы");
         int sum = Integer.parseInt(getResultSubCommandFromCache("getSum"));
@@ -700,7 +722,8 @@ public class BotCommandsImpl implements BotCommands {
         }
 
         String[] strings = text.split(";");
-        String ref = strings.length > 1 ? strings[1] : null;
+        String ref = strings.length > 1 ? strings[2] : null;
+        String comment = strings.length >= 1 ? strings[1] : null;
 
         List<Partner> partners = getPartnerByUserStatus();
         Partner partner = partners.isEmpty() ? null : partners.get(0);
@@ -711,13 +734,16 @@ public class BotCommandsImpl implements BotCommands {
         cardDoc.setPartnerData(partner);
         cardDoc.setReferenceNumber(ref);
         cardDoc.setPaymentType(PaymentType.INCOMING);
-        cardDocRepository.save(cardDoc);
-        eventPublisher.publishEvent(new EntitySavedEvent(cardDoc));
+        cardDoc.setCardData(CardData.createToDefault());
+        cardDoc.setComment(comment);
 
         SyncDataResponse createResponse = api1C.createCardDoc(cardDocConverter.convertToResponse(cardDoc));
         if (isCompleted(createResponse)) {
             cardDoc.setSyncData(new SyncData(createResponse.getGuid(), createResponse.getCode()));
         }
+
+        cardDocRepository.save(cardDoc);
+        eventPublisher.publishEvent(new EntitySavedEvent(cardDoc));
 
         sendMessage(Message.getSuccessfullyCreatingCardDoc(cardDoc));
         completeSubCommand(getCommandCache(), "end");
@@ -1006,7 +1032,6 @@ public class BotCommandsImpl implements BotCommands {
 
         Contract contract = new Contract(partner);
         partner.setDefaultContract(contract);
-        partner.setContracts(List.of(contract));
 
         return partnerRepository.save(partner);
     }

@@ -1,6 +1,5 @@
 package com.telegrambot.app.model.reference;
 
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -24,7 +23,7 @@ public class TaskStatus extends Reference {
     private static TaskStatus initialStatus;
 
     public TaskStatus(String guid) {
-        this.setSyncData(new SyncData(guid));
+        super(guid);
     }
 
     public TaskStatus(String guid, String name) {

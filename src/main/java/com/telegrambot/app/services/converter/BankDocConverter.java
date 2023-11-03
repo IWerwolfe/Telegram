@@ -22,6 +22,7 @@ public class BankDocConverter extends Converter {
     private final DataConverter dataConverter;
     private final ManagerConverter managerConverter;
     private final DivisionConverter divisionConverter;
+    private final CompanyConverter companyConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
@@ -46,6 +47,7 @@ public class BankDocConverter extends Converter {
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setDivision(divisionConverter.getOrCreateEntity(response.getGuidDivision(), true));
             entityBD.setPartnerData(dataConverter.getPartnerData(response));
+            entityBD.setCompany(companyConverter.getOrCreateEntity(response.getGuidCompany(), true));
 
             //TODO дописать конвертацию
 

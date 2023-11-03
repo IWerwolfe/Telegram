@@ -8,7 +8,12 @@ import lombok.Getter;
 public enum FormOfPayment {
     CARD("Банковской картой"),
     INVOICE("Счет на оплату"),
-    CRYPTO("Крипровалюта");
+    SBP("Система быстрых платежей");
 
-    private String label;
+    private final String label;
+
+    @Override
+    public String toString() {
+        return getLabel();
+    }
 }

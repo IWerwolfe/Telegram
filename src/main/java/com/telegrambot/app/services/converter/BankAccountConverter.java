@@ -4,8 +4,10 @@ import com.telegrambot.app.DTO.api.reference.bankAccount.BankAccountResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
 import com.telegrambot.app.DTO.types.BankAccountType;
 import com.telegrambot.app.model.reference.BankAccount;
+import com.telegrambot.app.model.reference.legalentity.LegalEntity;
 import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.repositories.BankAccountRepository;
+import com.telegrambot.app.repositories.reference.LegalEntityRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class BankAccountConverter extends Converter {
+    private final LegalEntityRepository legalEntityRepository;
 
     private final Class<BankAccount> classType = BankAccount.class;
     private final BankAccountRepository repository;
@@ -28,13 +31,14 @@ public class BankAccountConverter extends Converter {
             response.setCurrency(entityBD.getCurrency());
             response.setGuidBank(convertToGuid(entityBD.getBank()));
             response.setGuidPaymentBank(convertToGuid(entityBD.getPaymentBank()));
-            response.setNumber(String.valueOf(entityBD.getNumber()));
-            response.setNameType(String.valueOf(entityBD.getType()));
+            response.setNumber(entityBD.getNumber());
+            response.setNameType(entityBD.getType().name());
             response.setCorrespondent(entityBD.getCorrespondent());
             response.setPaymentPurpose(entityBD.getPaymentPurpose());
             response.setPermitNumberAndDate(entityBD.getPermitNumberAndDate());
             response.setOpeningDate(convertToDate(entityBD.getOpeningDate()));
             response.setClosingDate(convertToDate(entityBD.getClosingDate()));
+            response.setGuidLegal(convertToGuid(entityBD.getLegal()));
             return (R) response;
         }
         return null;
@@ -47,13 +51,14 @@ public class BankAccountConverter extends Converter {
             entityBD.setCurrency(response.getCurrency());
             entityBD.setBank(bankConverter.getOrCreateEntity(response.getGuidBank(), true));
             entityBD.setPaymentBank(bankConverter.getOrCreateEntity(response.getGuidPaymentBank(), true));
-            entityBD.setNumber(Long.parseLong(response.getNumber()));
+            entityBD.setNumber(response.getNumber());
             entityBD.setType(convertToEnum(response.getNameType(), BankAccountType.class));
             entityBD.setCorrespondent(response.getCorrespondent());
             entityBD.setPaymentPurpose(response.getPaymentPurpose());
             entityBD.setPermitNumberAndDate(response.getPermitNumberAndDate());
             entityBD.setOpeningDate(convertToLocalDateTime(response.getOpeningDate()));
             entityBD.setClosingDate(convertToLocalDateTime(response.getClosingDate()));
+            entityBD.setLegal(Converter.getOrCreateEntity(response.getGuidLegal(), legalEntityRepository, LegalEntity.class, true));
             return entity;
         }
         return null;

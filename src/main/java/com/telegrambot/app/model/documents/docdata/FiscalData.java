@@ -1,17 +1,24 @@
 package com.telegrambot.app.model.documents.docdata;
 
+import com.telegrambot.app.model.reference.CashDeskKkm;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Embeddable
+@NoArgsConstructor
+@AllArgsConstructor
 public class FiscalData {
 
+    @ManyToOne
     @JoinColumn(name = "cash_desk_kkm")
-    private String cashDeskKkm;
+    private CashDeskKkm cashDeskKkm;
     @JoinColumn(name = "cash_shift_number")
     private String cashShiftNumber;
     @JoinColumn(name = "receipt_number")

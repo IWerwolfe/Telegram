@@ -24,12 +24,12 @@ public class TaskDocConverter extends Converter {
     private final DataConverter dataConverter;
     private final ManagerConverter managerConverter;
     private final DivisionConverter divisionConverter;
+    private final CompanyConverter companyConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
         if (entity instanceof TaskDoc entityBD) {
             TaskDocResponse response = convertDocToResponse((Document) entityBD, TaskDocResponse.class);
-            dataConverter.fillPartnerDataToResponse(entityBD.getPartnerData(), response);
             response.setDescription(entityBD.getDescription());
             response.setDecision(entityBD.getDecision());
             response.setGuidStatus(convertToGuid(entityBD.getStatus()));
@@ -59,6 +59,7 @@ public class TaskDocConverter extends Converter {
             entityBD.setClosingDate(convertToLocalDateTime(response.getClosingDate()));
             entityBD.setType(typeConverter.getOrCreateEntity(response.getType(), true));
             entityBD.setProperties(getProperties(response));
+            entityBD.setCompany(companyConverter.getOrCreateEntity(response.getGuidCompany(), true));
             return entity;
         }
         return null;

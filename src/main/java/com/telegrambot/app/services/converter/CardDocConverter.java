@@ -2,13 +2,12 @@ package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api.doc.cardDoc.CardDocResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.DTO.types.PaymentType;
 import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.docdata.FiscalData;
 import com.telegrambot.app.model.types.Document;
 import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.repositories.doc.CardDocRepository;
-import com.telegrambot.app.repositories.reference.DivisionRepository;
-import com.telegrambot.app.repositories.reference.PayTerminalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,37 +18,41 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CardDocConverter extends Converter {
-    private final DivisionRepository divisionRepository;
-    private final PayTerminalRepository payTerminalRepository;
 
     private final Class<CardDoc> classType = CardDoc.class;
     private final CardDocRepository repository;
     private final DataConverter dataConverter;
     private final ManagerConverter managerConverter;
     private final DivisionConverter divisionConverter;
+    private final CompanyConverter companyConverter;
+    private final BankAccountConverter bankAccountConverter;
+    private final PayTerminalConverter payTerminalConverter;
+    private final CashDeskConverter cashDeskConverter;
+    private final CashDeskKkmConverter cashDeskKkmConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
         if (entity instanceof CardDoc entityBD) {
             CardDocResponse response = convertDocToResponse((Document) entityBD, CardDocResponse.class);
-            dataConverter.fillPartnerDataToResponse(entityBD.getPartnerData(), response);
-            response.setGuidCompany(convertToGuid(entityBD.getCompany()));
             response.setGuidBankAccount(convertToGuid(entityBD.getBankAccount()));
-            response.setPaymentTerminal(convertToGuid(entityBD.getPayTerminal()));
-            response.setTicketNumber(String.valueOf(entityBD.getTicketNumber()));
+            response.setGuidPayTerminal(convertToGuid(entityBD.getPayTerminal()));
+            response.setGuidCashDesk(convertToGuid(entityBD.getCashDesk()));
+            response.setTicketNumber(entityBD.getTicketNumber());
             response.setCommissionPercentage(String.valueOf(entityBD.getCommissionPercentage()));
             response.setReferenceNumber(entityBD.getReferenceNumber());
             response.setCommission(String.valueOf(entityBD.getCommission()));
+            response.setPaymentTypeString(entityBD.getPaymentType().name());
+
             if (entityBD.getCardData() != null) {
                 response.setCardNumber(entityBD.getCardData().getCardNumber());
                 response.setCardType(entityBD.getCardData().getCardType());
             }
             if (entityBD.getFiscalData() != null) {
                 FiscalData fiscal = entityBD.getFiscalData();
-                response.setCashDeskKkm(fiscal.getCashDeskKkm());
+                response.setGuidCashDeskKkm(convertToGuid(fiscal.getCashDeskKkm()));
                 response.setCashShiftNumber(fiscal.getCashShiftNumber());
                 response.setReceiptNumber(fiscal.getReceiptNumber());
-                response.setCashShift(fiscal.getCashShift());
+                response.setGuidCashShift(fiscal.getCashShift());
             }
 
             return (R) response;
@@ -60,14 +63,24 @@ public class CardDocConverter extends Converter {
     @Override
     public <T extends Entity, R extends EntityResponse> T updateEntity(R dto, T entity) {
         if (dto instanceof CardDocResponse response && entity instanceof CardDoc entityBD) {
-//            entityBD.setName(response.getName());
             fillResponseToDoc(entityBD, response);
             entityBD.setManager(managerConverter.getOrCreateEntity(response.getGuidManager(), true));
-            entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setDivision(divisionConverter.getOrCreateEntity(response.getGuidDivision(), true));
-            entityBD.setPartnerData(dataConverter.getPartnerData(response));
+            entityBD.setCompany(companyConverter.getOrCreateEntity(response.getGuidCompany(), true));
+            entityBD.setAuthor(response.getGuidAuthor());
 
-            //TODO дописать конвертацию
+            entityBD.setBankAccount(bankAccountConverter.getOrCreateEntity(response.getGuidBankAccount(), true));
+            entityBD.setPayTerminal(payTerminalConverter.getOrCreateEntity(response.getGuidPayTerminal(), true));
+            entityBD.setCashDesk(cashDeskConverter.getOrCreateEntity(response.getGuidCashDesk(), true));
+            entityBD.setTicketNumber(response.getTicketNumber());
+            entityBD.setCommissionPercentage(Long.valueOf(response.getCommissionPercentage()));
+            entityBD.setReferenceNumber(response.getReferenceNumber());
+            entityBD.setCommission(Integer.valueOf(response.getCommission()));
+            entityBD.setPaymentType(convertToEnum(response.getPaymentTypeString(), PaymentType.class));
+
+            entityBD.setPartnerData(dataConverter.getPartnerData(response));
+            entityBD.setFiscalData(dataConverter.getFiscalData(response));
+            entityBD.setCardData(dataConverter.getCardData(response));
 
             return entity;
         }

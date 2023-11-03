@@ -33,7 +33,6 @@ public class CompanyConverter extends Converter {
             response.setCertificate(entityBD.getCertificate());
             response.setDateCertificate(convertToDate(entityBD.getDateCertificate()));
             response.setOkpo(entityBD.getOKPO());
-            response.setGuidDefaultContract(convertToGuid(entityBD.getDefaultContract()));
             return (R) response;
         }
         return null;

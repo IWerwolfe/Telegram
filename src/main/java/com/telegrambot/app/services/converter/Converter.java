@@ -2,6 +2,7 @@ package com.telegrambot.app.services.converter;
 
 import com.telegrambot.app.DTO.api.typeОbjects.EntityDocResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.model.documents.docdata.PartnerData;
 import com.telegrambot.app.model.types.Document;
 import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.model.types.Reference;
@@ -46,14 +47,19 @@ public abstract class Converter {
             request.setDate(convertToDate(doc.getDate()));
             request.setComment(doc.getComment());
             request.setGuidCompany(convertToGuid(doc.getCompany()));
-            request.setGuidDepartment(convertToGuid(doc.getDepartment()));
-            request.setGuidContract(convertToGuid(doc.getContract()));
             request.setGuidDivision(convertToGuid(doc.getDivision()));
             request.setGuidManager(convertToGuid(doc.getManager()));
-            request.setGuidPartner(convertToGuid(doc.getPartner()));
-            request.setTotalAmount(doc.getPresentTotalAmount());
+            request.setTotalAmount(String.valueOf(doc.getTotalAmount()));
             request.setGuid(convertToGuid(doc));
             request.setMarkedForDel(doc.getMarkedForDel());
+            request.setGuidAuthor(doc.getAuthor());
+
+            PartnerData partnerData = doc.getPartnerData();
+            if (partnerData != null) {
+                request.setGuidDepartment(convertToGuid(partnerData.getDepartment()));
+                request.setGuidContract(convertToGuid(partnerData.getContract()));
+                request.setGuidPartner(convertToGuid(partnerData.getPartner()));
+            }
         }
         return request;
     }
@@ -63,6 +69,7 @@ public abstract class Converter {
         doc.setComment(response.getComment());
         doc.setTotalAmount(Integer.valueOf(response.getTotalAmount()));
         doc.setMarkedForDel(response.getMarkedForDel());
+        doc.setAuthor(response.getGuidAuthor());
     }
 
     public <E extends Reference, T extends EntityResponse> T convertReferenceToResponse(E entity, Class<T> entityType) {

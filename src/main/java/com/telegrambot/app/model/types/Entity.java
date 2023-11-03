@@ -22,6 +22,17 @@ public abstract class Entity {
     @Column(name = "marked_for_del")
     private Boolean markedForDel = false;
 
+    public Entity() {
+    }
+
+    public Entity(String guid) {
+        this.setSyncData(new SyncData(guid));
+    }
+
+    public Entity(String guid, String code) {
+        this.setSyncData(new SyncData(guid, code));
+    }
+
     @PrePersist
     private void prePersist() {
         EntityDefaults.initializeDefaultEntity1C(this);

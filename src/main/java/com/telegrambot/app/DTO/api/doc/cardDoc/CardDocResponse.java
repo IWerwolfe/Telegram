@@ -11,17 +11,19 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CardDocResponse extends EntityDocResponse {
     private String guidBankAccount;
-    private String paymentTerminal;
-    private String cashDeskKkm;
+    private String guidPayTerminal;
+    private String guidCashDeskKkm;
+    private String guidCashDesk;
     private String cashShiftNumber;
     private String receiptNumber;
-    private String cashShift;
+    private String guidCashShift;
     private String ticketNumber;
     private String commissionPercentage;
     private String referenceNumber;
     private String commission;
     private String cardNumber;
     private String cardType;
+    private String paymentTypeString;
 
     @JsonCreator
     public CardDocResponse(String json) {

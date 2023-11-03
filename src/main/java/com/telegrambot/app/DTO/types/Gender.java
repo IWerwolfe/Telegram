@@ -1,6 +1,18 @@
 package com.telegrambot.app.DTO.types;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
 public enum Gender {
-    MALE,
-    FEMALE
+    MALE("Мужской"),
+    FEMALE("Женский");
+
+    private String label;
+
+    @Override
+    public String toString() {
+        return getLabel();
+    }
 }

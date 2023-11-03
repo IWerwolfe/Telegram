@@ -11,4 +11,9 @@ public enum PaymentType {
     REFUND("Возврат денег");
 
     private String label;
+
+    @Override
+    public String toString() {
+        return getLabel();
+    }
 }

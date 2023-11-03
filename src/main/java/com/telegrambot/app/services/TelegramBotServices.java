@@ -11,7 +11,6 @@ import com.telegrambot.app.repositories.command.CommandCacheRepository;
 import com.telegrambot.app.repositories.transaction.TransactionRepository;
 import com.telegrambot.app.repositories.user.UserActivityRepository;
 import com.telegrambot.app.repositories.user.UserRepository;
-import com.telegrambot.app.repositories.user.UserStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,6 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     private final UserActivityRepository activityRepository;
     private final CommandCacheRepository commandCacheRepository;
     private final UserRepository userRepository;
-    private final UserStatusRepository statusRepository;
     private final TransactionRepository transactionRepository;
     private Update update;
     private UserBD user;

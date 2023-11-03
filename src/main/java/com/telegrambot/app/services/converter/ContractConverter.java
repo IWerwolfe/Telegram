@@ -31,7 +31,7 @@ public class ContractConverter extends Converter {
             response.setStopBilling(convertToDate(entityBD.getStopBilling()));
             response.setStandardHourlyRate(String.valueOf(entityBD.getStandardHourlyRate()));
             response.setIsBilling(convertToBoolean(entityBD.getIsBilling()));
-            response.setBillingTypeString(String.valueOf(entityBD.getBillingType()));
+            response.setBillingTypeString(entityBD.getBillingType().name());
             return (R) response;
         }
         return null;

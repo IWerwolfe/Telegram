@@ -1,9 +1,9 @@
 package com.telegrambot.app.DTO.types;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Getter
 public enum Currency {
 
@@ -96,4 +96,9 @@ public enum Currency {
 
     private final String label;
     private final String symbol;
+
+    @Override
+    public String toString() {
+        return getSymbol() + "(" + getLabel() + ")";
+    }
 }

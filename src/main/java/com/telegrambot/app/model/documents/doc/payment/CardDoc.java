@@ -29,7 +29,7 @@ public class CardDoc extends PayDoc {
     @JoinColumn(name = "fiscal_data")
     private FiscalData fiscalData;
     @JoinColumn(name = "ticket_number")
-    private Long ticketNumber;
+    private String ticketNumber;
     @JoinColumn(name = "commission_percentage")
     private Long commissionPercentage;
     @JoinColumn(name = "reference_number")

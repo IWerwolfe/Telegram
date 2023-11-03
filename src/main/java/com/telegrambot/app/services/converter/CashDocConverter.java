@@ -25,6 +25,7 @@ public class CashDocConverter extends Converter {
     private final DataConverter dataConverter;
     private final ManagerConverter managerConverter;
     private final DivisionConverter divisionConverter;
+    private final CompanyConverter companyConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
@@ -35,7 +36,7 @@ public class CashDocConverter extends Converter {
 
             if (entityBD.getFiscalData() != null) {
                 FiscalData fiscal = entityBD.getFiscalData();
-                response.setCashDeskKkm(fiscal.getCashDeskKkm());
+                response.setCashDeskKkm(convertToGuid(fiscal.getCashDeskKkm()));
                 response.setCashShiftNumber(fiscal.getCashShiftNumber());
                 response.setReceiptNumber(fiscal.getReceiptNumber());
                 response.setCashShift(fiscal.getCashShift());
@@ -57,6 +58,7 @@ public class CashDocConverter extends Converter {
             entityBD.setDate(convertToLocalDateTime(response.getDate()));
             entityBD.setDivision(divisionConverter.getOrCreateEntity(response.getGuidDivision(), true));
             entityBD.setPartnerData(dataConverter.getPartnerData(response));
+            entityBD.setCompany(companyConverter.getOrCreateEntity(response.getGuidCompany(), true));
 
             //TODO дописать конвертацию
 

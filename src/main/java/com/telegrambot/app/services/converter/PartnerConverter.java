@@ -20,7 +20,7 @@ public class PartnerConverter extends Converter {
     private final Class<Partner> classType = Partner.class;
     private final PartnerRepository repository;
     private final BankAccountConverter bankAccountConverter;
-    private final ContractConverter contractConverter;
+//    private final ContractConverter contractConverter;
 
     @Override
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
@@ -35,8 +35,8 @@ public class PartnerConverter extends Converter {
             response.setCertificate(entityBD.getCertificate());
             response.setDateCertificate(convertToDate(entityBD.getDateCertificate()));
             response.setOkpo(entityBD.getOKPO());
-            response.setGuidDefaultContract(convertToGuid(entityBD.getDefaultContract()));
-            response.setPartnerTypeString(entityBD.getPartnerType().toString());
+//            response.setGuidDefaultContract(convertToGuid(entityBD.getDefaultContract()));
+            response.setPartnerTypeString(entityBD.getPartnerType().name());
             return (R) response;
         }
         return null;
@@ -56,7 +56,7 @@ public class PartnerConverter extends Converter {
             entityBD.setDateCertificate(convertToLocalDateTime(response.getDateCertificate()));
             entityBD.setOKPO(response.getOkpo());
             entityBD.setPartnerType(convertToEnum(response.getPartnerTypeString(), PartnerType.class));
-            entityBD.setDefaultContract(contractConverter.getOrCreateEntity(response.getGuidDefaultContract(), true));
+//            entityBD.setDefaultContract(contractConverter.getOrCreateEntity(response.getGuidDefaultContract(), true));
             return (T) entityBD;
         }
         return null;

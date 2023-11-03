@@ -1,11 +1,9 @@
 package com.telegrambot.app.model.reference.legalentity;
 
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.BankAccount;
 import com.telegrambot.app.model.types.Reference;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -14,7 +12,6 @@ import java.time.LocalDateTime;
 @Setter
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @Entity
-@NoArgsConstructor
 @DiscriminatorColumn(name = "legal_type")
 public abstract class LegalEntity extends Reference {
 
@@ -29,12 +26,16 @@ public abstract class LegalEntity extends Reference {
     private String certificate;
     private LocalDateTime dateCertificate;
     private String OKPO;
-    @ManyToOne
-    @JoinColumn(name = "default_contract_id")
-    private Contract defaultContract;
+
+    public LegalEntity() {
+    }
 
     public LegalEntity(String guid) {
-        this.setSyncData(new SyncData(guid));
+        super(guid);
+    }
+
+    public LegalEntity(String guid, String code) {
+        super(guid, code);
     }
 
     @Override

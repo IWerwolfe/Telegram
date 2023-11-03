@@ -9,7 +9,6 @@ import com.telegrambot.app.model.types.Entity;
 import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.repositories.DefaultDocParamRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ public class EntityDefaults {
 
     private final DefaultDocParamRepository defaultDocParamRepository;
 
-    @Cacheable("default_param")
+    //    @Cacheable("default_param")
     public DefaultDocParam getDefaultDocParam() {
         List<DefaultDocParam> defaultDocParams = defaultDocParamRepository.findAll();
         return defaultDocParams.isEmpty() ? new DefaultDocParam() : defaultDocParams.get(0);
@@ -32,13 +31,13 @@ public class EntityDefaults {
         DefaultDocParam defaultParam = getDefaultDocParam();
         doc.setCompany(defaultParam.getCompany());
         doc.setManager(defaultParam.getManager());
-        doc.setDivision(doc.getDivision());
         doc.setDate(LocalDateTime.now());
         doc.setDivision(defaultParam.getDivision());
 
         if (doc instanceof CardDoc cardDoc) {
             cardDoc.setBankAccount(defaultParam.getBankAccount());
             cardDoc.setPayTerminal(defaultParam.getPayTerminal());
+            cardDoc.setCashDesk(defaultParam.getCashDesk());
         }
         if (doc instanceof BankDoc bankDoc) {
             bankDoc.setBankAccount(defaultParam.getBankAccount());

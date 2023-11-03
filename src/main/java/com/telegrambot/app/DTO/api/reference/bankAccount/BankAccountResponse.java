@@ -13,6 +13,7 @@ import java.util.Date;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BankAccountResponse extends EntityResponse {
 
+    private String guidLegal;
     private String currency;
     private String guidBank;
     private String guidPaymentBank;

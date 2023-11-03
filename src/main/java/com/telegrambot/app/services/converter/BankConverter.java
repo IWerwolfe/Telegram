@@ -23,7 +23,7 @@ public class BankConverter extends Converter {
     public <T extends Entity, R extends EntityResponse> R convertToResponse(T entity) {
         if (entity instanceof Bank entityBD) {
             BankResponse response = convertReferenceToResponse(entityBD, BankResponse.class);
-            response.setCorrespondentAccount(String.valueOf(entityBD.getCorrespondentAccount()));
+            response.setCorrAccount(entityBD.getCorrAccount());
             response.setCity(entityBD.getCity());
             response.setAddress(entityBD.getAddress());
             response.setPhone(entityBD.getPhone());
@@ -38,7 +38,7 @@ public class BankConverter extends Converter {
     public <T extends Entity, R extends EntityResponse> T updateEntity(R dto, T entity) {
         if (dto instanceof BankResponse response && entity instanceof Bank entityBD) {
             entityBD.setName(response.getName());
-            entityBD.setCorrespondentAccount(Long.parseLong(response.getCorrespondentAccount()));
+            entityBD.setCorrAccount(response.getCorrAccount());
             entityBD.setCity(response.getCity());
             entityBD.setAddress(response.getAddress());
             entityBD.setPhone(response.getPhone());

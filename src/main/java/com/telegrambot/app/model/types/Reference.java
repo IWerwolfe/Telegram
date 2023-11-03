@@ -6,12 +6,21 @@ import lombok.Setter;
 
 @Getter
 @Setter
-//@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-//@jakarta.persistence.Entity
-//@DiscriminatorValue("references_entities")
 @MappedSuperclass
 public abstract class Reference extends Entity {
+
     private String name;
+
+    public Reference() {
+    }
+
+    public Reference(String guid) {
+        super(guid);
+    }
+
+    public Reference(String guid, String code) {
+        super(guid, code);
+    }
 
     @Override
     public String toString() {

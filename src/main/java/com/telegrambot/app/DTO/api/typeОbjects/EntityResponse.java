@@ -24,6 +24,7 @@ public class EntityResponse implements Serializable {
     private String guid;
     private String name;
     private Boolean markedForDel;
+    private String guidAuthor;
 
     @JsonCreator
     public EntityResponse(String json) {
