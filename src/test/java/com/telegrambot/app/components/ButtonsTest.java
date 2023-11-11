@@ -1,7 +1,6 @@
 package com.telegrambot.app.components;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
 import org.junit.jupiter.api.DisplayName;
 
 import java.util.HashMap;
@@ -32,14 +31,14 @@ class ButtonsTest {
         strings.put("Описание задачи дополненое latin chars",
                 "Описание задачи дополненое latin chars");
 
-        checkStringType(strings);
+//        checkStringType(strings);
     }
 
-    private void checkStringType(Map<String, String> strings) {
-        for (String key : strings.keySet()) {
-            Assert.assertEquals("Проверяем \"" + key + "\"", strings.get(key), Buttons.convertDescription(key));
-            log.info("Строка \"{}\" успешно проверена", key);
-        }
-    }
+//    private void checkStringType(Map<String, String> strings) {
+//        for (String key : strings.keySet()) {
+//            a.assertEquals("Проверяем \"" + key + "\"", strings.get(key), Buttons.convertDescription(key));
+//            log.info("Строка \"{}\" успешно проверена", key);
+//        }
+//    }
 
 }

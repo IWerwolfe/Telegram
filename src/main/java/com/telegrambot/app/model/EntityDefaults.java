@@ -3,6 +3,7 @@ package com.telegrambot.app.model;
 import com.telegrambot.app.model.documents.doc.payment.BankDoc;
 import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
+import com.telegrambot.app.model.documents.docdata.FiscalData;
 import com.telegrambot.app.model.reference.legalentity.Contract;
 import com.telegrambot.app.model.types.Document;
 import com.telegrambot.app.model.types.Entity;
@@ -38,6 +39,7 @@ public class EntityDefaults {
             cardDoc.setBankAccount(defaultParam.getBankAccount());
             cardDoc.setPayTerminal(defaultParam.getPayTerminal());
             cardDoc.setCashDesk(defaultParam.getCashDesk());
+            cardDoc.setFiscalData(new FiscalData());
         }
         if (doc instanceof BankDoc bankDoc) {
             bankDoc.setBankAccount(defaultParam.getBankAccount());

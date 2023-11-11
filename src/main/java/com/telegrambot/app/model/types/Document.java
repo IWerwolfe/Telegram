@@ -78,7 +78,7 @@ public abstract class Document extends Entity {
     @Override
     public String toString() {
         String code = (getSyncData() == null ? String.valueOf(getId()) : getSyncData().getCode());
-        String date = getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
+        String date = getDate() == null ? "00.00.0000" : getDate().format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
         return getDescriptor() + " № " + code + " от " + date;
     }
 }

@@ -110,7 +110,7 @@ public abstract class Converter {
     public static <T extends Entity, S extends EntityResponse, R extends EntityRepository<T>> T getOrCreateEntity(S dto,
                                                                                                                   R repository,
                                                                                                                   Class<T> entityType) {
-        if (dto.getGuid() == null || dto.getGuid().isEmpty()) return null;
+        if (dto == null || dto.getGuid() == null || dto.getGuid().isEmpty()) return null;
         return getOrCreateEntity(dto.getGuid(), repository, entityType, true);
     }
 

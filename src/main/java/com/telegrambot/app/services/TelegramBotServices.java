@@ -6,7 +6,6 @@ import com.telegrambot.app.model.transaction.Transaction;
 import com.telegrambot.app.model.transaction.TransactionType;
 import com.telegrambot.app.model.user.UserActivity;
 import com.telegrambot.app.model.user.UserBD;
-import com.telegrambot.app.repositories.balance.UserBalanceRepository;
 import com.telegrambot.app.repositories.command.CommandCacheRepository;
 import com.telegrambot.app.repositories.transaction.TransactionRepository;
 import com.telegrambot.app.repositories.user.UserActivityRepository;
@@ -36,7 +35,6 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class TelegramBotServices extends TelegramLongPollingBot {
-    private final UserBalanceRepository userBalanceRepository;
 
     private final BotConfig config;
     private final BotCommandsImpl botCommands;
@@ -49,10 +47,17 @@ public class TelegramBotServices extends TelegramLongPollingBot {
 
     public void onUpdateReceived(Update update) {
 
-        botCommands.setParent(this);
-        boolean isCommand = true;
         this.update = update;
+        boolean isCommand = true;
         user = getUser();
+
+        if (!isBot()) {
+            SendMessage sendMessage = new SendMessage(String.valueOf(getChatId()), getReceivedMessage());
+            sendMessage(sendMessage);
+            return;
+        }
+
+        botCommands.setParent(this);
 
         if (update.hasPreCheckoutQuery() && update.getPreCheckoutQuery().getId() != null) {
             PreCheckoutQuery checkoutQuery = update.getPreCheckoutQuery();
@@ -194,6 +199,17 @@ public class TelegramBotServices extends TelegramLongPollingBot {
             user = update.getCallbackQuery().getFrom();
         }
         return user == null ? null : getUserBD(user);
+    }
+
+    private boolean isBot() {
+        User user = null;
+        if (update.hasMessage()) {
+            user = update.getMessage().getFrom();
+        }
+        if (update.hasCallbackQuery()) {
+            user = update.getCallbackQuery().getFrom();
+        }
+        return user != null && user.getIsBot();
     }
 
     private UserBD getUserBD(User user) {

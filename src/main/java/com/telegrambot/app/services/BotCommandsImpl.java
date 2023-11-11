@@ -122,7 +122,7 @@ public class BotCommandsImpl implements BotCommands {
         this.user = userBD;
         this.nameCommand = receivedMessage.trim();
 
-        if (text != null && (text.equals("/exit") || text.equals("Отмена"))) {
+        if (receivedMessage.equals("/exit") || receivedMessage.equals("Отмена")) {
             comExit(Message.getExitCommand(nameCommand));
             return;
         }
@@ -724,6 +724,8 @@ public class BotCommandsImpl implements BotCommands {
         String[] strings = text.split(";");
         String ref = strings.length > 1 ? strings[2] : null;
         String comment = strings.length >= 1 ? strings[1] : null;
+        String taskCode = getResultSubCommandFromCache("taskCode");
+        comment = taskCode.isEmpty() ? comment : comment + SEPARATOR + "task:" + taskCode;
 
         List<Partner> partners = getPartnerByUserStatus();
         Partner partner = partners.isEmpty() ? null : partners.get(0);

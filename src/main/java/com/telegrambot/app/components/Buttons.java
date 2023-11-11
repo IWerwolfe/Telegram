@@ -86,7 +86,7 @@ public class Buttons {
 
     public static InlineKeyboardMarkup getInlineByEnumFormOfPay(String command) {
         List<List<InlineKeyboardButton>> rowsInLine = Arrays.stream(FormOfPayment.values())
-                .map(field -> getInlineKeyboardButton(field.getLabel(), command + ":" + field))
+                .map(field -> getInlineKeyboardButton(field.getLabel(), command + ":" + field.name()))
                 .collect(Collectors.toList());
         return getInlineKeyboardMarkup(rowsInLine);
     }
