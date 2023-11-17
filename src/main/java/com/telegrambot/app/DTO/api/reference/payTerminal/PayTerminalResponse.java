@@ -13,6 +13,6 @@ public class PayTerminalResponse extends EntityResponse {
 
     @JsonCreator
     public PayTerminalResponse(String json) {
-        createToJson(json, PayTerminalResponse.class, this);
+        fillToJson(json, PayTerminalResponse.class, this);
     }
 }

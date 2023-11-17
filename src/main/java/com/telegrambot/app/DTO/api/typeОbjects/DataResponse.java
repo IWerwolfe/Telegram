@@ -9,5 +9,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DataResponse {
     private boolean result;
-    private String error;
+    private String error = "";
+
+    public DataResponse(Boolean result, String error) {
+        this.result = result != null && result;
+        this.error = error;
+    }
 }

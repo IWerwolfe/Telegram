@@ -13,6 +13,6 @@ public class CashDeskKkmResponse extends EntityResponse {
 
     @JsonCreator
     public CashDeskKkmResponse(String json) {
-        createToJson(json, CashDeskKkmResponse.class, this);
+        fillToJson(json, CashDeskKkmResponse.class, this);
     }
 }

@@ -22,6 +22,5 @@ public abstract class LegalEntityResponse extends EntityResponse {
     private Date dateCertificate;
     private String okpo;
     private String guidDefaultContract;
-    private String partnerTypeString;
 
 }

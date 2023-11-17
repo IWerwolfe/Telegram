@@ -1,5 +1,6 @@
 package com.telegrambot.app.model.types;
 
+import com.telegrambot.app.DTO.api.other.SyncDataResponse;
 import com.telegrambot.app.model.EntityDefaults;
 import com.telegrambot.app.model.documents.docdata.SyncData;
 import jakarta.persistence.*;
@@ -47,6 +48,18 @@ public abstract class Entity {
             this.syncData.setCode(code);
         }
         this.syncData.setLastUpdate(LocalDateTime.now());
+    }
+
+    public void setSyncData(SyncData syncData) {
+        this.syncData = syncData;
+        this.syncData.setLastUpdate(LocalDateTime.now());
+    }
+
+    public void setSyncData(SyncDataResponse syncData) {
+        if (syncData != null && syncData.isResult()) {
+            this.syncData = new SyncData(syncData.getGuid(), syncData.getCode());
+            this.syncData.setLastUpdate(LocalDateTime.now());
+        }
     }
 
     public String getCodeEntity() {

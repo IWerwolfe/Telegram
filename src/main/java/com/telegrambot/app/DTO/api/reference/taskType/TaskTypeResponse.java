@@ -13,6 +13,6 @@ public class TaskTypeResponse extends EntityResponse {
 
     @JsonCreator
     public TaskTypeResponse(String json) {
-        createToJson(json, TaskTypeResponse.class, this);
+        fillToJson(json, TaskTypeResponse.class, this);
     }
 }

@@ -67,30 +67,41 @@ public abstract class Converter {
     public <E extends Document, T extends EntityDocResponse> void fillResponseToDoc(E doc, T response) {
         doc.setDate(convertToLocalDateTime(response.getDate()));
         doc.setComment(response.getComment());
-        doc.setTotalAmount(Integer.valueOf(response.getTotalAmount()));
+        doc.setTotalAmount(convertToInteger(response.getTotalAmount()));
         doc.setMarkedForDel(response.getMarkedForDel());
         doc.setAuthor(response.getGuidAuthor());
     }
 
     public <E extends Reference, T extends EntityResponse> T convertReferenceToResponse(E entity, Class<T> entityType) {
+
         T request = createEntity(entityType);
-        if (request != null) {
-            request.setName(entity.getName());
-            request.setGuid(entity.getGuidEntity());
-            request.setMarkedForDel(entity.getMarkedForDel());
+        if (request == null || entity == null) {
+            return request;
         }
+
+        request.setName(entity.getName());
+        request.setGuid(entity.getGuidEntity());
+        request.setMarkedForDel(entity.getMarkedForDel());
+
         return request;
     }
 
     public <T extends Entity, R extends EntityResponse> T convertToEntity(R dto) {
+
+        if (dto == null) {
+            return null;
+        }
+
         T entity = getOrCreateEntity(dto);
+        if (entity == null) {
+            return null;
+        }
         entity.setSyncData(dto.getGuid(), dto.getCode());
         return updateEntity(dto, entity);
     }
 
     public static <T extends Entity,
             S extends EntityResponse,
-            R extends EntityRepository<T>,
             C extends Converter> List<T> convertToEntityList(List<S> list,
                                                              C converter) {
         return list == null || list.isEmpty() ?
@@ -104,13 +115,21 @@ public abstract class Converter {
             C extends Converter> List<T> convertToEntityListIsSave(List<S> list,
                                                                    C converter,
                                                                    R repository) {
-        return repository.saveAllAndFlush(convertToEntityList(list, converter));
+        List<T> entityList = convertToEntityList(list, converter);
+        return entityList == null || entityList.isEmpty() ?
+                new ArrayList<>() :
+                repository.saveAllAndFlush(entityList);
     }
 
     public static <T extends Entity, S extends EntityResponse, R extends EntityRepository<T>> T getOrCreateEntity(S dto,
                                                                                                                   R repository,
                                                                                                                   Class<T> entityType) {
-        if (dto == null || dto.getGuid() == null || dto.getGuid().isEmpty()) return null;
+        if (dto == null) {
+            return null;
+        }
+        if ((dto.getGuid() == null || dto.getGuid().isEmpty()) && (dto.getCode() != null || dto.getName() != null)) {
+            return createEntity(entityType);
+        }
         return getOrCreateEntity(dto.getGuid(), repository, entityType, true);
     }
 
@@ -131,15 +150,15 @@ public abstract class Converter {
         return existingEntity.orElseGet(() -> createEntity(guid, repository, entityType, isSaved));
     }
 
-    private static <T extends Entity, R extends EntityRepository<T>> T createEntity(String guid,
-                                                                                    R repository,
-                                                                                    Class<T> entityType,
-                                                                                    boolean isSaved) {
+    public static <T extends Entity, R extends EntityRepository<T>> T createEntity(String guid,
+                                                                                   R repository,
+                                                                                   Class<T> entityType,
+                                                                                   boolean isSaved) {
         T entity = createEntity(guid, entityType);
         return isSaved && entity != null ? repository.save(entity) : entity;
     }
 
-    private static <T extends Entity> T createEntity(String guid, Class<T> entityType) {
+    public static <T extends Entity> T createEntity(String guid, Class<T> entityType) {
         T entity = createEntity(entityType);
         if (entity != null) {
             entity.setSyncData(guid, "");
@@ -148,7 +167,7 @@ public abstract class Converter {
         return entity;
     }
 
-    private static <T> T createEntity(Class<T> entityType) {
+    public static <T> T createEntity(Class<T> entityType) {
         try {
             return entityType.getDeclaredConstructor().newInstance();
         } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
@@ -157,6 +176,15 @@ public abstract class Converter {
         }
         return null;
     }
+
+    public static Integer convertToInteger(String sum) {
+        try {
+            return sum == null || sum.isEmpty() ? 0 : Integer.parseInt(sum);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
 
     public static LocalDateTime convertToLocalDateTime(Date date) {
         if (date == null) {
@@ -196,6 +224,18 @@ public abstract class Converter {
         } catch (IllegalArgumentException e) {
             log.error("Invalid enum value: {}", value);
             return null;
+        }
+    }
+
+    public static <T extends Enum<T>> String convertEnumToString(T enumEntity) {
+        if (enumEntity == null) {
+            return "";
+        }
+        try {
+            return enumEntity.name();
+        } catch (Exception e) {
+            log.error("Invalid enum: {}", e.getMessage());
+            return "";
         }
     }
 }

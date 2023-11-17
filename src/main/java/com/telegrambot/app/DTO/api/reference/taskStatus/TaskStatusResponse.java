@@ -13,6 +13,6 @@ public class TaskStatusResponse extends EntityResponse {
 
     @JsonCreator
     public TaskStatusResponse(String json) {
-        createToJson(json, TaskStatusResponse.class, this);
+        fillToJson(json, TaskStatusResponse.class, this);
     }
 }

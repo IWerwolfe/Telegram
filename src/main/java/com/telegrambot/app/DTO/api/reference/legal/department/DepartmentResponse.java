@@ -19,6 +19,6 @@ public class DepartmentResponse extends EntityResponse {
 
     @JsonCreator
     public DepartmentResponse(String json) {
-        createToJson(json, DepartmentResponse.class, this);
+        fillToJson(json, DepartmentResponse.class, this);
     }
 }

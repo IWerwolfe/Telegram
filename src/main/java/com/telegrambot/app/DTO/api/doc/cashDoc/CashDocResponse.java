@@ -19,6 +19,6 @@ public class CashDocResponse extends EntityDocResponse {
 
     @JsonCreator
     public CashDocResponse(String json) {
-        createToJson(json, CashDocResponse.class, this);
+        fillToJson(json, CashDocResponse.class, this);
     }
 }

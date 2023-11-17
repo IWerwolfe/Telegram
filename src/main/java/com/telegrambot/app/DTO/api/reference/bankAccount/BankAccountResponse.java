@@ -27,6 +27,6 @@ public class BankAccountResponse extends EntityResponse {
 
     @JsonCreator
     public BankAccountResponse(String json) {
-        createToJson(json, BankAccountResponse.class, this);
+        fillToJson(json, BankAccountResponse.class, this);
     }
 }

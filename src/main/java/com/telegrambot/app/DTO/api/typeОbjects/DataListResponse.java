@@ -15,4 +15,19 @@ public class DataListResponse<T> extends DataResponse {
     public DataListResponse(boolean result, String error) {
         super(result, error);
     }
+
+    public DataListResponse(boolean result, String error, List<T> list) {
+        super(result, error);
+        this.list = list;
+    }
+
+    public DataListResponse(Boolean result, String error, List<T> list) {
+        super(result, error);
+        this.list = list;
+    }
+
+    public DataListResponse(Boolean result, String error) {
+        super(result, error);
+    }
+
 }

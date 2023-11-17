@@ -26,6 +26,6 @@ public class TaskDocResponse extends EntityDocResponse {
 
     @JsonCreator
     public TaskDocResponse(String json) {
-        createToJson(json, TaskDocResponse.class, this);
+        fillToJson(json, TaskDocResponse.class, this);
     }
 }

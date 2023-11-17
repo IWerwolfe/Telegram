@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -26,20 +27,37 @@ public class Partner extends LegalEntity {
     private List<Contract> contracts;
 
     public Contract getDefaultContract() {
-        return contracts.size() == 1 ?
-                contracts.get(0) :
-                contracts.stream()
+        switch (contracts.size()) {
+            case 0 -> {
+                Contract contract = new Contract(this);
+                setDefaultContract(contract);
+                return contract;
+            }
+            case 1 -> {
+                return contracts.get(0);
+            }
+            default -> {
+                return contracts.stream()
                         .filter(Contract::getIsDefault)
                         .findFirst()
                         .orElse(null);
+            }
+        }
     }
 
     public void setDefaultContract(Contract defaultContract) {
 
-        boolean is = contracts.stream()
-                .anyMatch(c -> c == defaultContract);
+        if (contracts == null) {
+            contracts = new ArrayList<>();
+        }
 
-        contracts.forEach(c -> c.setIsDefault(false));
+        boolean is = false;
+
+        if (!contracts.isEmpty()) {
+            is = contracts.stream()
+                    .anyMatch(c -> c == defaultContract);
+            contracts.forEach(c -> c.setIsDefault(false));
+        }
 
         if (contracts.isEmpty() || !is) {
             contracts.add(defaultContract);

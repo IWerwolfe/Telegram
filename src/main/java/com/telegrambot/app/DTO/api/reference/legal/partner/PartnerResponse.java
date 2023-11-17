@@ -14,6 +14,6 @@ public class PartnerResponse extends LegalEntityResponse {
 
     @JsonCreator
     public PartnerResponse(String json) {
-        createToJson(json, PartnerResponse.class, this);
+        fillToJson(json, PartnerResponse.class, this);
     }
 }

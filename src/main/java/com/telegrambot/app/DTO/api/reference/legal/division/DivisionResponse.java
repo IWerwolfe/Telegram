@@ -13,6 +13,6 @@ public class DivisionResponse extends EntityResponse {
 
     @JsonCreator
     public DivisionResponse(String json) {
-        createToJson(json, DivisionResponse.class, this);
+        fillToJson(json, DivisionResponse.class, this);
     }
 }

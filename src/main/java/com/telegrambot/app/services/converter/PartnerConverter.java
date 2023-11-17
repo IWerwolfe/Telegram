@@ -36,7 +36,7 @@ public class PartnerConverter extends Converter {
             response.setDateCertificate(convertToDate(entityBD.getDateCertificate()));
             response.setOkpo(entityBD.getOKPO());
 //            response.setGuidDefaultContract(convertToGuid(entityBD.getDefaultContract()));
-            response.setPartnerTypeString(entityBD.getPartnerType().name());
+            response.setPartnerTypeString(convertEnumToString(entityBD.getPartnerType()));
             return (R) response;
         }
         return null;

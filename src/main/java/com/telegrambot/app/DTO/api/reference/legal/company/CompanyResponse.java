@@ -13,6 +13,6 @@ public class CompanyResponse extends LegalEntityResponse {
 
     @JsonCreator
     public CompanyResponse(String json) {
-        createToJson(json, CompanyResponse.class, this);
+        fillToJson(json, CompanyResponse.class, this);
     }
 }

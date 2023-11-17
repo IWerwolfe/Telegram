@@ -13,6 +13,6 @@ public class ManagerResponse extends EntityResponse {
 
     @JsonCreator
     public ManagerResponse(String json) {
-        createToJson(json, ManagerResponse.class, this);
+        fillToJson(json, ManagerResponse.class, this);
     }
 }

@@ -31,9 +31,16 @@ public class PartnerData {
     private Contract contract;
 
     public PartnerData(Partner partner) {
+        this(partner, partner.getDepartments().size() == 1 ? partner.getDepartments().get(0) : null);
+    }
+
+    public PartnerData(Partner partner, Department department) {
+        if (partner == null) {
+            return;
+        }
         this.partner = partner;
         this.contract = partner.getDefaultContract();
-        this.department = partner.getDepartments().size() == 1 ? partner.getDepartments().get(0) : null;
+        this.department = department;
     }
 
     @Override

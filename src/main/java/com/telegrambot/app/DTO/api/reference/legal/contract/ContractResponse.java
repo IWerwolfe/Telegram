@@ -26,6 +26,6 @@ public class ContractResponse extends EntityResponse {
 
     @JsonCreator
     public ContractResponse(String json) {
-        createToJson(json, ContractResponse.class, this);
+        fillToJson(json, ContractResponse.class, this);
     }
 }

@@ -27,6 +27,6 @@ public class CardDocResponse extends EntityDocResponse {
 
     @JsonCreator
     public CardDocResponse(String json) {
-        createToJson(json, CardDocResponse.class, this);
+        fillToJson(json, CardDocResponse.class, this);
     }
 }

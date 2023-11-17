@@ -13,6 +13,7 @@ import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
 import com.telegrambot.app.DTO.types.Currency;
+import com.telegrambot.app.DTO.types.PartnerType;
 import com.telegrambot.app.DTO.types.PaymentType;
 import com.telegrambot.app.DTO.types.SortingTaskType;
 import com.telegrambot.app.components.Buttons;
@@ -27,7 +28,6 @@ import com.telegrambot.app.model.documents.doc.payment.CardDoc;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.documents.docdata.CardData;
 import com.telegrambot.app.model.documents.docdata.PartnerData;
-import com.telegrambot.app.model.documents.docdata.SyncData;
 import com.telegrambot.app.model.reference.Manager;
 import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.model.reference.legalentity.Contract;
@@ -122,7 +122,8 @@ public class BotCommandsImpl implements BotCommands {
         this.user = userBD;
         this.nameCommand = receivedMessage.trim();
 
-        if (receivedMessage.equals("/exit") || receivedMessage.equals("Отмена")) {
+        if (receivedMessage.equals("/exit") || receivedMessage.equals("Отмена") ||
+                (text != null && (text.equals("/exit") || text.equals("Отмена")))) {
             comExit(Message.getExitCommand(nameCommand));
             return;
         }
@@ -255,10 +256,12 @@ public class BotCommandsImpl implements BotCommands {
         switch (command.getSubCommand()) {
             case "getInn" -> subGetInn(command, info, "getPartnerData");
             case "getPartnerData" -> {
-                DaDataParty daDataParty = apiDaDataService.getCompanyDataByINN(text);
-                String message = daDataParty != null ?
-                        toStringServices.toStringNonNullFields(daDataParty, true) :
-                        Message.getNonFindPhone();
+                Partner partner = createLegalByInnFromDaData();
+//                DaDataParty daDataParty = apiDaDataService.getCompanyDataByINN(text);
+//                String message = daDataParty != null ?
+//                        toStringServices.toStringNonNullFields(daDataParty, true) :
+//                        Message.getNonFindPhone();
+                String message = toStringServices.toStringNonNullFields(partner, false);
                 sendMessage(message);
                 completeSubCommand(command, "end");
                 comGetByInn();
@@ -518,16 +521,15 @@ public class BotCommandsImpl implements BotCommands {
         TaskDoc doc = new TaskDoc();
         entityDefaults.fillDefaultData(doc);
         doc.setDescription(getDescriptionBySubCommand());
-        fillPartnerData(doc);
+        doc.setPartnerData(fillPartnerData());
 
         SyncDataResponse createResponse = api1C.createTask(taskDocConverter.convertToResponse(doc));
-        if (isCompleted(createResponse)) {
-            doc.setSyncData(new SyncData(createResponse.getGuid(), createResponse.getCode()));
-        }
+        doc.setSyncData(createResponse);
+
         taskDocRepository.save(doc);
         eventPublisher.publishEvent(new EntitySavedEvent(doc));
         sendMessage(Message.getSuccessfullyCreatingTask(doc));
-//        sendToWorkGroup(doc.toString());
+        sendToWorkGroup("Создана новая задача " + SEPARATOR + doc);
 
         completeSubCommand(getCommandCache(), "end");
         comCreateAssistance();
@@ -740,9 +742,7 @@ public class BotCommandsImpl implements BotCommands {
         cardDoc.setComment(comment);
 
         SyncDataResponse createResponse = api1C.createCardDoc(cardDocConverter.convertToResponse(cardDoc));
-        if (isCompleted(createResponse)) {
-            cardDoc.setSyncData(new SyncData(createResponse.getGuid(), createResponse.getCode()));
-        }
+        cardDoc.setSyncData(createResponse);
 
         cardDocRepository.save(cardDoc);
         eventPublisher.publishEvent(new EntitySavedEvent(cardDoc));
@@ -776,9 +776,7 @@ public class BotCommandsImpl implements BotCommands {
         taskDocRepository.save(taskDoc);
 
         SyncDataResponse createResponse = api1C.updateTask(taskDocConverter.convertToResponse(taskDoc));
-        if (isCompleted(createResponse)) {
-            taskDoc.setSyncData(new SyncData(createResponse.getGuid(), createResponse.getCode()));
-        }
+        taskDoc.setSyncData(createResponse);
 
         sendMessage(Message.getSuccessfullyEditTask(taskDoc));
         completeSubCommand(getCommandCache(), "end");
@@ -828,6 +826,7 @@ public class BotCommandsImpl implements BotCommands {
         taskDoc.setSuccessfully(successfully);
         String decision = taskDoc.getDecision();
         taskDoc.setDecision(decision == null || decision.isEmpty() ? message : message + SEPARATOR + decision);
+        sendToWorkGroup("Задача №" + taskDoc.getCodeEntity() + " отменена пользователем. " + SEPARATOR + "Причина: " + SEPARATOR + message);
     }
 
     private void closingTask(TaskDoc taskDoc, String message, boolean successfully, String prefix) {
@@ -929,23 +928,22 @@ public class BotCommandsImpl implements BotCommands {
         return taskDoc.getPartnerData() == null ? "-" : getNameEntity(taskDoc.getPartnerData().getDepartment());
     }
 
-    private void fillPartnerData(TaskDoc doc) {
+    private PartnerData fillPartnerData() {
 
         String idPartner = getResultSubCommandFromCache("getPartner");
 
         if (idPartner.isEmpty()) {
             UserResponse userData = api1C.getUserData(getResultSubCommandFromCache("getPhone"));
             if (userData != null && userData.getStatusList() != null && userData.getStatusList().size() >= 1) {
-                PartnerData partnerData = getPartnerDateByAPI(userData.getStatusList().get(0).getGuid());
-                doc.setPartnerData(partnerData);
-                return;
+                Partner partner = getPartnerByGuid(userData.getStatusList().get(0).getGuid());
+                return new PartnerData(partner);
             }
         }
 
         Partner partner = partnerRepository.findById(Long.valueOf(idPartner)).orElse(null);
         String idDepartment = getResultSubCommandFromCache("getDepartment");
         Department department = getDepartmentById(partner, idDepartment);
-        doc.setPartnerData(partner, department);
+        return new PartnerData(partner, department);
     }
 
     private Department getDepartmentById(Partner partner, String idDep) {
@@ -984,6 +982,9 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private @NonNull PartnerData getPartnerDateByAPI(String text) {
+        if (!text.equals(REGEX_INN)) {
+            return new PartnerData();
+        }
         PartnerDataResponse response = api1C.getPartnerData(text);
         Partner partner = isCompleted(response) ?
                 createDataByPartnerDataResponse(response).getPartners().get(0) :
@@ -1022,6 +1023,7 @@ public class BotCommandsImpl implements BotCommands {
         Partner partner = new Partner();
         partner.setInn(text);
         partner.setComment("created automatically on " + LocalDateTime.now().format(formatter));
+        partner.setPartnerType(PartnerType.BUYER);
 
         if (data != null) {
             partner.setName(data.getName().getShortWithOpf());
@@ -1034,6 +1036,9 @@ public class BotCommandsImpl implements BotCommands {
 
         Contract contract = new Contract(partner);
         partner.setDefaultContract(contract);
+
+        SyncDataResponse createResponse = api1C.createPartner(partnerConverter.convertToResponse(partner));
+        partner.setSyncData(createResponse);
 
         return partnerRepository.save(partner);
     }
@@ -1120,8 +1125,8 @@ public class BotCommandsImpl implements BotCommands {
         //TODO дописать эту процедуру
         SendMessage message = new SendMessage();
         message.setChatId(-1001380655854L);
-        message.setText("Создана новая задача " + text);
-        parent.sendMessage(message);
+        message.setText(text);
+//        parent.sendMessage(message);
     }
 
     private List<PartnerBalance> updateBalance(List<BalanceResponse> list) {

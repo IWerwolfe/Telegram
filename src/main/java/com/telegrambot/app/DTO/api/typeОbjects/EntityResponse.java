@@ -28,19 +28,28 @@ public class EntityResponse implements Serializable {
 
     @JsonCreator
     public EntityResponse(String json) {
-        createToJson(json, EntityResponse.class, this);
+        fillToJson(json, EntityResponse.class, this);
     }
 
-    public static <E> void createToJson(String json, Class<E> entityClass, E entity) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            E response = objectMapper.readValue(json, entityClass);
+    public static <E> void fillToJson(String json, Class<E> entityClass, E entity) {
+        E response = createToJson(json, entityClass);
+        if (response != null && entity != null) {
             BeanUtils.copyProperties(response, entity);
+        }
+    }
+
+    public static <E> E createToJson(String json, Class<E> entityClass) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(json, entityClass);
         } catch (JsonProcessingException e) {
             log.error("The error occurred during the creation of an {} from a JSON: {}{}",
                     entityClass.getSimpleName(),
                     System.lineSeparator(),
                     e.getMessage());
+        } catch (IllegalArgumentException e) {
+            log.error("The value null was passed instead of JSON.");
         }
+        return null;
     }
 }

@@ -9,8 +9,10 @@ import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
 import com.telegrambot.app.DTO.api.other.SyncDataResponse;
 import com.telegrambot.app.DTO.api.other.UserResponse;
 import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.config.Connector1C;
+import com.telegrambot.app.services.converter.Converter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 
 @Service
@@ -59,13 +60,13 @@ public class ApiOutServiceImpl implements ApiOutService {
         return headers;
     }
 
-    private static ByteArrayHttpMessageConverter getByteArrayHttpMessageConverter() {
+    private ByteArrayHttpMessageConverter getByteArrayHttpMessageConverter() {
         ByteArrayHttpMessageConverter converter = new ByteArrayHttpMessageConverter();
         converter.setSupportedMediaTypes(Collections.singletonList(MediaType.APPLICATION_OCTET_STREAM));
         return converter;
     }
 
-    private static RestTemplate getRestTemplate() {
+    private RestTemplate getRestTemplate() {
         ByteArrayHttpMessageConverter converter = getByteArrayHttpMessageConverter();
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(converter);
@@ -130,6 +131,11 @@ public class ApiOutServiceImpl implements ApiOutService {
     }
 
     @Override
+    public SyncDataResponse createPartner(@NonNull PartnerResponse response) {
+        return executePostRequest(response, "partner");
+    }
+
+    @Override
     public SyncDataResponse createTask(@NonNull TaskDocResponse taskDocResponse) {
         return executePostRequest(taskDocResponse, "task");
     }
@@ -181,13 +187,8 @@ public class ApiOutServiceImpl implements ApiOutService {
         return executeGetRequest(TaskDocDataListResponse.class, "taskList", param);
     }
 
-    private static <T> T createEntity(Class<T> entityType) {
-        try {
-            return entityType.getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
-                 InvocationTargetException e) {
-            log.error("Ошибка создания сущности {}: {}", entityType.getSimpleName(), e.getMessage());
-        }
-        return (T) new DataResponse();
+    private static <T extends DataResponse> T createEntity(Class<T> entityType) {
+        T entity = Converter.createEntity(entityType);
+        return entity == null ? (T) new DataResponse() : entity;
     }
 }

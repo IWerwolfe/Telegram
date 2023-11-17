@@ -1,0 +1,118 @@
+{
+  "result": true,
+  "errors": null,
+  "taskStatuses": [
+    {
+      "code": "1",
+      "guid": "guidStatus_init",
+      "markedForDel": false,
+      "name": "Init status"
+    },
+    {
+      "code": "2",
+      "guid": "guidStatus_close",
+      "markedForDel": false,
+      "name": "Close status"
+    },
+    {
+      "code": "3",
+      "guid": "guidStatus_status",
+      "markedForDel": false,
+      "name": "own status"
+    }
+  ],
+  "taskTypes": [
+    {
+      "code": "--",
+      "name": "default task type",
+      "guid": "guidType_default",
+      "markedForDel": false
+    }
+  ],
+  "managers": [
+    {
+      "code": "19",
+      "guid": "guidManager",
+      "markedForDel": false,
+      "name": "Manager"
+    }
+  ],
+  "companies": [
+    {
+      "code": "00-000001",
+      "guid": "guidCompany",
+      "markedForDel": false,
+      "name": "Default company",
+      "inn": "270322598120",
+      "kpp": "",
+      "guidBankAccount": "guidBank",
+      "ogrn": "305270310400012",
+      "commencement": "2005-04-14T00:00:00",
+      "certificate": "305270310400012",
+      "dateCertificate": "2005-04-14T00:00:00",
+      "okpo": "0146686429"
+    }
+  ],
+  "divisions": [
+    {
+      "code": "00-000004",
+      "guid": "guidDivision",
+      "markedForDel": false,
+      "name": "Default division"
+    }
+  ],
+  "banks": [
+    {
+      "code": "041012765",
+      "guid": "guidBank",
+      "markedForDel": false,
+      "name": "Default bank",
+      "corrAccount": "30101810300000000765",
+      "city": "KMS",
+      "address": "",
+      "phone": "",
+      "swift": "ASANRU8XXXX",
+      "country": "RUSSIA"
+    }
+  ],
+  "cashDeskKkms": [
+    {
+      "code": "000000001",
+      "guid": "guidCashDeskKKM",
+      "markedForDel": false,
+      "name": "default cashDesk KKM"
+    }
+  ],
+  "cashDesks": [
+    {
+      "code": "000000001",
+      "guid": "guidCashDesk",
+      "markedForDel": false,
+      "name": "default cashDesk"
+    }
+  ],
+  "payTerminals": [
+    {
+      "code": "2         ",
+      "guid": "guidPayT",
+      "markedForDel": false,
+      "name": "Default pay Terminal"
+    },
+    {
+      "code": "3         ",
+      "guid": "e94f7f92-3b9b-11ec-a9cc-00195bc08c65",
+      "markedForDel": false,
+      "name": "РРєРІР°Р№СЂРёРЅРіРѕРІС‹Р№ С‚РµСЂРјРёРЅР°Р» РҐР°Р±Р°СЂРѕРІСЃРє"
+    }
+  ],
+  "key": null,
+  "guidDefaultClosedStatus": "guidStatus_close",
+  "guidDefaultInitialStatus": "guidStatus_init",
+  "nameDefaultType": "guidType_default",
+  "guidDefaultCompany": "guidCompany",
+  "guidDefaultBankAccount": "guidBank",
+  "guidDefaultCashDesk": "guidCashDesk",
+  "guidDefaultCashDeskKkm": "guidCashDeskKKM",
+  "guidDefaultPaymentTerminal": "guidPayT",
+  "guidDefaultDivisions": "guidDivision"
+}

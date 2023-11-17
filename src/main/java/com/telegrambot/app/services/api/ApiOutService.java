@@ -8,6 +8,7 @@ import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
 import com.telegrambot.app.DTO.api.other.SyncDataResponse;
 import com.telegrambot.app.DTO.api.other.UserResponse;
 import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
+import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerResponse;
 import lombok.NonNull;
 
 public interface ApiOutService {
@@ -25,6 +26,8 @@ public interface ApiOutService {
     TaskDocDataResponse getTaskByGuid(@NonNull String guid);
 
     TaskDocDataResponse getTaskByCode(@NonNull String code);
+
+    SyncDataResponse createPartner(@NonNull PartnerResponse response);
 
     SyncDataResponse createTask(@NonNull TaskDocResponse taskDocResponse);
 

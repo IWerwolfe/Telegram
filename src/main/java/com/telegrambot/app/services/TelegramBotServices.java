@@ -51,7 +51,7 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         boolean isCommand = true;
         user = getUser();
 
-        if (!isBot()) {
+        if (isBot()) {
             SendMessage sendMessage = new SendMessage(String.valueOf(getChatId()), getReceivedMessage());
             sendMessage(sendMessage);
             return;

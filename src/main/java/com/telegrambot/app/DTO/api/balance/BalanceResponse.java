@@ -17,6 +17,6 @@ public class BalanceResponse {
 
     @JsonCreator
     public BalanceResponse(String json) {
-        EntityResponse.createToJson(json, BalanceResponse.class, this);
+        EntityResponse.fillToJson(json, BalanceResponse.class, this);
     }
 }
