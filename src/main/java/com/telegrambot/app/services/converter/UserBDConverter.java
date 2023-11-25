@@ -3,6 +3,7 @@ package com.telegrambot.app.services.converter;
 import com.telegrambot.app.DTO.api.other.UserResponse;
 import com.telegrambot.app.DTO.types.Gender;
 import com.telegrambot.app.model.documents.docdata.PersonData;
+import com.telegrambot.app.model.user.UserBD;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,13 @@ public class UserBDConverter {
         return null;
     }
 
-    public com.telegrambot.app.model.user.UserBD updateEntity(UserResponse response, com.telegrambot.app.model.user.UserBD entityBD) {
+    public UserBD updateEntity(UserResponse response, UserBD entityBD) {
+        if (response == null || entityBD == null) {
+            return entityBD;
+        }
+
+        entityBD.setSyncData(response.getGuid());
+
         if (entityBD.getPerson() == null) {
             entityBD.setPerson(new PersonData());
         }
@@ -36,23 +43,18 @@ public class UserBDConverter {
         if (fio == null || fio.isEmpty()) {
             return;
         }
-        String[] strings = fio.split("\\s+");
-        switch (strings.length) {
-            case 0:
-                return;
-            case 1:
-                personFields.setLastName(strings[0]);
-            case 2:
-                personFields.setFirstName(strings[1]);
-            default: {
-                if (strings.length < 3) {
-                    return;
-                }
-                String fatherName = Arrays
-                        .stream(strings, 2, strings.length)
-                        .collect(Collectors.joining(" "));
-                personFields.setFatherName(fatherName);
-            }
+
+        String[] strings = fio.replaceAll("[^a-zA-Zа-яА-ЯёЁ\s-]", "").split("\\s+");
+
+        personFields.setLastName(strings[0]);
+        if (strings.length > 1) {
+            personFields.setFirstName(strings[1]);
+        }
+        if (strings.length > 2) {
+            String fatherName = Arrays
+                    .stream(strings, 2, strings.length)
+                    .collect(Collectors.joining(" "));
+            personFields.setFatherName(fatherName);
         }
     }
 }

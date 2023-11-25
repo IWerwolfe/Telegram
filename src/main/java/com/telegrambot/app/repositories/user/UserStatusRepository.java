@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface UserStatusRepository extends CrudRepository<UserStatus, Long> {
+    @Query("select u from UserStatus u where u.legal = ?1")
+    List<UserStatus> findByLegal(LegalEntity legal);
+
     @Query("select u from UserStatus u where u.user = ?1 and u.legal = ?2")
     List<UserStatus> findByUserAndLegal(UserBD user, LegalEntity legal);
 

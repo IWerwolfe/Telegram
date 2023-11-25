@@ -222,4 +222,24 @@ public abstract class Message {
                 "Деньги поступят на баланс в течение 3 рабочих дней, после этого обновится информация в телеграм боте" + DUAL_SEPARATOR +
                 "Ссылка для оплаты через БСП: " + sbpStatic;
     }
+
+    public static String getErrorPayBlocked() {
+        return "В данный момент возможность оплаты через телеграм бот заблокирована. " +
+                "Приносим свои извинения";
+    }
+
+    public static String getNotifyNewTask(TaskDoc taskDoc) {
+        return "От вашей организации поступило новое обращение №"
+                + taskDoc.getCodeEntity() +
+                " в техподдержку: " + DUAL_SEPARATOR +
+                taskDoc.getDescription();
+    }
+
+    public static String getNotifyClosed(TaskDoc taskDoc) {
+        return "Обращение №"
+                + taskDoc.getCodeEntity() +
+                " было закрыто"
+                + DUAL_SEPARATOR +
+                taskDoc.getDescription();
+    }
 }

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.telegram.telegrambots.meta.api.objects.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -42,15 +43,25 @@ public class UserBD {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private UserBalance userBalance;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private UserActivity activity;
+
     public UserBD(User user) {
         BeanUtils.copyProperties(user, this);
-        this.person = new PersonData(user.getFirstName(), user.getLastName());
+        this.person = new PersonData();
+        this.getPerson().setFirstName(user.getFirstName());
+        this.getPerson().setLastName(user.getLastName());
         this.statuses = List.of(new UserStatus(this));
         this.userBalance = new UserBalance(this);
+        this.activity = new UserActivity(this);
+    }
+
+    public void updateActivity() {
+        activity.setLastActivityDate(LocalDateTime.now());
     }
 
     public UserType getUserType() {
-        return statuses.isEmpty() ? UserType.UNAUTHORIZED : statuses.get(0).getUserType();
+        return statuses == null || statuses.isEmpty() ? UserType.UNAUTHORIZED : statuses.get(0).getUserType();
     }
 
     public int getBalance() {

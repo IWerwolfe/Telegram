@@ -6,9 +6,11 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum FormOfPayment {
-    CARD("Банковской картой"),
+    CARD("Банковская карта"),
     INVOICE("Счет на оплату"),
-    SBP("Система быстрых платежей");
+    SBP("Система быстрых платежей"),
+    SBP_STATIC("Система быстрых платежей (ссылка)"),
+    CRYPTO("Криптовалюта");
 
     private final String label;
 

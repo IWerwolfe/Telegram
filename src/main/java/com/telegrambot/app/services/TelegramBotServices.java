@@ -49,7 +49,8 @@ public class TelegramBotServices extends TelegramLongPollingBot {
 
         this.update = update;
         boolean isCommand = true;
-        user = getUser();
+        this.user = getUser();
+        updateLastActivity();
 
         if (isBot()) {
             SendMessage sendMessage = new SendMessage(String.valueOf(getChatId()), getReceivedMessage());
@@ -83,7 +84,6 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         if (isCommand) {
             botCommands.botAnswerUtils(getReceivedMessage(), getChatId(), user);
         }
-        updateLastActivity(user);
     }
 
     private void updateUserProfile(Contact contact, UserBD userBD) {
@@ -113,18 +113,22 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     }
 
 
-    public void sendMessage(BotApiMethodMessage message) {
+    public void sendMessage(BotApiMethodMessage message, TransactionType transactionType) {
         try {
             Message reply = execute(message);
             if (message instanceof SendMessage send) {
-                saveTransaction(send, reply.getMessageId());
+                saveTransaction(send.getText(), reply.getMessageId(), transactionType);
             }
             if (message instanceof SendInvoice invoice) {
-                saveTransaction(invoice.getTitle(), reply.getMessageId());
+                saveTransaction(invoice.getTitle(), reply.getMessageId(), transactionType);
             }
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
         }
+    }
+
+    public void sendMessage(BotApiMethodMessage message) {
+        sendMessage(message, TransactionType.BOT_MESSAGE);
     }
 
     public void sendMessage(BotApiMethodBoolean message) {
@@ -219,16 +223,17 @@ public class TelegramBotServices extends TelegramLongPollingBot {
 
     private UserBD createUserBD(User user) {
         UserBD userBD = new UserBD(user);
+        userRepository.save(userBD);
         log.info("Create new telegram user {} {}", userBD.getPerson().getFirstName(), userBD.getUserName());
-        return userRepository.save(userBD);
+        return userBD;
+    }
+
+    private void saveTransaction(String text, Integer idMessage, TransactionType transactionType) {
+        saveTransaction(text, false, idMessage, transactionType);
     }
 
     private void saveTransaction(boolean isCommand) {
         saveTransaction(getReceivedMessage(), isCommand, getMessageId(), getTransactionTypeFromMessage());
-    }
-
-    private void saveTransaction(SendMessage sendMessage, long idMessage) {
-        saveTransaction(sendMessage.getText(), idMessage);
     }
 
     private void saveTransaction(String text, long idMessage) {
@@ -246,13 +251,14 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         transactionRepository.save(transaction);
     }
 
-    private void updateLastActivity(UserBD userBD) {
-        UserActivity activity = activityRepository.findByUserBD(userBD);
-        if (activity == null) {
-            activity = new UserActivity();
-            activity.setUserBD(userBD);
+    private void updateLastActivity() {
+        if (user == null) {
+            return;
         }
-        activity.setLastActivityDate(LocalDateTime.now());
-        activityRepository.save(activity);
+        UserActivity activity = user.getActivity();
+        if (activity.getId() != null) {
+            activity.setLastActivityDate(LocalDateTime.now());
+            activityRepository.save(activity);
+        }
     }
 }

@@ -18,11 +18,11 @@ import java.time.LocalDateTime;
 public class PersonData {
 
     @JoinColumn(name = "first_name")
-    private String firstName;
+    private String firstName = "";
     @JoinColumn(name = "last_name")
-    private String lastName;
+    private String lastName = "";
     @JoinColumn(name = "father_name")
-    private String fatherName;
+    private String fatherName = "";
     @Enumerated(EnumType.STRING)
     private Gender gender;
     private LocalDateTime birthday;

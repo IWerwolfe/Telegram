@@ -2,6 +2,7 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.config.Connector1C;
 import com.telegrambot.app.model.DefaultDocParam;
 import com.telegrambot.app.model.EntityDefaults;
 import com.telegrambot.app.repositories.BankAccountRepository;
@@ -89,9 +90,12 @@ class DefaultDataInitializerTest {
     private CashDeskConverter cashDeskConverter;
 
     @InjectMocks
-    private EntityDefaults entityDefaults;
+    private Connector1C connector1C;
 
     @InjectMocks
+    private EntityDefaults entityDefaults;
+
+    @Mock
     private DefaultDataInitializer initializer;
 
 

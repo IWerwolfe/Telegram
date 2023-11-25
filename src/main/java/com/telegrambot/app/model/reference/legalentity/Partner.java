@@ -1,6 +1,7 @@
 package com.telegrambot.app.model.reference.legalentity;
 
 import com.telegrambot.app.DTO.types.PartnerType;
+import com.telegrambot.app.model.balance.EntityBalance;
 import com.telegrambot.app.model.balance.PartnerBalance;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import java.util.List;
 @Setter
 @Entity
 @DiscriminatorValue("partners")
-public class Partner extends LegalEntity {
+public class Partner extends LegalEntity implements EntityBalance {
 
     private PartnerType partnerType;
 
@@ -80,15 +81,13 @@ public class Partner extends LegalEntity {
         this.partnerBalance = new PartnerBalance(this);
     }
 
+    @Override
     public int getBalance() {
         return partnerBalance.getAmount();
     }
 
-    public void setBalance(int balance) {
-        partnerBalance.setAmount(balance);
-    }
-
-    public void updateBalance(int sum) {
-        partnerBalance.setAmount(partnerBalance.getAmount() + sum);
+    @Override
+    public void setBalance(int amount) {
+        partnerBalance.setAmount(amount);
     }
 }

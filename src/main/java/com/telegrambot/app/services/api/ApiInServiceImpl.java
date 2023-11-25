@@ -35,7 +35,9 @@ import com.telegrambot.app.DTO.api.typeОbjects.DataEntityResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.DataListResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.DTO.types.OperationType;
 import com.telegrambot.app.DTO.types.TaskType;
+import com.telegrambot.app.model.EntitySavedEvent;
 import com.telegrambot.app.model.balance.PartnerBalance;
 import com.telegrambot.app.model.documents.doc.payment.BankDoc;
 import com.telegrambot.app.model.documents.doc.payment.CardDoc;
@@ -57,6 +59,7 @@ import com.telegrambot.app.repositories.reference.*;
 import com.telegrambot.app.services.converter.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -79,7 +82,6 @@ public class ApiInServiceImpl implements ApiInService {
     private final TaskDocRepository taskDocRepository;
     private final TaskTypeRepository taskTypeRepository;
 
-
     private final PartnerConverter partnerConverter;
     private final TaskDocConverter taskDocConverter;
     private final DepartmentConverter departmentConverter;
@@ -91,6 +93,8 @@ public class ApiInServiceImpl implements ApiInService {
     private final CashDocConverter cashDocConverter;
     private final BalanceConverter balanceConverter;
     private final TaskTypeConverter taskTypeConverter;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public TaskDocDataResponse getTask(String guid) {
@@ -563,14 +567,15 @@ public class ApiInServiceImpl implements ApiInService {
     private <T extends EntityResponse,
             C extends Converter,
             R extends EntityRepository<E>,
-            E extends Entity> DataResponse createEntity(T response, C converter, R repository, String operator) {
+            E extends Entity> DataResponse createEntity(T response, C converter, R repository, OperationType operator) {
 
         try {
             E entity = converter.convertToEntity(response);
             repository.save(entity);
+            eventPublisher.publishEvent(new EntitySavedEvent(entity, operator));
             return new DataResponse(true, "");
         } catch (Exception e) {
-            log.error("error when {} a entity: {}{}", operator, System.lineSeparator(), e.getMessage());
+            log.error("error when {} a entity: {}{}", operator.getLabel(), System.lineSeparator(), e.getMessage());
             return new DataResponse(false, e.getMessage());
         }
     }
@@ -580,7 +585,7 @@ public class ApiInServiceImpl implements ApiInService {
             R extends EntityRepository<E>,
             E extends Entity> DataResponse createEntity(T response, C converter, R repository) {
 
-        return createEntity(response, converter, repository, "creating");
+        return createEntity(response, converter, repository, OperationType.CREATE);
     }
 
     private <T extends EntityResponse,
@@ -589,7 +594,7 @@ public class ApiInServiceImpl implements ApiInService {
             E extends Entity> DataResponse updateEntity(T response, C converter, R repository) {
 
         Optional<E> optional = repository.findBySyncDataNotNullAndSyncData_Guid(response.getGuid());
-        String operator = optional.isEmpty() ? "creating" : "update";
+        OperationType operator = optional.isEmpty() ? OperationType.CREATE : OperationType.UPDATE;
         return createEntity(response, converter, repository, operator);
     }
 

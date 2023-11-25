@@ -1,42 +1,42 @@
 Manifest-Version: 1.0
 Main-Class: com.telegrambot.app.AppApplication
-Class-Path: jaxb-core-4.0.2.jar spring-orm-6.0.9.jar spring-web-6.0.9.ja
- r jackson-module-jakarta-xmlbind-annotations-2.15.0.jar commons-lang3-3
- .12.0.jar hibernate-commons-annotations-6.0.6.Final.jar httpcore-4.4.16
- .jar jakarta.validation-api-3.0.2.jar jackson-module-jaxb-annotations-2
- .15.0.jar jersey-server-3.1.1.jar javassist-3.29.0-GA.jar hk2-utils-3.0
- .3.jar telegrambots-meta-6.5.0.jar commons-codec-1.15.jar hk2-locator-3
- .0.3.jar httpcore5-h2-5.2.1.jar jersey-media-json-jackson-3.1.1.jar com
- mons-io-2.11.0.jar mssql-jdbc-11.2.3.jre17.jar spring-boot-starter-logg
- ing-3.1.0.jar hk2-api-3.0.3.jar commons-logging-1.2.jar jackson-jaxrs-b
- ase-2.15.0.jar jboss-logging-3.5.0.Final.jar log4j-to-slf4j-2.20.0.jar 
- jackson-annotations-2.15.0.jar txw2-4.0.2.jar angus-activation-2.0.0.ja
- r jaxb-runtime-4.0.2.jar mysql-connector-j-8.0.33.jar spring-boot-autoc
- onfigure-3.1.0.jar istack-commons-runtime-4.1.1.jar jandex-3.0.5.jar sp
- ring-data-commons-3.1.0.jar osgi-resource-locator-1.0.3.jar jackson-dat
- abind-2.15.0.jar spring-webmvc-6.0.9.jar spring-aop-6.0.9.jar spring-bo
- ot-starter-data-jpa-3.1.0.jar classmate-1.5.1.jar byte-buddy-1.14.4.jar
-  jackson-jaxrs-json-provider-2.15.0.jar telegrambots-6.5.0.jar jersey-c
- ontainer-grizzly2-http-3.1.1.jar lombok-1.18.26.jar grizzly-http-server
- -4.0.0.jar DSLBuilder-1.2.1.jar httpclient5-5.2.1.jar snakeyaml-1.33.ja
- r jersey-client-3.1.1.jar slf4j-api-2.0.7.jar jackson-datatype-jdk8-2.1
- 5.0.jar jakarta.xml.bind-api-4.0.0.jar jakarta.inject-api-2.0.1.jar tom
- cat-embed-websocket-10.1.8.jar httpmime-4.5.13.jar jackson-core-2.15.0.
- jar spring-tx-6.0.9.jar micrometer-observation-1.11.0.jar aspectjweaver
- -1.9.19.jar spring-jdbc-6.0.9.jar antlr4-runtime-4.10.1.jar spring-boot
- -starter-3.1.0.jar httpcore5-5.2.1.jar spring-boot-starter-web-3.1.0.ja
- r jersey-hk2-3.1.1.jar jackson-datatype-jsr310-2.15.0.jar jakarta.trans
- action-api-2.0.1.jar jul-to-slf4j-2.0.7.jar jakarta.annotation-api-2.1.
- 1.jar jakarta.activation-api-2.1.2.jar jersey-common-3.1.1.jar spring-j
- cl-6.0.9.jar grizzly-http-4.0.0.jar httpclient-4.5.13.jar jakarta.persi
- stence-api-3.1.0.jar spring-beans-6.0.9.jar spring-context-6.0.9.jar sp
- ring-data-jpa-3.1.0.jar spring-boot-3.1.0.jar logback-classic-1.4.7.jar
-  jackson-module-parameter-names-2.15.0.jar spring-expression-6.0.9.jar 
- aopalliance-repackaged-3.0.3.jar jakarta.ws.rs-api-3.1.0.jar tomcat-emb
- ed-el-10.1.8.jar micrometer-commons-1.11.0.jar spring-boot-starter-jdbc
- -3.1.0.jar HikariCP-5.0.1.jar spring-boot-starter-tomcat-3.1.0.jar griz
- zly-framework-4.0.0.jar logback-core-1.4.7.jar log4j-api-2.20.0.jar jer
- sey-entity-filtering-3.1.1.jar spring-aspects-6.0.9.jar hibernate-core-
- 6.2.2.Final.jar spring-boot-starter-json-3.1.0.jar spring-core-6.0.9.ja
- r spring-boot-starter-aop-3.1.0.jar tomcat-embed-core-10.1.8.jar
+Class-Path: jackson-databind-2.15.0.jar snakeyaml-1.33.jar httpclient5-5
+ .2.1.jar jboss-logging-3.5.0.Final.jar jersey-client-3.1.1.jar httpmime
+ -4.5.13.jar HikariCP-5.0.1.jar jul-to-slf4j-2.0.7.jar jackson-module-pa
+ rameter-names-2.15.0.jar httpcore5-h2-5.2.1.jar grizzly-http-server-4.0
+ .0.jar jersey-media-json-jackson-3.1.1.jar jakarta.activation-api-2.1.2
+ .jar jaxb-core-4.0.2.jar commons-codec-1.15.jar spring-beans-6.0.9.jar 
+ telegrambots-6.5.0.jar spring-tx-6.0.9.jar commons-lang3-3.12.0.jar spr
+ ing-jcl-6.0.9.jar spring-aspects-6.0.9.jar spring-expression-6.0.9.jar 
+ spring-boot-starter-logging-3.1.0.jar aopalliance-repackaged-3.0.3.jar 
+ classmate-1.5.1.jar spring-orm-6.0.9.jar slf4j-api-2.0.7.jar log4j-api-
+ 2.20.0.jar spring-web-6.0.9.jar grizzly-framework-4.0.0.jar httpcore5-5
+ .2.1.jar micrometer-commons-1.11.0.jar commons-io-2.11.0.jar hibernate-
+ core-6.2.2.Final.jar hk2-locator-3.0.3.jar spring-boot-starter-data-jpa
+ -3.1.0.jar osgi-resource-locator-1.0.3.jar jackson-core-2.15.0.jar hibe
+ rnate-commons-annotations-6.0.6.Final.jar jackson-jaxrs-base-2.15.0.jar
+  spring-context-6.0.9.jar jandex-3.0.5.jar spring-boot-starter-3.1.0.ja
+ r httpclient-4.5.13.jar spring-webmvc-6.0.9.jar jakarta.annotation-api-
+ 2.1.1.jar jersey-hk2-3.1.1.jar hk2-api-3.0.3.jar log4j-to-slf4j-2.20.0.
+ jar angus-activation-2.0.0.jar tomcat-embed-websocket-10.1.8.jar antlr4
+ -runtime-4.10.1.jar mssql-jdbc-11.2.3.jre17.jar jakarta.ws.rs-api-3.1.0
+ .jar spring-boot-starter-web-3.1.0.jar httpcore-4.4.16.jar spring-core-
+ 6.0.9.jar jackson-datatype-jsr310-2.15.0.jar jackson-jaxrs-json-provide
+ r-2.15.0.jar spring-boot-autoconfigure-3.1.0.jar grizzly-http-4.0.0.jar
+  jersey-container-grizzly2-http-3.1.1.jar commons-logging-1.2.jar sprin
+ g-boot-starter-aop-3.1.0.jar jakarta.persistence-api-3.1.0.jar tomcat-e
+ mbed-el-10.1.8.jar jakarta.transaction-api-2.0.1.jar spring-boot-starte
+ r-tomcat-3.1.0.jar tomcat-embed-core-10.1.8.jar spring-aop-6.0.9.jar ja
+ ckson-module-jaxb-annotations-2.15.0.jar spring-jdbc-6.0.9.jar jersey-s
+ erver-3.1.1.jar jakarta.xml.bind-api-4.0.0.jar txw2-4.0.2.jar spring-da
+ ta-jpa-3.1.0.jar logback-core-1.4.7.jar spring-data-commons-3.1.0.jar j
+ ackson-annotations-2.15.0.jar aspectjweaver-1.9.19.jar spring-boot-3.1.
+ 0.jar javassist-3.27.0-GA.jar hk2-utils-3.0.3.jar telegrambots-meta-6.5
+ .0.jar jersey-common-3.1.1.jar jackson-module-jakarta-xmlbind-annotatio
+ ns-2.15.0.jar jakarta.inject-api-2.0.1.jar mysql-connector-j-8.0.33.jar
+  istack-commons-runtime-4.1.1.jar jersey-entity-filtering-3.1.1.jar spr
+ ing-boot-starter-jdbc-3.1.0.jar jaxb-runtime-4.0.2.jar DSLBuilder-1.2.1
+ .jar lombok-1.18.26.jar byte-buddy-1.14.4.jar spring-boot-starter-json-
+ 3.1.0.jar jackson-datatype-jdk8-2.15.0.jar logback-classic-1.4.7.jar mi
+ crometer-observation-1.11.0.jar jakarta.validation-api-3.0.2.jar
 

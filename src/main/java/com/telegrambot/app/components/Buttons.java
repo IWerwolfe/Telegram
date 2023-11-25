@@ -3,20 +3,30 @@ package com.telegrambot.app.components;    /*
  */
 
 import com.telegrambot.app.DTO.types.FormOfPayment;
+import com.telegrambot.app.config.PaySetting;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.model.types.Reference;
 import com.telegrambot.app.model.user.UserType;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Component
+@RequiredArgsConstructor
 public class Buttons {
+
+    private final PaySetting paySetting;
 
     private static final int SIZE_INLINE_BUTTON = 64;
 
@@ -42,28 +52,50 @@ public class Buttons {
 
 
     public static void init() {
+
         BUY.setCallbackData("/buy");
         START_BUTTON.setCallbackData("/start");
         HELP_BUTTON.setCallbackData("/help");
     }
 
-    public static ReplyKeyboardMarkup keyboardMarkupDefault(UserType userType) {
+    public ReplyKeyboardMarkup keyboardMarkupDefault(UserType userType) {
 
         List<KeyboardRow> rows = new ArrayList<>();
 
         switch (userType) {
             case USER, ADMINISTRATOR, DIRECTOR -> {
                 rows.add(new KeyboardRow(List.of(GET_TASKS, CREATE_TASK)));
-                rows.add(new KeyboardRow(List.of(GET_BALANCE, ADD_BALANCE)));
+                addPayButton(rows);
             }
             default -> {
                 rows.add(new KeyboardRow(List.of(GET_TASKS, NEED_HELP)));
-                rows.add(new KeyboardRow(List.of(ADD_BALANCE, GET_BALANCE)));
+                addPayButton(rows);
                 rows.add(new KeyboardRow(List.of(SEND_CONTACT)));
             }
         }
 
         return createReplyKeyboardMarkup(rows);
+    }
+
+    private void addPayButton(List<KeyboardRow> rows) {
+
+        if (!paySetting.isUse()) {
+            return;
+        }
+
+        KeyboardRow rowsPay = new KeyboardRow();
+
+        if (paySetting.isBalanceVisibly()) {
+            rowsPay.add(GET_BALANCE);
+        }
+
+        if (paySetting.isAddBalance()) {
+            rowsPay.add(ADD_BALANCE);
+        }
+
+        if (!rowsPay.isEmpty()) {
+            rows.add(rowsPay);
+        }
     }
 
     public static ReplyKeyboardMarkup keyboardMarkupCommands() {
@@ -80,31 +112,51 @@ public class Buttons {
         return keyboardMarkup;
     }
 
-    private static ReplyKeyboardMarkup createReplyKeyboardMarkup(List<KeyboardRow> rows) {
+    private ReplyKeyboardMarkup createReplyKeyboardMarkup(List<KeyboardRow> rows) {
         return createReplyKeyboardMarkup(rows, true);
     }
 
-    public static InlineKeyboardMarkup getInlineByEnumFormOfPay(String command) {
-        List<List<InlineKeyboardButton>> rowsInLine = Arrays.stream(FormOfPayment.values())
-                .map(field -> getInlineKeyboardButton(field.getLabel(), command + ":" + field.name()))
-                .collect(Collectors.toList());
-        return getInlineKeyboardMarkup(rowsInLine);
+    public InlineKeyboardMarkup getInlineByEnumFormOfPay(String command) {
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+
+        if (paySetting.isCard()) {
+            rows.add(getInlineKeyboardButton(FormOfPayment.CARD.getLabel(), command + ":" + FormOfPayment.CARD.name()));
+        }
+
+        if (paySetting.isBank()) {
+            rows.add(getInlineKeyboardButton(FormOfPayment.INVOICE.getLabel(), command + ":" + FormOfPayment.INVOICE.name()));
+        }
+
+        if (paySetting.isSBPStatic()) {
+            rows.add(getInlineKeyboardButton(FormOfPayment.SBP_STATIC.getLabel(), command + ":" + FormOfPayment.SBP_STATIC.name()));
+        }
+
+        if (paySetting.isSBP()) {
+            rows.add(getInlineKeyboardButton(FormOfPayment.SBP.getLabel(), command + ":" + FormOfPayment.SBP.name()));
+        }
+
+        if (paySetting.isCrypto()) {
+            rows.add(getInlineKeyboardButton(FormOfPayment.CRYPTO.getLabel(), command + ":" + FormOfPayment.CRYPTO.name()));
+        }
+
+        return getInlineKeyboardMarkup(rows);
     }
 
-    public static <E extends Reference> InlineKeyboardMarkup getInlineByRef(String command, List<E> list) {
+    public <E extends Reference> InlineKeyboardMarkup getInlineByRef(String command, List<E> list) {
         List<List<InlineKeyboardButton>> rowsInLine = list.stream()
                 .map(field -> getInlineKeyboardButton(field, command))
                 .collect(Collectors.toList());
         return getInlineKeyboardMarkup(rowsInLine);
     }
 
-    public static InlineKeyboardMarkup getInlineMarkupEditTask(TaskDoc taskDoc) {
+    public InlineKeyboardMarkup getInlineMarkupEditTask(TaskDoc taskDoc) {
 
         PAY_TASK.setCallbackData("pay:" + taskDoc.getId());
         PAY_TASK.setPay(true);
 
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        boolean isPay = taskDoc.getTotalAmount() != null && taskDoc.getTotalAmount() > 0;
+        boolean isPay = taskDoc.getTotalAmount() != null && taskDoc.getTotalAmount() > 0 && paySetting.isUse();
         boolean isClosed = Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getClosedStatus().getId());
 
         if (isPay && isClosed) {
@@ -123,7 +175,7 @@ public class Buttons {
         return getInlineKeyboardMarkup(rows);
     }
 
-    public static InlineKeyboardMarkup getInlineMarkupByTasks(List<TaskDoc> taskDocs) {
+    public InlineKeyboardMarkup getInlineMarkupByTasks(List<TaskDoc> taskDocs) {
         List<List<InlineKeyboardButton>> rowsInLine = taskDocs.stream()
                 .map(taskDoc -> {
                     String name = getDescriptorToInline(taskDoc);
@@ -134,7 +186,7 @@ public class Buttons {
         return getInlineKeyboardMarkup(rowsInLine);
     }
 
-    public static ReplyKeyboardMarkup getContact() {
+    public ReplyKeyboardMarkup getContact() {
         GET_CONTACT.setRequestContact(true);
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
         keyboardMarkup.setResizeKeyboard(true);
@@ -145,34 +197,34 @@ public class Buttons {
         return keyboardMarkup;
     }
 
-    private static List<InlineKeyboardButton> getInlineKeyboardButton(String label, String command) {
+    private List<InlineKeyboardButton> getInlineKeyboardButton(String label, String command) {
         InlineKeyboardButton taskButton = new InlineKeyboardButton(label);
         taskButton.setCallbackData(command);
         return List.of(taskButton);
     }
 
-    private static List<InlineKeyboardButton> getInlineKeyboardButton(Reference ref, String command) {
+    private List<InlineKeyboardButton> getInlineKeyboardButton(Reference ref, String command) {
         return getInlineKeyboardButton(ref.getName(), command + ":" + ref.getId());
     }
 
-    public static String getDescriptorToInline(TaskDoc taskDoc) {
+    public String getDescriptorToInline(TaskDoc taskDoc) {
         String description = convertCode(taskDoc.getCodeEntity()) + " > " + convertDescription(taskDoc.getDescription());
         return description.length() > SIZE_INLINE_BUTTON ?
                 description.substring(0, SIZE_INLINE_BUTTON - 18) :
                 String.format("%-" + SIZE_INLINE_BUTTON + "s", description);
     }
 
-    public static String convertDescription(String code) {
+    public String convertDescription(String code) {
         String REGEX = "[^0-9a-zA-Zа-яА-ЯёЁ\\-.,=_*+&:#№@!/(){}\\[\\]]+";
         return code.replaceAll(REGEX, " ").replaceAll("\s{2,}", " ").trim();
     }
 
-    public static String convertCode(String code) {
+    public String convertCode(String code) {
         String REGEX_CODE = "^0+";
         return code.replaceAll(REGEX_CODE, "").trim();
     }
 
-    private static InlineKeyboardMarkup getInlineKeyboardMarkup(List<List<InlineKeyboardButton>> rows) {
+    private InlineKeyboardMarkup getInlineKeyboardMarkup(List<List<InlineKeyboardButton>> rows) {
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         markupInline.setKeyboard(rows);
         return markupInline;

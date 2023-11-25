@@ -13,11 +13,10 @@ import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
 import com.telegrambot.app.DTO.types.Currency;
-import com.telegrambot.app.DTO.types.PartnerType;
-import com.telegrambot.app.DTO.types.PaymentType;
-import com.telegrambot.app.DTO.types.SortingTaskType;
+import com.telegrambot.app.DTO.types.*;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.config.BotConfig;
+import com.telegrambot.app.config.PaySetting;
 import com.telegrambot.app.model.EntityDefaults;
 import com.telegrambot.app.model.EntitySavedEvent;
 import com.telegrambot.app.model.balance.PartnerBalance;
@@ -54,7 +53,6 @@ import com.telegrambot.app.services.converter.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
@@ -74,7 +72,6 @@ import java.util.stream.Collectors;
 public class BotCommandsImpl implements BotCommands {
 
     private final PartnerBalanceRepository partnerBalanceRepository;
-
     private final CardDocRepository cardDocRepository;
     private final TaskDocRepository taskDocRepository;
     private final UserRepository userRepository;
@@ -98,11 +95,10 @@ public class BotCommandsImpl implements BotCommands {
 
     private final BalanceService balanceService;
     private final EntityDefaults entityDefaults;
+    private final Buttons button;
 
     private final BotConfig bot;
-
-    @Value("${pay.sbpStatic}")
-    private String sbpStatic;
+    private final PaySetting paySetting;
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
     private final String REGEX_INN = "^[0-9]{10}|[0-9]{12}$";
@@ -170,7 +166,6 @@ public class BotCommandsImpl implements BotCommands {
             case "/add_balance", "Пополнить баланс" -> comAddBalance();
             case "/get_balance", "Проверить баланс" -> comGetBalance();
             case "pay" -> comPayTask();
-//            case "/need_help" -> createAssistance();
             case "/exit", "Отмена" -> comExit();
             default -> comSendDefault();
         }
@@ -183,17 +178,17 @@ public class BotCommandsImpl implements BotCommands {
     //Command
     private void comStartBot() {
 
-        boolean nonRegistered = (user.getUserType() == UserType.UNAUTHORIZED);
+//        boolean nonRegistered = (user.getUserType() == UserType.UNAUTHORIZED);
         boolean phoneFilled = (user.getPhone() != null && !user.getPhone().isEmpty());
 
-        if (nonRegistered && phoneFilled) {
+        if (phoneFilled) {
             subUpdateUserByAPI();
         }
-        sendMessage(Message.getWelcomeMessage(), Buttons.keyboardMarkupDefault(user.getUserType()));
+        sendMessage(Message.getWelcomeMessage(), button.keyboardMarkupDefault(user.getUserType()));
 
         if (user.getUserType() != UserType.UNAUTHORIZED) {
             String message = Message.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
-            sendMessage(message, Buttons.keyboardMarkupDefault(user.getUserType()));
+            sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
         }
     }
 
@@ -202,7 +197,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comGetContact() {
-        sendMessage(Message.getBeforeSendingPhone(), Buttons.getContact());
+        sendMessage(Message.getBeforeSendingPhone(), button.getContact());
     }
 
     private void comAfterRegistered() {
@@ -215,7 +210,7 @@ public class BotCommandsImpl implements BotCommands {
         }
 
         String message = Message.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
-        sendMessage(message, Buttons.keyboardMarkupDefault(user.getUserType()));
+        sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
     }
 
     private void comRegistrationSurvey() {
@@ -320,7 +315,7 @@ public class BotCommandsImpl implements BotCommands {
     private void comTaskPresentation() {
         TaskDoc taskDoc = subGetTaskDoc(getTaskCode());
         String message = taskDoc == null ? "TaskDoc not found" : taskDoc.toString(true);
-        InlineKeyboardMarkup keyboard = taskDoc == null ? null : Buttons.getInlineMarkupEditTask(taskDoc);
+        InlineKeyboardMarkup keyboard = taskDoc == null ? null : button.getInlineMarkupEditTask(taskDoc);
         sendMessage(message, keyboard);
     }
 
@@ -333,6 +328,10 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comAddBalance() {
+        if (!paySetting.isUse() || !paySetting.isAddBalance()) {
+            comExit(Message.getErrorPayBlocked());
+            return;
+        }
         CommandCache command = getCommandCache("getSum");
         switch (command.getSubCommand()) {
             case "getSum" -> {
@@ -363,6 +362,10 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comPayTask() {
+        if (!paySetting.isUse() || !paySetting.isAddBalance()) {
+            comExit(Message.getErrorPayBlocked());
+            return;
+        }
         CommandCache command = getCommandCache("getSum");
         switch (command.getSubCommand()) {
             case "getSum" -> {
@@ -385,7 +388,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comExit(String message) {
-        sendMessage(message, Buttons.keyboardMarkupDefault(user.getUserType()));
+        sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
         comExit();
     }
 
@@ -416,7 +419,7 @@ public class BotCommandsImpl implements BotCommands {
             if (isCompleted(response)) {
                 TaskDoc taskDoc = taskDocConverter.convertToEntity(response.getEntity());
                 taskDocRepository.save(taskDoc);
-                sendMessage(taskDoc.toString(true), Buttons.getInlineMarkupEditTask(taskDoc));
+                sendMessage(taskDoc.toString(true), button.getInlineMarkupEditTask(taskDoc));
                 return;
             }
         }
@@ -453,7 +456,7 @@ public class BotCommandsImpl implements BotCommands {
                 info.setNextSumCommand("getPay");
                 info.setStartMessage(Message.getFormOfPayment());
                 info.setErrorMessage(Message.errorWhenEditTask());
-                info.setKeyboard(Buttons.getInlineByEnumFormOfPay(command.getCommand()));
+                info.setKeyboard(button.getInlineByEnumFormOfPay(command.getCommand()));
                 subGetTextInfo(command, info);
             }
             case "getPay" -> {
@@ -497,8 +500,8 @@ public class BotCommandsImpl implements BotCommands {
     private void subGetPay(CommandCache command, String title, String explanation) {
         String formOfPay = getResultSubCommandFromCache("getFormOfPayment");
         switch (formOfPay) {
-            case "SBP" -> {
-                sendMessage(Message.getToPaySBP(sbpStatic));
+            case "SBP_STATIC" -> {
+                sendMessage(Message.getToPaySBP(paySetting.getSbpStatic()));
                 completeSubCommand(command, "end");
                 comAddBalance();
             }
@@ -527,7 +530,8 @@ public class BotCommandsImpl implements BotCommands {
         doc.setSyncData(createResponse);
 
         taskDocRepository.save(doc);
-        eventPublisher.publishEvent(new EntitySavedEvent(doc));
+        eventPublisher.publishEvent(new EntitySavedEvent(doc, OperationType.CREATE, user));
+
         sendMessage(Message.getSuccessfullyCreatingTask(doc));
         sendToWorkGroup("Создана новая задача " + SEPARATOR + doc);
 
@@ -586,16 +590,17 @@ public class BotCommandsImpl implements BotCommands {
         userConverter.updateEntity(userData, user);
         userRepository.save(user);
 
-        taskDocConverter.convertToEntityList(userData.getTaskList(), true);
-
         if (isCompleted(userData.getPartnerListData())) {
             createDataByPartnerDataResponse(userData.getPartnerListData());
         }
+
+        taskDocConverter.convertToEntityList(userData.getTaskList(), true);
     }
 
     private void updateUserStatus(UserResponse userData) {
         List<UserStatus> statuses = userData.getStatusList()
                 .stream()
+                .filter(status -> status != null)
                 .map(statusResponse ->
                         new UserStatus(user, getPartnerByGuid(statusResponse.getGuid()), statusResponse.getPost()))
                 .toList();
@@ -620,7 +625,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private void subEnd() {
         subEnd(CommandStatus.COMPLETE);
-        sendMessage("Команда упешно обработана", Buttons.keyboardMarkupDefault(user.getUserType()));
+        sendMessage("Команда упешно обработана", button.keyboardMarkupDefault(user.getUserType()));
     }
 
     private void subSendTaskList(Map<String, List<TaskDoc>> sortedTask) {
@@ -631,7 +636,7 @@ public class BotCommandsImpl implements BotCommands {
         sortedTask.keySet().forEach(sortName -> {
             List<TaskDoc> taskDocList = sortedTask.get(sortName);
             String message = Message.getSearchGrouping(sortName, taskDocList.size());
-            ReplyKeyboard keyboard = Buttons.getInlineMarkupByTasks(taskDocList);
+            ReplyKeyboard keyboard = button.getInlineMarkupByTasks(taskDocList);
             sendMessage(message, keyboard);
         });
     }
@@ -671,7 +676,7 @@ public class BotCommandsImpl implements BotCommands {
             info.setNextSumCommand("getDepartment");
             info.setStartMessage(Message.getPartnersByList());
             info.setErrorMessage(Message.errorWhenEditTask());
-            info.setKeyboard(Buttons.getInlineByRef("getPartner", partners));
+            info.setKeyboard(button.getInlineByRef("getPartner", partners));
             subGetTextInfo(command, info);
             return;
         }
@@ -684,21 +689,30 @@ public class BotCommandsImpl implements BotCommands {
     private void subGetDepartment(CommandCache command, Runnable parent) {
 
         String result = getResultSubCommandFromCache("getPartner");
+        Optional<Partner> optional = partnerRepository.findById(Long.parseLong(result));
 
-        Partner partner = partnerRepository.getReferenceById(Long.parseLong(result));
-        List<Department> departments = partner.getDepartments();
+        if (optional.isEmpty()) {
+            comExit(Message.getDefaultMessageError(user.getUserName()));
+            return;
+        }
 
-        if (departments.size() > 1) {
+        List<Department> departments = optional.get().getDepartments();
+        String value;
+
+        if (departments == null || departments.isEmpty()) {
+            value = "";
+        } else if (departments.size() == 1) {
+            value = String.valueOf(departments.get(0).getId());
+        } else {
             SubCommandInfo info = new SubCommandInfo(parent);
             info.setNextSumCommand("getDescription");
             info.setStartMessage(Message.getDepartmentsByList());
             info.setErrorMessage(Message.errorWhenEditTask());
-            info.setKeyboard(Buttons.getInlineByRef("getDepartment", departments));
+            info.setKeyboard(button.getInlineByRef("getDepartment", departments));
             subGetTextInfo(command, info);
             return;
         }
 
-        String value = departments.size() == 1 ? String.valueOf(departments.get(0).getId()) : "";
         completeSubCommand(command, "getDescription", value);
         runHandler(parent);
     }
@@ -745,7 +759,7 @@ public class BotCommandsImpl implements BotCommands {
         cardDoc.setSyncData(createResponse);
 
         cardDocRepository.save(cardDoc);
-        eventPublisher.publishEvent(new EntitySavedEvent(cardDoc));
+        eventPublisher.publishEvent(new EntitySavedEvent(cardDoc, OperationType.CREATE, user));
 
         sendMessage(Message.getSuccessfullyCreatingCardDoc(cardDoc));
         completeSubCommand(getCommandCache(), "end");
@@ -774,6 +788,7 @@ public class BotCommandsImpl implements BotCommands {
             closingTask(taskDoc, message, true);
         }
         taskDocRepository.save(taskDoc);
+        eventPublisher.publishEvent(new EntitySavedEvent(taskDoc, OperationType.EDIT, user));
 
         SyncDataResponse createResponse = api1C.updateTask(taskDocConverter.convertToResponse(taskDoc));
         taskDoc.setSyncData(createResponse);
@@ -1131,6 +1146,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private List<PartnerBalance> updateBalance(List<BalanceResponse> list) {
         return list.stream()
+                .filter(balanceService -> balanceService != null)
                 .map(balanceService::updateLegalBalance)
                 .collect(Collectors.toList());
     }
