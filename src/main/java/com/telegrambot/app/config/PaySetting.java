@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @Data
-@PropertySource("config.properties")
+@PropertySource("application.properties")
 public class PaySetting {
 
     @Value("${pay.sbpStatic}")

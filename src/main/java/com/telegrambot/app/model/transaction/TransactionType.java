@@ -6,5 +6,6 @@ public enum TransactionType {
     BOT_MESSAGE,
     COMMAND,
     CONTACT,
-    NOTIFY
+    NOTIFY,
+    PRE_CHECK
 }

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @Data
-@PropertySource("config.properties")
+@PropertySource("application.properties")
 public class Connector1C {
     @Value("${Connector1C.url}")
     String url;

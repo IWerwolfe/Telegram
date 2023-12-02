@@ -87,6 +87,10 @@ public class UserBD {
         }
     }
 
+    public String getNamePresentation() {
+        return person == null ? this.userName : person.toString();
+    }
+
     @Override
     public String toString() {
         return person.getFirstName() + " " + person.getLastName();

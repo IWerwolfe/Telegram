@@ -35,6 +35,7 @@ import com.telegrambot.app.DTO.api.typeОbjects.DataEntityResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.DataListResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.DTO.types.EventSource;
 import com.telegrambot.app.DTO.types.OperationType;
 import com.telegrambot.app.DTO.types.TaskType;
 import com.telegrambot.app.model.EntitySavedEvent;
@@ -572,7 +573,7 @@ public class ApiInServiceImpl implements ApiInService {
         try {
             E entity = converter.convertToEntity(response);
             repository.save(entity);
-            eventPublisher.publishEvent(new EntitySavedEvent(entity, operator));
+            eventPublisher.publishEvent(new EntitySavedEvent(entity, operator, EventSource.API));
             return new DataResponse(true, "");
         } catch (Exception e) {
             log.error("error when {} a entity: {}{}", operator.getLabel(), System.lineSeparator(), e.getMessage());

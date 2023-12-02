@@ -1,8 +1,10 @@
 package com.telegrambot.app.DTO.message;
 
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
+import com.telegrambot.app.model.reference.legalentity.Department;
 import com.telegrambot.app.model.reference.legalentity.LegalEntity;
 import com.telegrambot.app.model.types.doctype.PayDoc;
+import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.model.user.UserStatus;
 import lombok.Data;
 
@@ -228,18 +230,72 @@ public abstract class Message {
                 "Приносим свои извинения";
     }
 
-    public static String getNotifyNewTask(TaskDoc taskDoc) {
+    public static String getNotifyNewTask(TaskDoc taskDoc, UserBD user) {
         return "От вашей организации поступило новое обращение №"
                 + taskDoc.getCodeEntity() +
                 " в техподдержку: " + DUAL_SEPARATOR +
-                taskDoc.getDescription();
+                taskDoc.getDescription() + DUAL_SEPARATOR +
+                getDepartmentPresentation(taskDoc.getDepartment()) +
+                getUserPresentation(user);
     }
 
-    public static String getNotifyClosed(TaskDoc taskDoc) {
+    public static String getNotifyClosed(TaskDoc taskDoc, UserBD user) {
         return "Обращение №"
                 + taskDoc.getCodeEntity() +
-                " было закрыто"
+                " было закрыто "
+                + (user != null ? user.getNamePresentation() : "")
+                + DUAL_SEPARATOR
+                + taskDoc.getDescription();
+    }
+
+    public static String getSystemNotifyOfUserClosure(TaskDoc taskDoc, UserBD user) {
+        return "Задача №"
+                + taskDoc.getCodeEntity() +
+                " была закрыта пользоватем "
+                + (user != null ? user.getNamePresentation() : "")
+                + DUAL_SEPARATOR
+                + taskDoc.getDescription() + DUAL_SEPARATOR
+                + "Причина: "
+                + SEPARATOR
+                + taskDoc.getDecision().replaceAll("Закрыто пользователем:", "").trim();
+    }
+
+    public static String getIncorrectTaskStatus() {
+        return "Запрещено редактировать завершенные обращения";
+    }
+
+    public static String getSystemNotifyClosed(TaskDoc taskDoc) {
+        return "Задача №"
+                + taskDoc.getCodeEntity() +
+                " была закрыта"
                 + DUAL_SEPARATOR +
-                taskDoc.getDescription();
+                taskDoc.getDescription()
+                + "Решение: "
+                + DUAL_SEPARATOR
+                + taskDoc.getDecision();
+    }
+
+    public static String getSystemNotifyNewTask(TaskDoc taskDoc, UserBD user) {
+        return "От организации "
+                + (taskDoc.isBilling() ? "на обслуживании " : "") +
+                taskDoc.getPartner() +
+                " поступила новая задача №"
+                + taskDoc.getCodeEntity() + DUAL_SEPARATOR +
+                "Описание: " + SEPARATOR +
+                taskDoc.getDescription() + DUAL_SEPARATOR +
+                getDepartmentPresentation(taskDoc.getDepartment()) +
+                getUserPresentation(user);
+    }
+
+    private static String getDepartmentPresentation(Department department) {
+        return department != null ? "Торговая точка " + department.getName() + SEPARATOR : "";
+    }
+
+    private static String getUserPresentation(UserBD user) {
+        return user != null ? "от " + user.getNamePresentation() : "";
+    }
+
+    public static String getSkippingMessageFromGroup() {
+        return "Обработка сообщения из общей группы пропущено";
     }
 }

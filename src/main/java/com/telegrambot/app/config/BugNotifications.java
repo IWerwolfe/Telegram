@@ -10,13 +10,11 @@ import org.springframework.context.annotation.PropertySource;
 @Configuration
 @Data
 @PropertySource("application.properties")
-public class BotConfig {
-    @Value("${bot.name}")
-    String botName;
-    @Value("${bot.token}")
-    String token;
-    @Value("${bot.chatId}")
-    String chatId;
-    @Value("${bot.payment}")
-    String payment;
+public class BugNotifications {
+
+    @Value("${bug.isUse}")
+    boolean isUse;
+
+    @Value("${bug.idTelegramUser}")
+    String idTelegramUser;
 }

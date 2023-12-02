@@ -31,4 +31,47 @@ public class PersonData {
         this.firstName = firstName;
         this.lastName = lastName;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder string = new StringBuilder();
+        if (firstName != null && !firstName.isEmpty()) {
+            string.append(firstName);
+        }
+        if (lastName != null && !lastName.isEmpty()) {
+            string.append(" ")
+                    .append(lastName);
+        }
+        if (fatherName != null && !fatherName.isEmpty()) {
+            string.append(" ")
+                    .append(fatherName);
+        }
+        return string.toString();
+    }
+
+    public String toStringFull() {
+        StringBuilder string = new StringBuilder();
+        if (firstName != null && !firstName.isEmpty()) {
+            string.append(firstName);
+        }
+        if (lastName != null && !lastName.isEmpty()) {
+            string.append(" ")
+                    .append(lastName);
+        }
+        if (fatherName != null && !fatherName.isEmpty()) {
+            string.append(" ")
+                    .append(fatherName);
+        }
+        if (birthday != null) {
+            string.append(", ")
+                    .append(birthday)
+                    .append(" года рождения");
+        }
+        if (gender != null) {
+            string.append(", ")
+                    .append("пол ")
+                    .append(gender.getLabel());
+        }
+        return string.toString();
+    }
 }

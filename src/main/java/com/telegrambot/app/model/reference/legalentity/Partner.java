@@ -28,6 +28,11 @@ public class Partner extends LegalEntity implements EntityBalance {
     private List<Contract> contracts;
 
     public Contract getDefaultContract() {
+
+        if (contracts == null) {
+            return null;
+        }
+
         switch (contracts.size()) {
             case 0 -> {
                 Contract contract = new Contract(this);

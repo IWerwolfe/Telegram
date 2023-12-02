@@ -1,8 +1,11 @@
 package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.message.Message;
+import com.telegrambot.app.DTO.types.EventSource;
 import com.telegrambot.app.DTO.types.OperationType;
 import com.telegrambot.app.components.Buttons;
+import com.telegrambot.app.config.SystemNotifications;
+import com.telegrambot.app.config.UserNotifications;
 import com.telegrambot.app.model.EntitySavedEvent;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.reference.TaskStatus;
@@ -33,17 +36,20 @@ public class EntitySavedListener {
     private final BalanceService balanceService;
     private final TelegramBotServices botServices;
     private final Buttons button;
+    private final SystemNotifications systemNotifications;
+    private final UserNotifications userNotifications;
 
-    private Object entity;
     private OperationType type;
     private UserBD sourceUser;
+    private EventSource eventSource;
 
     @EventListener
     public void handleEntitySavedEvent(EntitySavedEvent event) {
 
-        entity = event.getSource();
+        Object entity = event.getSource();
         type = event.getType();
         sourceUser = event.getSourceUser();
+        eventSource = event.getEventSource();
 
         log.info("++ Event {} registered from {} object: {}", type, sourceUser, entity);
 
@@ -58,27 +64,76 @@ public class EntitySavedListener {
 
     private void sendNotifyByTaskDoc(TaskDoc task) {
 
+        if (userNotifications.isUse()) {
+            sendTaskDocNotifyToUsers(task);
+        }
+        if (systemNotifications.isUse()) {
+            sendTaskDocNotifyToSystem(task);
+        }
+    }
+
+    private void sendTaskDocNotifyToUsers(TaskDoc task) {
         List<UserBD> users = getUserByPartner(task.getPartner());
 
         if (users == null || users.isEmpty()) {
             return;
         }
 
-        SendMessage sendMessage = getSendMessageByTaskDoc(type, task);
+        SendMessage sendMessage = getSendMessageByTaskDocForUsers(task);
         sendMessageUsers(users, sendMessage);
     }
 
-    private SendMessage getSendMessageByTaskDoc(OperationType type, TaskDoc task) {
+    private void sendTaskDocNotifyToSystem(TaskDoc task) {
+        if (systemNotifications.getIdToWorkGroup() == null || systemNotifications.getIdToWorkGroup().isEmpty()) {
+            return;
+        }
+        SendMessage sendMessage = getSendMessageByTaskDocForSystem(task);
+        if (sendMessage != null) {
+            sendMessageUser(Long.valueOf(systemNotifications.getIdToWorkGroup()), sendMessage);
+        }
+    }
+
+    private SendMessage getSendMessageByTaskDocForSystem(TaskDoc task) {
+        boolean isClosed = Objects.equals(task.getStatus().getId(), TaskStatus.getClosedStatus().getId());
         switch (type) {
             case CREATE -> {
-                if (!Objects.equals(task.getStatus().getId(), TaskStatus.getClosedStatus().getId())) {
-                    String message = Message.getNotifyNewTask(task);
+                if (systemNotifications.isSendCreateNewTask() && eventSource == EventSource.USER) {
+                    String message = Message.getSystemNotifyNewTask(task, sourceUser);
+                    return createMessage(message);
+                }
+            }
+            case UPDATE, EDIT -> {
+                if (isClosed && systemNotifications.isUserClosedTask() && eventSource == EventSource.USER) {
+                    String message = Message.getSystemNotifyOfUserClosure(task, sourceUser);
+                    return createMessage(message);
+                }
+                if (isClosed && systemNotifications.isClosedTask() && eventSource != EventSource.USER) {
+                    String message = Message.getSystemNotifyClosed(task);
+                    return createMessage(message);
+                }
+            }
+            case DEL -> {
+                return null;
+            }
+            default -> {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private SendMessage getSendMessageByTaskDocForUsers(TaskDoc task) {
+        boolean isClosed = Objects.equals(task.getStatus().getId(), TaskStatus.getClosedStatus().getId());
+        switch (type) {
+            case CREATE -> {
+                if (!isClosed && userNotifications.isSendCreateNewTask()) {
+                    String message = Message.getNotifyNewTask(task, sourceUser);
                     return createMessage(message, button.getInlineMarkupByTasks(List.of(task)));
                 }
             }
             case UPDATE, EDIT -> {
-                if (Objects.equals(task.getStatus().getId(), TaskStatus.getClosedStatus().getId())) {
-                    String message = Message.getNotifyClosed(task);
+                if (isClosed && userNotifications.isClosedTask()) {
+                    String message = Message.getNotifyClosed(task, sourceUser);
                     return createMessage(message);
                 }
             }
@@ -101,10 +156,12 @@ public class EntitySavedListener {
         long sourceId = sourceUser == null ? 0 : sourceUser.getId();
         users.stream()
                 .filter(user -> user != null && user.getId() != sourceId)
-                .forEach(user -> {
-                    sendMessage.setChatId(user.getId());
-                    botServices.sendMessage(sendMessage, TransactionType.NOTIFY);
-                });
+                .forEach(user -> sendMessageUser(user.getId(), sendMessage));
+    }
+
+    private void sendMessageUser(Long id, SendMessage sendMessage) {
+        sendMessage.setChatId(id);
+        botServices.sendMessage(sendMessage, TransactionType.NOTIFY);
     }
 
     private List<UserBD> getUserByPartner(Partner partner) {

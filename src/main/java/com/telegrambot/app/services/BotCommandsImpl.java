@@ -112,7 +112,7 @@ public class BotCommandsImpl implements BotCommands {
     private long chatId;
     private UserBD user;
 
-    public void botAnswerUtils(String receivedMessage, long chatId, UserBD userBD) {
+    public void botAnswerUtils(String receivedMessage, long chatId, UserBD userBD) throws Exception {
 
         this.chatId = chatId;
         this.user = userBD;
@@ -127,18 +127,21 @@ public class BotCommandsImpl implements BotCommands {
         try {
             botAnswerUtils();
         } catch (Exception e) {
-            log.error("Ошибка при выполнении команды: {}{}{}", nameCommand, SEPARATOR, e.getMessage());
+            parent.handleAnException("Ошибка при выполнении команды \"%s\":\r\n%s \r\n user ID: %s",
+                    nameCommand,
+                    e.getMessage(),
+                    String.valueOf(userBD.getId()));
             comExit(Message.getExitToErrors());
         }
     }
 
-    public void botAnswerUtils(List<CommandCache> commandCacheList, String text, long chatId, UserBD userBD) {
+    public void botAnswerUtils(List<CommandCache> commandCacheList, String text, long chatId, UserBD userBD) throws Exception {
         this.commandCacheList = commandCacheList;
         this.text = text;
         botAnswerUtils(getCommandCache().getCommand(), chatId, userBD);
     }
 
-    public void botAnswerUtils() {
+    public void botAnswerUtils() throws Exception {
 
         if (nameCommand == null) {
             return;
@@ -525,15 +528,15 @@ public class BotCommandsImpl implements BotCommands {
         entityDefaults.fillDefaultData(doc);
         doc.setDescription(getDescriptionBySubCommand());
         doc.setPartnerData(fillPartnerData());
+        doc.setCreator(user);
 
         SyncDataResponse createResponse = api1C.createTask(taskDocConverter.convertToResponse(doc));
         doc.setSyncData(createResponse);
 
         taskDocRepository.save(doc);
-        eventPublisher.publishEvent(new EntitySavedEvent(doc, OperationType.CREATE, user));
+        eventPublisher.publishEvent(new EntitySavedEvent(doc, OperationType.CREATE, EventSource.USER, user));
 
         sendMessage(Message.getSuccessfullyCreatingTask(doc));
-        sendToWorkGroup("Создана новая задача " + SEPARATOR + doc);
 
         completeSubCommand(getCommandCache(), "end");
         comCreateAssistance();
@@ -759,7 +762,7 @@ public class BotCommandsImpl implements BotCommands {
         cardDoc.setSyncData(createResponse);
 
         cardDocRepository.save(cardDoc);
-        eventPublisher.publishEvent(new EntitySavedEvent(cardDoc, OperationType.CREATE, user));
+        eventPublisher.publishEvent(new EntitySavedEvent(cardDoc, OperationType.CREATE, EventSource.USER, user));
 
         sendMessage(Message.getSuccessfullyCreatingCardDoc(cardDoc));
         completeSubCommand(getCommandCache(), "end");
@@ -773,7 +776,16 @@ public class BotCommandsImpl implements BotCommands {
         }
 
         TaskDoc taskDoc = subGetTaskDoc(getResultSubCommandFromCache("code"));
-        if (taskDoc == null) return;
+        if (taskDoc == null) {
+            comExit(Message.getIncorrectTask());
+            return;
+        }
+
+        if (Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getClosedStatus().getId())) {
+            comExit(Message.getIncorrectTaskStatus());
+            return;
+        }
+
         String prefix = "Дополнено " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")) + " -> ";
         taskDoc.setDescription(getResultFromSubCommand("editDescriptor", taskDoc.getDescription(), prefix));
         taskDoc.setComment(getResultFromSubCommand("editComment", taskDoc.getComment(), prefix));
@@ -788,7 +800,7 @@ public class BotCommandsImpl implements BotCommands {
             closingTask(taskDoc, message, true);
         }
         taskDocRepository.save(taskDoc);
-        eventPublisher.publishEvent(new EntitySavedEvent(taskDoc, OperationType.EDIT, user));
+        eventPublisher.publishEvent(new EntitySavedEvent(taskDoc, OperationType.EDIT, EventSource.USER, user));
 
         SyncDataResponse createResponse = api1C.updateTask(taskDocConverter.convertToResponse(taskDoc));
         taskDoc.setSyncData(createResponse);
@@ -841,7 +853,6 @@ public class BotCommandsImpl implements BotCommands {
         taskDoc.setSuccessfully(successfully);
         String decision = taskDoc.getDecision();
         taskDoc.setDecision(decision == null || decision.isEmpty() ? message : message + SEPARATOR + decision);
-        sendToWorkGroup("Задача №" + taskDoc.getCodeEntity() + " отменена пользователем. " + SEPARATOR + "Причина: " + SEPARATOR + message);
     }
 
     private void closingTask(TaskDoc taskDoc, String message, boolean successfully, String prefix) {
@@ -953,6 +964,7 @@ public class BotCommandsImpl implements BotCommands {
                 Partner partner = getPartnerByGuid(userData.getStatusList().get(0).getGuid());
                 return new PartnerData(partner);
             }
+            return null;
         }
 
         Partner partner = partnerRepository.findById(Long.valueOf(idPartner)).orElse(null);
@@ -1136,17 +1148,9 @@ public class BotCommandsImpl implements BotCommands {
         return message;
     }
 
-    private void sendToWorkGroup(String text) {
-        //TODO дописать эту процедуру
-        SendMessage message = new SendMessage();
-        message.setChatId(-1001380655854L);
-        message.setText(text);
-//        parent.sendMessage(message);
-    }
-
     private List<PartnerBalance> updateBalance(List<BalanceResponse> list) {
         return list.stream()
-                .filter(balanceService -> balanceService != null)
+                .filter(Objects::nonNull)
                 .map(balanceService::updateLegalBalance)
                 .collect(Collectors.toList());
     }
@@ -1159,7 +1163,7 @@ public class BotCommandsImpl implements BotCommands {
         this.parent = parent;
     }
 
-    private static void runHandler(Runnable handler) {
+    private void runHandler(Runnable handler) {
         if (handler == null) {
             return;
         }

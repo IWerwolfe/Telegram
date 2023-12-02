@@ -41,6 +41,27 @@ public class TaskDoc extends SalesDoc {
         this.setProperties(new PropertyData());
     }
 
+    public boolean isBilling() {
+        if (properties == null || properties.getIsBilling() == null) {
+            return false;
+        }
+        return properties.getIsBilling();
+    }
+
+    public boolean isHighPriority() {
+        if (properties == null || properties.getHighPriority() == null) {
+            return false;
+        }
+        return properties.getHighPriority();
+    }
+
+    public boolean isOutsourcing() {
+        if (properties == null || properties.getIsOutsourcing() == null) {
+            return false;
+        }
+        return properties.getIsOutsourcing();
+    }
+
     public String toString(boolean full) {
 
         String dualSeparator = System.lineSeparator() + System.lineSeparator();
