@@ -179,7 +179,8 @@ public class TelegramBotServices extends TelegramLongPollingBot {
                         orderInfoToString(pay);
             }
 
-            return update.getMessage().getText();
+            String text = update.getMessage().getText();
+            return text == null ? "" : text;
         }
         if (update.hasCallbackQuery()) {
             return update.getCallbackQuery().getData();

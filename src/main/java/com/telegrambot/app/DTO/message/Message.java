@@ -105,7 +105,7 @@ public abstract class Message {
     }
 
     public static String getErrorDescription() {
-        return "Сообщение не корректно";
+        return "Сообщение не корректно, опишите подробно что у вас случилось. Я не могу обрабатывать видео, фото и голосовые сообщения ";
     }
 
     public static String getStartName() {

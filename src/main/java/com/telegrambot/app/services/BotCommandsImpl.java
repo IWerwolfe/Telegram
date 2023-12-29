@@ -284,14 +284,14 @@ public class BotCommandsImpl implements BotCommands {
 
     private void comCreateAssistance() {
         String message = Message.getStartCreateAssistance(user.getPerson().getFirstName());
-        CommandCache command = getCommandCache(message, "getTopic");
+        CommandCache command = getCommandCache(message, "getDescription");
         SubCommandInfo info = new SubCommandInfo(this::comCreateAssistance);
         switch (command.getSubCommand()) {
-            case "getTopic" -> {
-                info.setStartMessage(Message.getStartTopic());
-                info.setNextSumCommand("getDescription");
-                subGetTextInfo(command, info);
-            }
+//            case "getTopic" -> {
+//                info.setStartMessage(Message.getStartTopic());
+//                info.setNextSumCommand("getDescription");
+//                subGetTextInfo(command, info);
+//            }
             case "getDescription" -> subGetDescription(command, info, "getPhone");
             case "getPhone" -> subGetPhone(command, info, "getUserName");
             case "getUserName" -> subGetName(command, info, "createTask");
@@ -667,6 +667,7 @@ public class BotCommandsImpl implements BotCommands {
         info.setStartMessage(Message.getStartDescription());
         info.setErrorMessage(Message.getErrorDescription());
         info.setNextSumCommand(nextCommand);
+        info.setRegex(".{10,}");
         subGetTextInfo(command, info);
     }
 
