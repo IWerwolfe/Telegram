@@ -1,4 +1,4 @@
-package com.telegrambot.app.services;
+package com.telegrambot.app.bot;
 
 import com.telegrambot.app.config.BotConfig;
 import com.telegrambot.app.config.BugNotifications;
@@ -11,6 +11,7 @@ import com.telegrambot.app.repositories.command.CommandCacheRepository;
 import com.telegrambot.app.repositories.transaction.TransactionRepository;
 import com.telegrambot.app.repositories.user.UserActivityRepository;
 import com.telegrambot.app.repositories.user.UserRepository;
+import com.telegrambot.app.services.BotCommandsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TelegramBotServices extends TelegramLongPollingBot {
+public class SupportBot extends TelegramLongPollingBot {
 
     private final BotConfig botConfig;
     private final BugNotifications bugNotifications;

@@ -3,6 +3,7 @@ package com.telegrambot.app.services;
 import com.telegrambot.app.DTO.message.Message;
 import com.telegrambot.app.DTO.types.EventSource;
 import com.telegrambot.app.DTO.types.OperationType;
+import com.telegrambot.app.bot.SupportBot;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.config.SystemNotifications;
 import com.telegrambot.app.config.UserNotifications;
@@ -34,7 +35,7 @@ public class EntitySavedListener {
     private final UserStatusRepository userStatusRepository;
 
     private final BalanceService balanceService;
-    private final TelegramBotServices botServices;
+    private final SupportBot botServices;
     private final Buttons button;
     private final SystemNotifications systemNotifications;
     private final UserNotifications userNotifications;

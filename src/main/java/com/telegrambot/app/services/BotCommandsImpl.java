@@ -14,6 +14,9 @@ import com.telegrambot.app.DTO.dadata.DaDataParty;
 import com.telegrambot.app.DTO.message.Message;
 import com.telegrambot.app.DTO.types.Currency;
 import com.telegrambot.app.DTO.types.*;
+import com.telegrambot.app.bot.SupportBot;
+import com.telegrambot.app.client.ApiClient;
+import com.telegrambot.app.client.DaDataClient;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.config.BotConfig;
 import com.telegrambot.app.config.PaySetting;
@@ -47,8 +50,6 @@ import com.telegrambot.app.repositories.reference.ContractRepository;
 import com.telegrambot.app.repositories.reference.DepartmentRepository;
 import com.telegrambot.app.repositories.reference.PartnerRepository;
 import com.telegrambot.app.repositories.user.UserRepository;
-import com.telegrambot.app.services.api.ApiDaDataService;
-import com.telegrambot.app.services.api.ApiOutServiceImpl;
 import com.telegrambot.app.services.converter.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -80,8 +81,8 @@ public class BotCommandsImpl implements BotCommands {
     private final ContractRepository contractRepository;
     private final CommandCacheRepository commandCacheRepository;
     private final CommandRepository commandRepository;
-    private final ApiOutServiceImpl api1C;
-    private final ApiDaDataService apiDaDataService;
+    private final ApiClient api1C;
+    private final DaDataClient daDataClient;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -105,7 +106,7 @@ public class BotCommandsImpl implements BotCommands {
     private final String REGEX_FIO = "^(?:[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\\s+){1,2}[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?$";
     private final String REGEX_PHONE = "^79[0-9]{9}$";
     private static final String SEPARATOR = System.lineSeparator();
-    private TelegramBotServices parent;
+    private SupportBot parent;
     private List<CommandCache> commandCacheList = new ArrayList<>();
     private String text;
     private String nameCommand;
@@ -255,7 +256,7 @@ public class BotCommandsImpl implements BotCommands {
             case "getInn" -> subGetInn(command, info, "getPartnerData");
             case "getPartnerData" -> {
                 Partner partner = createLegalByInnFromDaData();
-//                DaDataParty daDataParty = apiDaDataService.getCompanyDataByINN(text);
+//                DaDataParty daDataParty = daDataClient.getCompanyDataByINN(text);
 //                String message = daDataParty != null ?
 //                        toStringServices.toStringNonNullFields(daDataParty, true) :
 //                        Message.getNonFindPhone();
@@ -1047,7 +1048,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private Partner createLegalByInnFromDaData() {
-        DaDataParty data = apiDaDataService.getCompanyDataByINN(text);
+        DaDataParty data = daDataClient.getCompanyDataByINN(text);
         Partner partner = new Partner();
         partner.setInn(text);
         partner.setComment("created automatically on " + LocalDateTime.now().format(formatter));
@@ -1160,7 +1161,7 @@ public class BotCommandsImpl implements BotCommands {
         return response != null && response.isResult();
     }
 
-    public void setParent(TelegramBotServices parent) {
+    public void setParent(SupportBot parent) {
         this.parent = parent;
     }
 

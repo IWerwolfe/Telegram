@@ -2,6 +2,7 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
 import com.telegrambot.app.DTO.api.typeОbjects.EntityResponse;
+import com.telegrambot.app.client.ApiClient;
 import com.telegrambot.app.config.Connector1C;
 import com.telegrambot.app.model.DefaultDocParam;
 import com.telegrambot.app.model.EntityDefaults;
@@ -14,7 +15,6 @@ import com.telegrambot.app.repositories.reference.DivisionRepository;
 import com.telegrambot.app.repositories.reference.PayTerminalRepository;
 import com.telegrambot.app.repositories.reference.TaskStatusRepository;
 import com.telegrambot.app.repositories.reference.TaskTypeRepository;
-import com.telegrambot.app.services.api.ApiOutServiceImpl;
 import com.telegrambot.app.services.converter.*;
 import com.telegrambot.app.tools.FileReader;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 class DefaultDataInitializerTest {
 
     @Mock
-    private ApiOutServiceImpl api1C;
+    private ApiClient api1C;
 
     @Mock
     private DefaultDocParamRepository defaultDocParamRepository;

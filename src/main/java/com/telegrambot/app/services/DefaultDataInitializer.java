@@ -2,6 +2,7 @@ package com.telegrambot.app.services;
 
 import com.telegrambot.app.DTO.api.other.DefaultDataResponse;
 import com.telegrambot.app.DTO.types.TaskType;
+import com.telegrambot.app.client.ApiClient;
 import com.telegrambot.app.components.Buttons;
 import com.telegrambot.app.model.DefaultDocParam;
 import com.telegrambot.app.model.reference.*;
@@ -14,7 +15,6 @@ import com.telegrambot.app.repositories.reference.DivisionRepository;
 import com.telegrambot.app.repositories.reference.PayTerminalRepository;
 import com.telegrambot.app.repositories.reference.TaskStatusRepository;
 import com.telegrambot.app.repositories.reference.TaskTypeRepository;
-import com.telegrambot.app.services.api.ApiOutServiceImpl;
 import com.telegrambot.app.services.converter.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DefaultDataInitializer implements CommandLineRunner {
 
-    private final ApiOutServiceImpl api1C;
+    private final ApiClient api1C;
 
     private final DefaultDocParamRepository defaultDocParamRepository;
 

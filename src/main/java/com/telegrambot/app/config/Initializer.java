@@ -2,7 +2,7 @@ package com.telegrambot.app.config;    /*
  *created by WerWolfe on Initializer
  */
 
-import com.telegrambot.app.services.TelegramBotServices;
+import com.telegrambot.app.bot.SupportBot;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -16,7 +16,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 @Component
 public class Initializer {
     @Autowired
-    TelegramBotServices bot;
+    SupportBot bot;
 
     @EventListener({ContextRefreshedEvent.class})
     public void init() {

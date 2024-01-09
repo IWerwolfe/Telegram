@@ -1,10 +1,13 @@
 package com.telegrambot.app.DTO.dadata;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DaDataAddressData {
+
     @JsonProperty("postal_code")
     private String postalCode;
     @JsonProperty("country_code")
