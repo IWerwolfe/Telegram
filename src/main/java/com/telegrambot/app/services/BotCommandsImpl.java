@@ -11,7 +11,7 @@ import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerDataResponse;
 import com.telegrambot.app.DTO.api.reference.legal.partner.PartnerListData;
 import com.telegrambot.app.DTO.api.typeОbjects.DataResponse;
 import com.telegrambot.app.DTO.dadata.DaDataParty;
-import com.telegrambot.app.DTO.message.Message;
+import com.telegrambot.app.DTO.message.MessageText;
 import com.telegrambot.app.DTO.types.Currency;
 import com.telegrambot.app.DTO.types.*;
 import com.telegrambot.app.bot.SupportBot;
@@ -107,7 +107,7 @@ public class BotCommandsImpl implements BotCommands {
     private final String REGEX_PHONE = "^79[0-9]{9}$";
     private static final String SEPARATOR = System.lineSeparator();
     private SupportBot parent;
-    private List<CommandCache> commandCacheList = new ArrayList<>();
+    private List<CommandCache> commandCacheList;
     private String text;
     private String nameCommand;
     private long chatId;
@@ -117,11 +117,18 @@ public class BotCommandsImpl implements BotCommands {
 
         this.chatId = chatId;
         this.user = userBD;
-        this.nameCommand = receivedMessage.trim();
 
-        if (receivedMessage.equals("/exit") || receivedMessage.equals("Отмена") ||
-                (text != null && (text.equals("/exit") || text.equals("Отмена")))) {
-            comExit(Message.getExitCommand(nameCommand));
+        if (user.getCommandsCache() != null && user.getCommandsCache().size() > 0) {
+            this.text = receivedMessage.trim();
+            this.nameCommand = getCommandCache().getCommand();
+            this.commandCacheList = user.getCommandsCache();
+        } else {
+            this.nameCommand = receivedMessage.trim();
+            this.commandCacheList = new ArrayList<>();
+        }
+
+        if (this.nameCommand.equals("/exit") || this.nameCommand.equals("Отмена")) {
+            comExit(MessageText.getExitCommand(nameCommand));
             return;
         }
 
@@ -132,14 +139,8 @@ public class BotCommandsImpl implements BotCommands {
                     nameCommand,
                     e.getMessage(),
                     String.valueOf(userBD.getId()));
-            comExit(Message.getExitToErrors());
+            comExit(MessageText.getExitToErrors());
         }
-    }
-
-    public void botAnswerUtils(List<CommandCache> commandCacheList, String text, long chatId, UserBD userBD) throws Exception {
-        this.commandCacheList = commandCacheList;
-        this.text = text;
-        botAnswerUtils(getCommandCache().getCommand(), chatId, userBD);
     }
 
     public void botAnswerUtils() throws Exception {
@@ -188,10 +189,10 @@ public class BotCommandsImpl implements BotCommands {
         if (phoneFilled) {
             subUpdateUserByAPI();
         }
-        sendMessage(Message.getWelcomeMessage(), button.keyboardMarkupDefault(user.getUserType()));
+        sendMessage(MessageText.getWelcomeMessage(), button.keyboardMarkupDefault(user.getUserType()));
 
         if (user.getUserType() != UserType.UNAUTHORIZED) {
-            String message = Message.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
+            String message = MessageText.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
             sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
         }
     }
@@ -201,7 +202,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comGetContact() {
-        sendMessage(Message.getBeforeSendingPhone(), button.getContact());
+        sendMessage(MessageText.getBeforeSendingPhone(), button.getContact());
     }
 
     private void comAfterRegistered() {
@@ -213,12 +214,12 @@ public class BotCommandsImpl implements BotCommands {
             return;
         }
 
-        String message = Message.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
+        String message = MessageText.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
         sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
     }
 
     private void comRegistrationSurvey() {
-        CommandCache command = getCommandCache(Message.getBeforeSurvey(), "getInn");
+        CommandCache command = getCommandCache(MessageText.getBeforeSurvey(), "getInn");
         SubCommandInfo info = new SubCommandInfo(this::comRegistrationSurvey);
         switch (command.getSubCommand()) {
             case "getInn" -> subGetInn(command, info, "getUserName");
@@ -239,7 +240,7 @@ public class BotCommandsImpl implements BotCommands {
                 UserResponse response = api1C.getUserData(text);
                 String message = isCompleted(response) ?
                         toStringServices.toStringNonNullFields(response, false) :
-                        Message.getNonFindPhone();
+                        MessageText.getNonFindPhone();
                 sendMessage(message);
                 completeSubCommand(command, "end");
                 comGetUserByPhone();
@@ -259,7 +260,7 @@ public class BotCommandsImpl implements BotCommands {
 //                DaDataParty daDataParty = daDataClient.getCompanyDataByINN(text);
 //                String message = daDataParty != null ?
 //                        toStringServices.toStringNonNullFields(daDataParty, true) :
-//                        Message.getNonFindPhone();
+//                        MessageText.getNonFindPhone();
                 String message = toStringServices.toStringNonNullFields(partner, false);
                 sendMessage(message);
                 completeSubCommand(command, "end");
@@ -273,23 +274,23 @@ public class BotCommandsImpl implements BotCommands {
     private void comGetTask() {
         List<UserStatus> statuses = user.getStatuses();
         switch (statuses.size()) {
-            case 0 -> sendMessage(Message.getSearchErrors());
+            case 0 -> sendMessage(MessageText.getSearchErrors());
             case 1 -> subSendTaskList(getSortedTask(getTaskListToSend(statuses.get(0))));
             default -> statuses.forEach(s -> {
                 TaskListToSend taskListToSend = getTaskListToSend(s);
-                sendMessage(Message.getSearch(getNameEntity(s.getLegal()), taskListToSend.getTaskDocs().size()));
+                sendMessage(MessageText.getSearch(getNameEntity(s.getLegal()), taskListToSend.getTaskDocs().size()));
                 subSendTaskList(getSortedTask(taskListToSend));
             });
         }
     }
 
     private void comCreateAssistance() {
-        String message = Message.getStartCreateAssistance(user.getPerson().getFirstName());
+        String message = MessageText.getStartCreateAssistance(user.getPerson().getFirstName());
         CommandCache command = getCommandCache(message, "getDescription");
         SubCommandInfo info = new SubCommandInfo(this::comCreateAssistance);
         switch (command.getSubCommand()) {
 //            case "getTopic" -> {
-//                info.setStartMessage(Message.getStartTopic());
+//                info.setStartMessage(MessageText.getStartTopic());
 //                info.setNextSumCommand("getDescription");
 //                subGetTextInfo(command, info);
 //            }
@@ -303,7 +304,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comCreateTask() {
-        String message = Message.getStartCreateAssistance(user.getPerson().getFirstName());
+        String message = MessageText.getStartCreateAssistance(user.getPerson().getFirstName());
         CommandCache command = getCommandCache(message, "getPartner");
         SubCommandInfo info = new SubCommandInfo(this::comCreateTask);
         switch (command.getSubCommand()) {
@@ -324,23 +325,23 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comEditCommentTask() {
-        editTask(Message.getEditTextTask("комментарий"), "comment", this::comEditCommentTask);
+        editTask(MessageText.getEditTextTask("комментарий"), "comment", this::comEditCommentTask);
     }
 
     private void comEditCancelTask() {
-        editTask(Message.getWhenCancelTask(), "cancel", this::comEditCancelTask);
+        editTask(MessageText.getWhenCancelTask(), "cancel", this::comEditCancelTask);
     }
 
     private void comAddBalance() {
         if (!paySetting.isUse() || !paySetting.isAddBalance()) {
-            comExit(Message.getErrorPayBlocked());
+            comExit(MessageText.getErrorPayBlocked());
             return;
         }
         CommandCache command = getCommandCache("getSum");
         switch (command.getSubCommand()) {
             case "getSum" -> {
-                SubCommandInfo info = new SubCommandInfo(Message.getInputSum(),
-                        Message.errorWhenEditTask(),
+                SubCommandInfo info = new SubCommandInfo(MessageText.getInputSum(),
+                        MessageText.errorWhenEditTask(),
                         this::comAddBalance,
                         "getFormOfPayment",
                         "[0-9]{3,}",
@@ -354,12 +355,12 @@ public class BotCommandsImpl implements BotCommands {
     private void comGetBalance() {
         List<PartnerBalance> balances = getBalances();
         if (balances == null || balances.isEmpty()) {
-            sendMessage(Message.getBalanceUser(user.getBalance()));
+            sendMessage(MessageText.getBalanceUser(user.getBalance()));
             return;
         }
         StringBuilder text = new StringBuilder();
         for (PartnerBalance balance : balances) {
-            text.append(Message.getBalanceLegal(balance.getPartner(), balance.getAmount()))
+            text.append(MessageText.getBalanceLegal(balance.getPartner(), balance.getAmount()))
                     .append(SEPARATOR);
         }
         sendMessage(text.toString());
@@ -367,7 +368,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private void comPayTask() {
         if (!paySetting.isUse() || !paySetting.isAddBalance()) {
-            comExit(Message.getErrorPayBlocked());
+            comExit(MessageText.getErrorPayBlocked());
             return;
         }
         CommandCache command = getCommandCache("getSum");
@@ -427,7 +428,7 @@ public class BotCommandsImpl implements BotCommands {
                 return;
             }
         }
-        sendMessage(Message.getDefaultMessageError(user.getPerson().getFirstName()));
+        sendMessage(MessageText.getDefaultMessageError(user.getPerson().getFirstName()));
     }
 
     private void editTask(String message, String nameCommand, Runnable parent) {
@@ -444,7 +445,7 @@ public class BotCommandsImpl implements BotCommands {
             default -> {
                 if (command.getSubCommand().equals(subCommand)) {
                     SubCommandInfo info = new SubCommandInfo(message,
-                            Message.errorWhenEditTask(),
+                            MessageText.errorWhenEditTask(),
                             parent,
                             "editTask");
                     subGetTextInfo(command, info);
@@ -458,8 +459,8 @@ public class BotCommandsImpl implements BotCommands {
             case "getFormOfPayment" -> {
                 SubCommandInfo info = new SubCommandInfo(parentRun);
                 info.setNextSumCommand("getPay");
-                info.setStartMessage(Message.getFormOfPayment());
-                info.setErrorMessage(Message.errorWhenEditTask());
+                info.setStartMessage(MessageText.getFormOfPayment());
+                info.setErrorMessage(MessageText.errorWhenEditTask());
                 info.setKeyboard(button.getInlineByEnumFormOfPay(command.getCommand()));
                 subGetTextInfo(command, info);
             }
@@ -473,14 +474,14 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void editDescriptionTask() {
-        editTask(Message.getEditTextTask("описание"), "descriptor", this::editDescriptionTask);
+        editTask(MessageText.getEditTextTask("описание"), "descriptor", this::editDescriptionTask);
     }
 
     //SubCommand
 
     private void subUpdateUserInfo() {
         if (commandCacheList.isEmpty()) {
-            comExit(Message.getErrorToEditUserInfo());
+            comExit(MessageText.getErrorToEditUserInfo());
             return;
         }
         String inn = getResultSubCommandFromCache("getInn");
@@ -494,7 +495,7 @@ public class BotCommandsImpl implements BotCommands {
         UserBDConverter.updateUserFIO(fio, user.getPerson());
         userRepository.save(user);
 
-        String message = Message.getSuccessfullyRegister(user.getPerson().getFirstName());
+        String message = MessageText.getSuccessfullyRegister(user.getPerson().getFirstName());
         sendMessage(message);
 
         completeSubCommand(getCommandCache(), "end");
@@ -505,7 +506,7 @@ public class BotCommandsImpl implements BotCommands {
         String formOfPay = getResultSubCommandFromCache("getFormOfPayment");
         switch (formOfPay) {
             case "SBP_STATIC" -> {
-                sendMessage(Message.getToPaySBP(paySetting.getSbpStatic()));
+                sendMessage(MessageText.getToPaySBP(paySetting.getSbpStatic()));
                 completeSubCommand(command, "end");
                 comAddBalance();
             }
@@ -522,7 +523,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private void subCreateTask() {
         if (commandCacheList.isEmpty()) {
-            comExit(Message.getIncorrectTask());
+            comExit(MessageText.getIncorrectTask());
             return;
         }
         TaskDoc doc = new TaskDoc();
@@ -537,45 +538,45 @@ public class BotCommandsImpl implements BotCommands {
         taskDocRepository.save(doc);
         eventPublisher.publishEvent(new EntitySavedEvent(doc, OperationType.CREATE, EventSource.USER, user));
 
-        sendMessage(Message.getSuccessfullyCreatingTask(doc));
+        sendMessage(MessageText.getSuccessfullyCreatingTask(doc));
 
         completeSubCommand(getCommandCache(), "end");
         comCreateAssistance();
     }
 
     private void subGetPhone(CommandCache command, SubCommandInfo info, String nextCommand) {
-        info.setStartMessage(Message.getStartGetPhone());
-        info.setErrorMessage(Message.getUnCorrectGetPhone());
+        info.setStartMessage(MessageText.getStartGetPhone());
+        info.setErrorMessage(MessageText.getUnCorrectGetPhone());
         info.setNextSumCommand(nextCommand);
         info.setRegex(REGEX_PHONE);
         subGetTextInfo(command, info);
     }
 
     private void subGetInn(CommandCache command, SubCommandInfo info, String nextCommand) {
-        info.setStartMessage(Message.getStartINN());
-        info.setErrorMessage(Message.getUnCorrectINN());
+        info.setStartMessage(MessageText.getStartINN());
+        info.setErrorMessage(MessageText.getUnCorrectINN());
         info.setNextSumCommand(nextCommand);
         info.setRegex(REGEX_INN);
         subGetTextInfo(command, info);
     }
 
     private void subGetFio(CommandCache command, SubCommandInfo info, String nextCommand) {
-        info.setStartMessage(Message.getStarFIO());
-        info.setErrorMessage(Message.getUnCorrectFIO());
+        info.setStartMessage(MessageText.getStarFIO());
+        info.setErrorMessage(MessageText.getUnCorrectFIO());
         info.setRegex(REGEX_FIO);
         info.setNextSumCommand(nextCommand);
         subGetTextInfo(command, info);
     }
 
     private void subGetName(CommandCache command, SubCommandInfo info, String nextCommand) {
-        info.setStartMessage(Message.getStartName());
-        info.setErrorMessage(Message.getErrorName());
+        info.setStartMessage(MessageText.getStartName());
+        info.setErrorMessage(MessageText.getErrorName());
         info.setNextSumCommand(nextCommand);
         subGetTextInfo(command, info);
     }
 
     private void subGetPost(CommandCache command, SubCommandInfo info, String nextCommand) {
-        info.setStartMessage(Message.getStartPost());
+        info.setStartMessage(MessageText.getStartPost());
         info.setNextSumCommand(nextCommand);
         subGetTextInfo(command, info);
     }
@@ -634,12 +635,12 @@ public class BotCommandsImpl implements BotCommands {
 
     private void subSendTaskList(Map<String, List<TaskDoc>> sortedTask) {
         if (sortedTask.isEmpty()) {
-            sendMessage(Message.getSearchErrors());
+            sendMessage(MessageText.getSearchErrors());
             return;
         }
         sortedTask.keySet().forEach(sortName -> {
             List<TaskDoc> taskDocList = sortedTask.get(sortName);
-            String message = Message.getSearchGrouping(sortName, taskDocList.size());
+            String message = MessageText.getSearchGrouping(sortName, taskDocList.size());
             ReplyKeyboard keyboard = button.getInlineMarkupByTasks(taskDocList);
             sendMessage(message, keyboard);
         });
@@ -665,8 +666,8 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subGetDescription(CommandCache command, SubCommandInfo info, String nextCommand) {
-        info.setStartMessage(Message.getStartDescription());
-        info.setErrorMessage(Message.getErrorDescription());
+        info.setStartMessage(MessageText.getStartDescription());
+        info.setErrorMessage(MessageText.getErrorDescription());
         info.setNextSumCommand(nextCommand);
         info.setRegex(".{10,}");
         subGetTextInfo(command, info);
@@ -679,8 +680,8 @@ public class BotCommandsImpl implements BotCommands {
         if (partners.size() > 1) {
             SubCommandInfo info = new SubCommandInfo(parent);
             info.setNextSumCommand("getDepartment");
-            info.setStartMessage(Message.getPartnersByList());
-            info.setErrorMessage(Message.errorWhenEditTask());
+            info.setStartMessage(MessageText.getPartnersByList());
+            info.setErrorMessage(MessageText.errorWhenEditTask());
             info.setKeyboard(button.getInlineByRef("getPartner", partners));
             subGetTextInfo(command, info);
             return;
@@ -697,7 +698,7 @@ public class BotCommandsImpl implements BotCommands {
         Optional<Partner> optional = partnerRepository.findById(Long.parseLong(result));
 
         if (optional.isEmpty()) {
-            comExit(Message.getDefaultMessageError(user.getUserName()));
+            comExit(MessageText.getDefaultMessageError(user.getUserName()));
             return;
         }
 
@@ -711,8 +712,8 @@ public class BotCommandsImpl implements BotCommands {
         } else {
             SubCommandInfo info = new SubCommandInfo(parent);
             info.setNextSumCommand("getDescription");
-            info.setStartMessage(Message.getDepartmentsByList());
-            info.setErrorMessage(Message.errorWhenEditTask());
+            info.setStartMessage(MessageText.getDepartmentsByList());
+            info.setErrorMessage(MessageText.errorWhenEditTask());
             info.setKeyboard(button.getInlineByRef("getDepartment", departments));
             subGetTextInfo(command, info);
             return;
@@ -738,7 +739,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private void subCreatePayDoc() {
         if (commandCacheList.size() == 0 || text == null) {
-            comExit(Message.getDefaultMessageError(user.getUserName()));
+            comExit(MessageText.getDefaultMessageError(user.getUserName()));
             return;
         }
 
@@ -766,25 +767,25 @@ public class BotCommandsImpl implements BotCommands {
         cardDocRepository.save(cardDoc);
         eventPublisher.publishEvent(new EntitySavedEvent(cardDoc, OperationType.CREATE, EventSource.USER, user));
 
-        sendMessage(Message.getSuccessfullyCreatingCardDoc(cardDoc));
+        sendMessage(MessageText.getSuccessfullyCreatingCardDoc(cardDoc));
         completeSubCommand(getCommandCache(), "end");
         comAddBalance();
     }
 
     private void subEditTask(Runnable parent) {
         if (commandCacheList.isEmpty()) {
-            comExit(Message.getIncorrectTask());
+            comExit(MessageText.getIncorrectTask());
             return;
         }
 
         TaskDoc taskDoc = subGetTaskDoc(getResultSubCommandFromCache("code"));
         if (taskDoc == null) {
-            comExit(Message.getIncorrectTask());
+            comExit(MessageText.getIncorrectTask());
             return;
         }
 
         if (Objects.equals(taskDoc.getStatus().getId(), TaskStatus.getClosedStatus().getId())) {
-            comExit(Message.getIncorrectTaskStatus());
+            comExit(MessageText.getIncorrectTaskStatus());
             return;
         }
 
@@ -807,7 +808,7 @@ public class BotCommandsImpl implements BotCommands {
         SyncDataResponse createResponse = api1C.updateTask(taskDocConverter.convertToResponse(taskDoc));
         taskDoc.setSyncData(createResponse);
 
-        sendMessage(Message.getSuccessfullyEditTask(taskDoc));
+        sendMessage(MessageText.getSuccessfullyEditTask(taskDoc));
         completeSubCommand(getCommandCache(), "end");
         runHandler(parent);
     }
@@ -817,7 +818,7 @@ public class BotCommandsImpl implements BotCommands {
         if (optional.isPresent()) {
             return optional.get();
         }
-        comExit(Message.getIncorrectTask());
+        comExit(MessageText.getIncorrectTask());
         return null;
     }
 

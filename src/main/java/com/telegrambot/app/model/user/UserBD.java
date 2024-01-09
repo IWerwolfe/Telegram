@@ -3,6 +3,7 @@ package com.telegrambot.app.model.user;    /*
  */
 
 import com.telegrambot.app.model.balance.UserBalance;
+import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.documents.docdata.PersonData;
 import com.telegrambot.app.model.documents.docdata.SyncData;
 import jakarta.persistence.*;
@@ -45,6 +46,9 @@ public class UserBD {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private UserActivity activity;
+
+    @OneToMany(mappedBy = "userBD", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<CommandCache> commandsCache;
 
     public UserBD(User user) {
         BeanUtils.copyProperties(user, this);

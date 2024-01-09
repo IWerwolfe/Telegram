@@ -1,6 +1,6 @@
 package com.telegrambot.app.services;
 
-import com.telegrambot.app.DTO.message.Message;
+import com.telegrambot.app.DTO.message.MessageText;
 import com.telegrambot.app.DTO.types.EventSource;
 import com.telegrambot.app.DTO.types.OperationType;
 import com.telegrambot.app.bot.SupportBot;
@@ -99,17 +99,17 @@ public class EntitySavedListener {
         switch (type) {
             case CREATE -> {
                 if (systemNotifications.isSendCreateNewTask() && eventSource == EventSource.USER) {
-                    String message = Message.getSystemNotifyNewTask(task, sourceUser);
+                    String message = MessageText.getSystemNotifyNewTask(task, sourceUser);
                     return createMessage(message);
                 }
             }
             case UPDATE, EDIT -> {
                 if (isClosed && systemNotifications.isUserClosedTask() && eventSource == EventSource.USER) {
-                    String message = Message.getSystemNotifyOfUserClosure(task, sourceUser);
+                    String message = MessageText.getSystemNotifyOfUserClosure(task, sourceUser);
                     return createMessage(message);
                 }
                 if (isClosed && systemNotifications.isClosedTask() && eventSource != EventSource.USER) {
-                    String message = Message.getSystemNotifyClosed(task);
+                    String message = MessageText.getSystemNotifyClosed(task);
                     return createMessage(message);
                 }
             }
@@ -128,13 +128,13 @@ public class EntitySavedListener {
         switch (type) {
             case CREATE -> {
                 if (!isClosed && userNotifications.isSendCreateNewTask()) {
-                    String message = Message.getNotifyNewTask(task, sourceUser);
+                    String message = MessageText.getNotifyNewTask(task, sourceUser);
                     return createMessage(message, button.getInlineMarkupByTasks(List.of(task)));
                 }
             }
             case UPDATE, EDIT -> {
                 if (isClosed && userNotifications.isClosedTask()) {
-                    String message = Message.getNotifyClosed(task, sourceUser);
+                    String message = MessageText.getNotifyClosed(task, sourceUser);
                     return createMessage(message);
                 }
             }

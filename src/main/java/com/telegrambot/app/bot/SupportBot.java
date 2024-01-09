@@ -1,13 +1,12 @@
 package com.telegrambot.app.bot;
 
+import com.telegrambot.app.DTO.message.MessageText;
 import com.telegrambot.app.config.BotConfig;
 import com.telegrambot.app.config.BugNotifications;
-import com.telegrambot.app.model.command.CommandCache;
 import com.telegrambot.app.model.transaction.Transaction;
 import com.telegrambot.app.model.transaction.TransactionType;
 import com.telegrambot.app.model.user.UserActivity;
 import com.telegrambot.app.model.user.UserBD;
-import com.telegrambot.app.repositories.command.CommandCacheRepository;
 import com.telegrambot.app.repositories.transaction.TransactionRepository;
 import com.telegrambot.app.repositories.user.UserActivityRepository;
 import com.telegrambot.app.repositories.user.UserRepository;
@@ -43,7 +42,6 @@ public class SupportBot extends TelegramLongPollingBot {
 
     private final BotCommandsImpl botCommands;
     private final UserActivityRepository activityRepository;
-    private final CommandCacheRepository commandCacheRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
     private Update update;
@@ -76,14 +74,14 @@ public class SupportBot extends TelegramLongPollingBot {
                 !update.getMessage().getChat().getType().equals("private");
 
         if (this.user == null) {
-            String text = com.telegrambot.app.DTO.message.Message.getSkippingMessageFromUnknownUser(getReceivedMessage());
+            String text = MessageText.getSkippingMessageFromUnknownUser(getReceivedMessage());
             saveTransaction(text);
             log.warn(text);
             return;
         }
 
         if (isGroupMessage) {
-            saveTransaction(com.telegrambot.app.DTO.message.Message.getSkippingMessageFromGroup());
+            saveTransaction(MessageText.getSkippingMessageFromGroup());
             return;
         }
 
@@ -100,6 +98,7 @@ public class SupportBot extends TelegramLongPollingBot {
     }
 
     private void handlerMessage(Update update) throws Exception {
+
         if (isBot()) {
             SendMessage sendMessage = new SendMessage(String.valueOf(getChatId()), getReceivedMessage());
             sendMessage(sendMessage);
@@ -110,12 +109,6 @@ public class SupportBot extends TelegramLongPollingBot {
             PreCheckoutQuery checkoutQuery = update.getPreCheckoutQuery();
             AnswerPreCheckoutQuery query = new AnswerPreCheckoutQuery(checkoutQuery.getId(), true);
             sendMessage(query);
-            return;
-        }
-
-        List<CommandCache> commandCache = commandCacheRepository.findByUserBDOrderById(user);
-        if (commandCache.size() > 0) {
-            botCommands.botAnswerUtils(commandCache, getReceivedMessage(), getChatId(), user);
             return;
         }
 

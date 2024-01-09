@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Data
-public abstract class Message {
+public abstract class MessageText {
 
     private static final String SEPARATOR = System.lineSeparator();
     private static final String DUAL_SEPARATOR = System.lineSeparator() + System.lineSeparator();

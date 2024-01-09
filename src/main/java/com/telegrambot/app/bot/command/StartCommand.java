@@ -1,6 +1,6 @@
 package com.telegrambot.app.bot.command;
 
-import com.telegrambot.app.bot.Sender;
+import com.telegrambot.app.services.SenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 @RequiredArgsConstructor
 public class StartCommand implements IBotCommand {
 
-    private final Sender sender;
+    private final SenderService senderService;
 
     @Override
     public String getCommandIdentifier() {
@@ -34,7 +34,7 @@ public class StartCommand implements IBotCommand {
 //        sendMessage.setChatId(message.getChatId());
 //        sendMessage.setText(text);
 //
-//        sender.sendMessage(absSender, sendMessage, getCommandIdentifier());
+//        senderService.sendMessage(absSender, sendMessage, getCommandIdentifier());
     }
 
 }

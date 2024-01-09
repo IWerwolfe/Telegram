@@ -22,7 +22,6 @@ public class ProfileLogger {
                 "Active profile(s): " + String.join(", ", activeProfiles);
 
         log.error(message);
-
         log.error("Active bot \"{}\"", botConfig.getBotName());
     }
 }
