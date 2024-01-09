@@ -298,4 +298,8 @@ public abstract class Message {
     public static String getSkippingMessageFromGroup() {
         return "Обработка сообщения из общей группы пропущено";
     }
+
+    public static String getSkippingMessageFromUnknownUser(String messageText) {
+        return "Обработка сообщения от неизвестного пользователя пропущена. Текст: " + messageText;
+    }
 }

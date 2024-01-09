@@ -55,9 +55,31 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         this.user = getUser();
         botCommands.setParent(this);
 
+        updateLastActivity();
+
+        if (update.hasMyChatMember()) {
+
+            String newStatus = update.getMyChatMember().getNewChatMember().getStatus();
+
+            this.user.setNotValid(newStatus.equals("kicked"));
+            userRepository.save(this.user);
+
+            String text = "У пользователя с id: " + getUserID() + " изменился статус на " + newStatus;
+            saveTransaction(text);
+            log.warn(text);
+            return;
+        }
+
         boolean isGroupMessage = update.hasMessage() &&
                 update.getMessage().getChat() != null &&
                 !update.getMessage().getChat().getType().equals("private");
+
+        if (this.user == null) {
+            String text = com.telegrambot.app.DTO.message.Message.getSkippingMessageFromUnknownUser(getReceivedMessage());
+            saveTransaction(text);
+            log.warn(text);
+            return;
+        }
 
         if (isGroupMessage) {
             saveTransaction(com.telegrambot.app.DTO.message.Message.getSkippingMessageFromGroup());
@@ -66,7 +88,6 @@ public class TelegramBotServices extends TelegramLongPollingBot {
 
         try {
             handlerMessage(update);
-            updateLastActivity();
             saveTransaction();
         } catch (Exception e) {
             handleAnException("Ошибка при обработке сообщения id: %s, текст: \"%s\" \r\n от user ID: %s \r\n %s",
@@ -225,6 +246,9 @@ public class TelegramBotServices extends TelegramLongPollingBot {
         if (update.hasCallbackQuery()) {
             user = update.getCallbackQuery().getFrom();
         }
+        if (update.hasMyChatMember()) {
+            user = update.getMyChatMember().getFrom();
+        }
         return user == null ? null : getUserBD(user);
     }
 
@@ -260,6 +284,11 @@ public class TelegramBotServices extends TelegramLongPollingBot {
     }
 
     private void saveTransaction(String text, long idMessage, TransactionType type) {
+
+        if (text == null || text.isEmpty()) {
+            return;
+        }
+
         Transaction transaction = new Transaction();
         transaction.setUserBD(user);
         transaction.setDate(LocalDateTime.now());
