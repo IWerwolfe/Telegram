@@ -57,10 +57,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -97,6 +97,7 @@ public class BotCommandsImpl implements BotCommands {
     private final BalanceService balanceService;
     private final EntityDefaults entityDefaults;
     private final Buttons button;
+    private final SenderService senderService;
 
     private final BotConfig bot;
     private final PaySetting paySetting;
@@ -107,7 +108,6 @@ public class BotCommandsImpl implements BotCommands {
     private final String REGEX_PHONE = "^79[0-9]{9}$";
     private static final String SEPARATOR = System.lineSeparator();
     private SupportBot parent;
-    private List<CommandCache> commandCacheList;
     private String text;
     private String nameCommand;
     private long chatId;
@@ -121,13 +121,12 @@ public class BotCommandsImpl implements BotCommands {
         if (user.getCommandsCache() != null && user.getCommandsCache().size() > 0) {
             this.text = receivedMessage.trim();
             this.nameCommand = getCommandCache().getCommand();
-            this.commandCacheList = user.getCommandsCache();
         } else {
             this.nameCommand = receivedMessage.trim();
-            this.commandCacheList = new ArrayList<>();
+            user.setCommandsCache(new ArrayList<>());
         }
 
-        if (this.nameCommand.equals("/exit") || this.nameCommand.equals("Отмена")) {
+        if (receivedMessage.equals("/exit") || receivedMessage.equals("Отмена")) {
             comExit(MessageText.getExitCommand(nameCommand));
             return;
         }
@@ -171,11 +170,12 @@ public class BotCommandsImpl implements BotCommands {
             case "/add_balance", "Пополнить баланс" -> comAddBalance();
             case "/get_balance", "Проверить баланс" -> comGetBalance();
             case "pay" -> comPayTask();
+            case "/error" -> throw new TelegramApiException();
             case "/exit", "Отмена" -> comExit();
             default -> comSendDefault();
         }
-        if (!commandCacheList.isEmpty()) {
-            commandCacheRepository.saveAll(commandCacheList);
+        if (!user.getCommandsCache().isEmpty()) {
+            commandCacheRepository.saveAll(user.getCommandsCache());
         }
         text = null;
     }
@@ -386,9 +386,6 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comExit() {
-        commandCacheList = commandCacheList.isEmpty() ?
-                commandCacheRepository.findByUserBDOrderById(user) :
-                commandCacheList;
         subEnd(CommandStatus.INTERRUPTED_BY_USER);
     }
 
@@ -480,7 +477,7 @@ public class BotCommandsImpl implements BotCommands {
     //SubCommand
 
     private void subUpdateUserInfo() {
-        if (commandCacheList.isEmpty()) {
+        if (user.getCommandsCache().isEmpty()) {
             comExit(MessageText.getErrorToEditUserInfo());
             return;
         }
@@ -512,7 +509,7 @@ public class BotCommandsImpl implements BotCommands {
             }
             case "CARD" -> {
                 SendInvoice invoice = subGetSendInvoice(title, explanation);
-                parent.sendMessage(invoice);
+                senderService.sendBotMessage(parent, invoice, user);
                 completeSubCommand(command, "createPayDoc");
             }
             case "INVOICE" -> {
@@ -522,7 +519,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subCreateTask() {
-        if (commandCacheList.isEmpty()) {
+        if (user.getCommandsCache().isEmpty()) {
             comExit(MessageText.getIncorrectTask());
             return;
         }
@@ -605,7 +602,7 @@ public class BotCommandsImpl implements BotCommands {
     private void updateUserStatus(UserResponse userData) {
         List<UserStatus> statuses = userData.getStatusList()
                 .stream()
-                .filter(status -> status != null)
+                .filter(Objects::nonNull)
                 .map(statusResponse ->
                         new UserStatus(user, getPartnerByGuid(statusResponse.getGuid()), statusResponse.getPost()))
                 .toList();
@@ -613,19 +610,21 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subEnd(CommandStatus status) {
-        if (!commandCacheList.isEmpty()) {
-            Command command = new Command();
-            command.setUserBD(user);
-            command.setCommand(commandCacheList.get(0).getCommand());
-            command.setResult(getStringSubCommand());
-            command.setStatus(status);
-            command.setDateComplete(LocalDateTime.now());
-            commandRepository.save(command);
-
-            commandCacheRepository.deleteByUserBD(user);
-            commandCacheList.clear();
-            text = null;
+        if (user.getCommandsCache().isEmpty()) {
+            return;
         }
+
+        Command command = new Command();
+        command.setUserBD(user);
+        command.setCommand(user.getCommandsCache().get(0).getCommand());
+        command.setResult(getStringSubCommand());
+        command.setStatus(status);
+        command.setDateComplete(LocalDateTime.now());
+        commandRepository.save(command);
+
+        commandCacheRepository.deleteAll(user.getCommandsCache());
+        user.getCommandsCache().clear();
+        text = null;
     }
 
     private void subEnd() {
@@ -724,6 +723,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private SendInvoice subGetSendInvoice(String title, String explanation) {
+
         SendInvoice invoice = new SendInvoice();
         invoice.setChatId(chatId);
         invoice.setTitle(title);
@@ -738,7 +738,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subCreatePayDoc() {
-        if (commandCacheList.size() == 0 || text == null) {
+        if (user.getCommandsCache().isEmpty() || text == null) {
             comExit(MessageText.getDefaultMessageError(user.getUserName()));
             return;
         }
@@ -773,7 +773,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subEditTask(Runnable parent) {
-        if (commandCacheList.isEmpty()) {
+        if (user.getCommandsCache().isEmpty()) {
             comExit(MessageText.getIncorrectTask());
             return;
         }
@@ -988,7 +988,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private String getResultSubCommandFromCache(String subCommand) {
-        List<String> result = commandCacheList.stream()
+        List<String> result = user.getCommandsCache().stream()
                 .filter(command -> command.getSubCommand().equalsIgnoreCase(subCommand) && command.getResult() != null)
                 .map(CommandCache::getResult).toList();
         return result.isEmpty() ? "" : result.get(0).replaceAll(".*:", "");
@@ -1000,7 +1000,7 @@ public class BotCommandsImpl implements BotCommands {
 
     private String getStringSubCommand() {
         StringBuilder builder = new StringBuilder();
-        for (CommandCache cache : commandCacheList) {
+        for (CommandCache cache : user.getCommandsCache()) {
             builder.append(cache.getSubCommand())
                     .append(" -> ")
                     .append(cache.getResult())
@@ -1100,31 +1100,27 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void sendMessage(@NonNull String message, ReplyKeyboard keyboard) {
-        if (message.trim().isEmpty()) {
-            return;
-        }
-        SendMessage sendMessage = createMessage(message, keyboard);
-        parent.sendMessage(sendMessage);
+        senderService.sendBotMessage(parent, message, keyboard, chatId, user);
     }
 
     private CommandCache getCommandCache() {
-        return commandCacheList.isEmpty() ?
+        return user.getCommandsCache().isEmpty() ?
                 new CommandCache(nameCommand, user) :
-                commandCacheList.get(commandCacheList.size() - 1);
+                user.getCommandsCache().get(user.getCommandsCache().size() - 1);
     }
 
     private CommandCache getCommandCache(String message, String nameSubCommand) {
-        if (commandCacheList.isEmpty()) {
+        if (user.getCommandsCache().isEmpty()) {
             sendMessage(message);
             return addNewSubCommand(nameSubCommand, null);
         }
-        return commandCacheList.get(commandCacheList.size() - 1);
+        return user.getCommandsCache().get(user.getCommandsCache().size() - 1);
     }
 
     private CommandCache getCommandCache(String nameSubCommand) {
-        return commandCacheList.isEmpty() ?
+        return user.getCommandsCache().isEmpty() ?
                 addNewSubCommand(nameSubCommand, null) :
-                commandCacheList.get(commandCacheList.size() - 1);
+                user.getCommandsCache().get(user.getCommandsCache().size() - 1);
     }
 
     private void completeSubCommand(CommandCache command, String nextSubCommand, String result) {
@@ -1135,20 +1131,12 @@ public class BotCommandsImpl implements BotCommands {
 
     private CommandCache addNewSubCommand(String subCommand, String result) {
         CommandCache command = new CommandCache(nameCommand, subCommand, user, result);
-        commandCacheList.add(command);
+        user.getCommandsCache().add(command);
         return command;
     }
 
     private void completeSubCommand(CommandCache command, String subCommand) {
         completeSubCommand(command, subCommand, text);
-    }
-
-    private SendMessage createMessage(String text, ReplyKeyboard keyboard) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(text);
-        message.setReplyMarkup(keyboard);
-        return message;
     }
 
     private List<PartnerBalance> updateBalance(List<BalanceResponse> list) {

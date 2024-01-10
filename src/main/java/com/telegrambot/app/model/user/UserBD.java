@@ -47,7 +47,7 @@ public class UserBD {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private UserActivity activity;
 
-    @OneToMany(mappedBy = "userBD", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "userBD", fetch = FetchType.EAGER)
     private List<CommandCache> commandsCache;
 
     public UserBD(User user) {

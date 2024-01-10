@@ -7,5 +7,6 @@ public enum TransactionType {
     COMMAND,
     CONTACT,
     NOTIFY,
+    ERROR_NOTIFY,
     PRE_CHECK
 }

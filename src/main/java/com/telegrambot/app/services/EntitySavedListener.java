@@ -11,7 +11,6 @@ import com.telegrambot.app.model.EntitySavedEvent;
 import com.telegrambot.app.model.documents.doc.service.TaskDoc;
 import com.telegrambot.app.model.reference.TaskStatus;
 import com.telegrambot.app.model.reference.legalentity.Partner;
-import com.telegrambot.app.model.transaction.TransactionType;
 import com.telegrambot.app.model.types.Document;
 import com.telegrambot.app.model.user.UserBD;
 import com.telegrambot.app.model.user.UserStatus;
@@ -35,10 +34,11 @@ public class EntitySavedListener {
     private final UserStatusRepository userStatusRepository;
 
     private final BalanceService balanceService;
-    private final SupportBot botServices;
     private final Buttons button;
     private final SystemNotifications systemNotifications;
     private final UserNotifications userNotifications;
+    private final SenderService senderService;
+    private final SupportBot bot;
 
     private OperationType type;
     private UserBD sourceUser;
@@ -156,13 +156,14 @@ public class EntitySavedListener {
 
         long sourceId = sourceUser == null ? 0 : sourceUser.getId();
         users.stream()
-                .filter(user -> user != null && user.getId() != sourceId)
+                .filter(user -> user != null && user.getId() != sourceId && !user.getNotValid())
+                .toList()
                 .forEach(user -> sendMessageUser(user.getId(), sendMessage));
     }
 
     private void sendMessageUser(Long id, SendMessage sendMessage) {
         sendMessage.setChatId(id);
-        botServices.sendMessage(sendMessage, TransactionType.NOTIFY);
+        senderService.sendNotifyMessage(bot, sendMessage, null);
     }
 
     private List<UserBD> getUserByPartner(Partner partner) {

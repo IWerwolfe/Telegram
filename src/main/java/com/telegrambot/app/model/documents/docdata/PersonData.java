@@ -38,13 +38,13 @@ public class PersonData {
         if (firstName != null && !firstName.isEmpty()) {
             string.append(firstName);
         }
-        if (lastName != null && !lastName.isEmpty()) {
-            string.append(" ")
-                    .append(lastName);
-        }
         if (fatherName != null && !fatherName.isEmpty()) {
             string.append(" ")
                     .append(fatherName);
+        }
+        if (lastName != null && !lastName.isEmpty()) {
+            string.append(" ")
+                    .append(lastName);
         }
         return string.toString();
     }
@@ -54,13 +54,13 @@ public class PersonData {
         if (firstName != null && !firstName.isEmpty()) {
             string.append(firstName);
         }
-        if (lastName != null && !lastName.isEmpty()) {
-            string.append(" ")
-                    .append(lastName);
-        }
         if (fatherName != null && !fatherName.isEmpty()) {
             string.append(" ")
                     .append(fatherName);
+        }
+        if (lastName != null && !lastName.isEmpty()) {
+            string.append(" ")
+                    .append(lastName);
         }
         if (birthday != null) {
             string.append(", ")
