@@ -9,7 +9,7 @@ import com.supportbot.DTO.api.other.SyncDataResponse;
 import com.supportbot.DTO.api.other.UserResponse;
 import com.supportbot.DTO.api.reference.legal.partner.PartnerDataResponse;
 import com.supportbot.DTO.api.reference.legal.partner.PartnerResponse;
-import com.supportbot.DTO.api.typeОbjects.DataResponse;
+import com.supportbot.DTO.api.typeObjects.DataResponse;
 import com.supportbot.config.Connector1C;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;

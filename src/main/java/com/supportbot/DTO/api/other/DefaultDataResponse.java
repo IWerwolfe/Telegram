@@ -11,7 +11,7 @@ import com.supportbot.DTO.api.reference.manager.ManagerResponse;
 import com.supportbot.DTO.api.reference.payTerminal.PayTerminalResponse;
 import com.supportbot.DTO.api.reference.taskStatus.TaskStatusResponse;
 import com.supportbot.DTO.api.reference.taskType.TaskTypeResponse;
-import com.supportbot.DTO.api.typeОbjects.DataResponse;
+import com.supportbot.DTO.api.typeObjects.DataResponse;
 import lombok.Data;
 
 import java.util.List;

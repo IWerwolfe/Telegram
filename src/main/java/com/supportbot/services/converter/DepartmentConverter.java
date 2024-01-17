@@ -1,7 +1,7 @@
 package com.supportbot.services.converter;
 
 import com.supportbot.DTO.api.reference.legal.department.DepartmentResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.model.reference.legalentity.Department;
 import com.supportbot.model.types.Entity;
 import com.supportbot.repositories.reference.DepartmentRepository;

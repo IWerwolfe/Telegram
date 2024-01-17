@@ -3,7 +3,7 @@ package com.supportbot.DTO.api.doc.bankDoc;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.supportbot.DTO.api.typeОbjects.EntityDocResponse;
+import com.supportbot.DTO.api.typeObjects.EntityDocResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

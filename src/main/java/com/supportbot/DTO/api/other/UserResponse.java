@@ -3,7 +3,7 @@ package com.supportbot.DTO.api.other;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.supportbot.DTO.api.doc.taskDoc.TaskDocResponse;
 import com.supportbot.DTO.api.reference.legal.partner.PartnerDataResponse;
-import com.supportbot.DTO.api.typeОbjects.DataResponse;
+import com.supportbot.DTO.api.typeObjects.DataResponse;
 import lombok.Data;
 
 import java.util.Date;
@@ -24,5 +24,4 @@ public class UserResponse extends DataResponse {
     private List<UserStatusResponse> statusList;
     private List<TaskDocResponse> taskList;
     private PartnerDataResponse partnerListData;
-    //TODO добавить информацию о задачах
 }

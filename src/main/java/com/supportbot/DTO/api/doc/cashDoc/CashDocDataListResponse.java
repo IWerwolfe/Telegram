@@ -2,7 +2,7 @@ package com.supportbot.DTO.api.doc.cashDoc;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.supportbot.DTO.api.doc.cardDoc.CardDocResponse;
-import com.supportbot.DTO.api.typeОbjects.DataListResponse;
+import com.supportbot.DTO.api.typeObjects.DataListResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

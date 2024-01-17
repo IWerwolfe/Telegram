@@ -1,7 +1,7 @@
 package com.supportbot.mockResponse.testDoc;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.supportbot.DTO.api.typeОbjects.EntityDocResponse;
+import com.supportbot.DTO.api.typeObjects.EntityDocResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

@@ -9,7 +9,7 @@ import com.supportbot.DTO.api.other.SyncDataResponse;
 import com.supportbot.DTO.api.other.UserResponse;
 import com.supportbot.DTO.api.reference.legal.partner.PartnerDataResponse;
 import com.supportbot.DTO.api.reference.legal.partner.PartnerListData;
-import com.supportbot.DTO.api.typeОbjects.DataResponse;
+import com.supportbot.DTO.api.typeObjects.DataResponse;
 import com.supportbot.DTO.dadata.DaDataParty;
 import com.supportbot.DTO.message.MessageText;
 import com.supportbot.DTO.types.Currency;
@@ -60,6 +60,7 @@ import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.objects.payments.LabeledPrice;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.time.LocalDateTime;
@@ -155,7 +156,7 @@ public class BotCommandsImpl implements BotCommands {
         switch (nameCommand) {
             case "/start" -> comStartBot();
             case "/help" -> comSendHelpText();
-            case "/send_contact", "Зарегистрироваться" -> comGetContact();
+//            case "/send_contact", "Зарегистрироваться" -> comGetContact();
             case "/afterRegistered" -> comAfterRegistered();
             case "/registrationSurvey" -> comRegistrationSurvey();
             case "/getUserByPhone" -> comGetUserByPhone();
@@ -183,18 +184,20 @@ public class BotCommandsImpl implements BotCommands {
     //Command
     private void comStartBot() {
 
-//        boolean nonRegistered = (user.getUserType() == UserType.UNAUTHORIZED);
         boolean phoneFilled = (user.getPhone() != null && !user.getPhone().isEmpty());
 
         if (phoneFilled) {
             subUpdateUserByAPI();
         }
-        sendMessage(MessageText.getWelcomeMessage(), button.keyboardMarkupDefault(user.getUserType()));
 
-        if (user.getUserType() != UserType.UNAUTHORIZED) {
-            String message = MessageText.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
-            sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
-        }
+        String message = user.getUserType() == UserType.UNAUTHORIZED ?
+                MessageText.getWelcomeMessage() :
+                MessageText.getShotWelcomeMessage() +
+                        SEPARATOR + SEPARATOR +
+                        MessageText.getAfterSendingPhone(user.getPerson().getFirstName(), user.getStatuses());
+
+        ReplyKeyboardMarkup keyboard = button.keyboardMarkupDefault(user.getUserType());
+        sendMessage(message, keyboard);
     }
 
     private void comSendHelpText() {
@@ -1012,7 +1015,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private @NonNull PartnerData getPartnerDateByAPI(String text) {
-        if (!text.equals(REGEX_INN)) {
+        if (!text.matches(REGEX_INN)) {
             return new PartnerData();
         }
         PartnerDataResponse response = api1C.getPartnerData(text);

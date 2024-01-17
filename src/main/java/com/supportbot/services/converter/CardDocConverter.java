@@ -1,7 +1,7 @@
 package com.supportbot.services.converter;
 
 import com.supportbot.DTO.api.doc.cardDoc.CardDocResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.DTO.types.PaymentType;
 import com.supportbot.model.documents.doc.payment.CardDoc;
 import com.supportbot.model.documents.docdata.FiscalData;

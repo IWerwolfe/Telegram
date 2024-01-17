@@ -1,7 +1,7 @@
 package com.supportbot.services.converter;
 
 import com.supportbot.DTO.api.reference.legal.contract.ContractResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.DTO.types.BillingType;
 import com.supportbot.model.reference.legalentity.Contract;
 import com.supportbot.model.types.Entity;

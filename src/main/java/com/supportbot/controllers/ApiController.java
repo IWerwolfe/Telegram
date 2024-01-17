@@ -31,7 +31,7 @@ import com.supportbot.DTO.api.reference.taskStatus.TaskStatusResponse;
 import com.supportbot.DTO.api.reference.taskType.TaskTypeDataListResponse;
 import com.supportbot.DTO.api.reference.taskType.TaskTypeDataResponse;
 import com.supportbot.DTO.api.reference.taskType.TaskTypeResponse;
-import com.supportbot.DTO.api.typeОbjects.DataResponse;
+import com.supportbot.DTO.api.typeObjects.DataResponse;
 import com.supportbot.services.api.ApiInService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

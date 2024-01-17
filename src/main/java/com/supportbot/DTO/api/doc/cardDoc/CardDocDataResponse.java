@@ -1,7 +1,7 @@
 package com.supportbot.DTO.api.doc.cardDoc;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.supportbot.DTO.api.typeОbjects.DataEntityResponse;
+import com.supportbot.DTO.api.typeObjects.DataEntityResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

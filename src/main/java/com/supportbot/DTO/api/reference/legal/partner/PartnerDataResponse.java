@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.supportbot.DTO.api.balance.BalanceResponse;
 import com.supportbot.DTO.api.reference.legal.contract.ContractResponse;
 import com.supportbot.DTO.api.reference.legal.department.DepartmentResponse;
-import com.supportbot.DTO.api.typeОbjects.DataResponse;
+import com.supportbot.DTO.api.typeObjects.DataResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

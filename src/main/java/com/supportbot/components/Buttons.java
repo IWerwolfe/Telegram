@@ -68,6 +68,7 @@ public class Buttons {
                 addPayButton(rows);
             }
             default -> {
+                SEND_CONTACT.setRequestContact(true);
                 rows.add(new KeyboardRow(List.of(GET_TASKS, NEED_HELP)));
                 addPayButton(rows);
                 rows.add(new KeyboardRow(List.of(SEND_CONTACT)));

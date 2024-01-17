@@ -1,7 +1,7 @@
 package com.supportbot.services.converter;
 
 import com.supportbot.DTO.api.reference.legal.partner.PartnerResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.DTO.types.PartnerType;
 import com.supportbot.model.reference.legalentity.Partner;
 import com.supportbot.model.types.Entity;

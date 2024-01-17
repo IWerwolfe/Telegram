@@ -1,4 +1,4 @@
-package com.supportbot.DTO.api.typeОbjects;
+package com.supportbot.DTO.api.typeObjects;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

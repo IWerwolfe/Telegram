@@ -1,7 +1,7 @@
 package com.supportbot.services.converter;
 
 import com.supportbot.DTO.api.doc.taskDoc.TaskDocResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.model.documents.doc.service.TaskDoc;
 import com.supportbot.model.documents.docdata.PropertyData;
 import com.supportbot.model.types.Document;

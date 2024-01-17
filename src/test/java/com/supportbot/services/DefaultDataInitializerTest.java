@@ -1,7 +1,7 @@
 package com.supportbot.services;
 
 import com.supportbot.DTO.api.other.DefaultDataResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.client.ApiClient;
 import com.supportbot.config.Connector1C;
 import com.supportbot.model.DefaultDocParam;

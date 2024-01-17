@@ -1,7 +1,7 @@
 package com.supportbot.services.converter;
 
 import com.supportbot.DTO.api.reference.bankAccount.BankAccountResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.DTO.types.BankAccountType;
 import com.supportbot.model.reference.BankAccount;
 import com.supportbot.model.reference.legalentity.LegalEntity;

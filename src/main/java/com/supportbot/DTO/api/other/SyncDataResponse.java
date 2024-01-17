@@ -1,7 +1,7 @@
 package com.supportbot.DTO.api.other;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.supportbot.DTO.api.typeОbjects.DataResponse;
+import com.supportbot.DTO.api.typeObjects.DataResponse;
 import lombok.Data;
 
 @Data

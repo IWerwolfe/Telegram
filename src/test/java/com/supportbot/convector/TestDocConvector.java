@@ -1,6 +1,6 @@
 package com.supportbot.convector;
 
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.mockResponse.testDoc.TestDocResponse;
 import com.supportbot.model.types.Document;
 import com.supportbot.model.types.Entity;

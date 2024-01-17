@@ -1,7 +1,7 @@
 package com.supportbot.services.converter;
 
 import com.supportbot.DTO.api.reference.taskType.TaskTypeResponse;
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.DTO.types.TaskType;
 import com.supportbot.model.types.Entity;
 import com.supportbot.model.types.Reference;

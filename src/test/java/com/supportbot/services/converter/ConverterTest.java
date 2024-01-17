@@ -1,6 +1,6 @@
 package com.supportbot.services.converter;
 
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 import com.supportbot.convector.TestDocConvector;
 import com.supportbot.convector.TestRefConvector;
 import com.supportbot.mockResponse.testDoc.TestDocResponse;

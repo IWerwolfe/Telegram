@@ -1,6 +1,6 @@
 package com.supportbot.DTO;
 
-import com.supportbot.DTO.api.typeОbjects.EntityResponse;
+import com.supportbot.DTO.api.typeObjects.EntityResponse;
 
 public interface DataResponseInt {
 
