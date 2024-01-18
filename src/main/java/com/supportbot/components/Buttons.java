@@ -17,7 +17,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -36,7 +35,6 @@ public class Buttons {
     private static final KeyboardButton GET_BALANCE = new KeyboardButton("Проверить баланс");
     private static final KeyboardButton SEND_CONTACT = new KeyboardButton("Зарегистрироваться");
     private static final KeyboardButton ADD_BALANCE = new KeyboardButton("Пополнить баланс");
-    private static final KeyboardButton GET_CONTACT = new KeyboardButton("Отправить номер телефона");
     private static final KeyboardButton EXIT = new KeyboardButton("Отмена");
 
 
@@ -185,17 +183,6 @@ public class Buttons {
                 })
                 .toList();
         return getInlineKeyboardMarkup(rowsInLine);
-    }
-
-    public ReplyKeyboardMarkup getContact() {
-        GET_CONTACT.setRequestContact(true);
-        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        keyboardMarkup.setResizeKeyboard(true);
-        keyboardMarkup.setOneTimeKeyboard(true);
-        KeyboardRow row = new KeyboardRow();
-        row.add(GET_CONTACT);
-        keyboardMarkup.setKeyboard(Collections.singletonList(row));
-        return keyboardMarkup;
     }
 
     private List<InlineKeyboardButton> getInlineKeyboardButton(String label, String command) {

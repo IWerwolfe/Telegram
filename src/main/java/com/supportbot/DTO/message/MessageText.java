@@ -30,9 +30,7 @@ public abstract class MessageText {
                   • программным обеспечением,
                   • настройкой 1С.
                                 
-                Для начала работы нажмите «Зарегистрироваться».
-                               
-                * мы гарантируем, что ваш номер телефона будет использован только для регистрации заявок по сервисному обслуживанию, и не будет передан третьим лицам.""";
+                Для начала работы нажмите «Зарегистрироваться».""";
     }
 
     public static String getShotWelcomeMessage() {
@@ -45,23 +43,10 @@ public abstract class MessageText {
                   • настройкой 1С.""";
     }
 
-    public static String getBeforeSendingPhone() {
-        return """
-                Для получения персонализированной поддержки и доступа к информации, пожалуйста, нажмите на кнопку ниже.
-                Мы гарантируем конфиденциальность и безопасность ваших данных.
-                После отправки номера телефона, наша система проведет поиск информации и произведет регистрацию. 
-                Затем мы присвоим вам соответствующий статус и предоставим вам точную и полезную информацию по вашему предприятию. 
-                Мы ценим ваше доверие и стремимся обеспечить наивысший уровень сервиса."
-                """;
-    }
-
     public static String getBeforeSurvey() {
-        return "У нас не удалось найти информацию, соответствующую вашему номеру телефона в базе данных. " + DUAL_SEPARATOR +
-                "Пожалуйста, укажите актуальную информацию, чтобы зарегистрироваться и получить доступ к нашим услугам";
-    }
-
-    public static String getMessageCorrectINN() {
-        return "ИНН введен корректно";
+        return """
+                У нас не удалось найти информацию, соответствующую вашему номеру телефона в базе данных.
+                Пожалуйста, укажите актуальную информацию, чтобы зарегистрироваться и получить доступ к нашим услугам""";
     }
 
     public static String getUnCorrectINN() {
@@ -98,14 +83,17 @@ public abstract class MessageText {
     }
 
     public static String getAfterSendingPhone(String name, List<UserStatus> userStatus) {
+
         StringBuilder message = new StringBuilder();
-        message.append(name).append(", мы нашли и обновили информацию для следующих организаций: ");
+        message.append(name)
+                .append(", вы закреплены за следующими организациями: ")
+                .append(SEPARATOR);
+
         for (UserStatus status : userStatus) {
             message.append(SEPARATOR)
-                    .append(" * ")
                     .append(TextUtils.getNameRef(status.getLegal()))
-                    .append(" - ")
-                    .append(status.getUserType());
+                    .append(", ваш статус: ")
+                    .append(status.getUserType().getLabel());
         }
         return message.toString();
     }
@@ -138,16 +126,13 @@ public abstract class MessageText {
     }
 
     public static String getStartCreateAssistance(String name) {
-        return name + """
-                спасибо что обратились к нам.                 
-                Мы зададим вам несколько вопросов чтобы уточнить все детали.
+        return "Рады помочь, " + name + """
+                 :
                                 
-                Постарайтесь точно описать проблему, избегая общих формулировок типа:
-                    - не включается,
-                    - показывает черный экран,
-                    - не работает касса.
-                    
-                Нам очень поможет если вы укажите модель оборудования и/или название установленного у вас програмного обеспечения и что предшествовало проблеме                
+                1. Опишите в сообщении (как можно подробнее!) вашу проблему, что именно не работает или не включается.
+                2. Постарайтесь указать модель кассы или оборудования (как правило, написано на наклейке).
+                                
+                Пожалуйста, не дублируйте заявки, мы обязательно с вами свяжемся!
                 """;
     }
 
@@ -156,8 +141,9 @@ public abstract class MessageText {
     }
 
     public static String getExitToErrors() {
-        return "Произошла ошибка при выполнении команды и мы уже разбираемся как ее устранить, " +
-                "попробуйте пожалуйста немного позже";
+        return """
+                Произошла ошибка при выполнении команды и мы уже разбираемся как ее устранить, попробуйте пожалуйста немного позже
+                """;
     }
 
     public static String getIncorrectTask() {
@@ -166,8 +152,8 @@ public abstract class MessageText {
 
     public static String getSuccessfullyCreatingTask(TaskDoc taskDoc) {
         return "Ваше обращение успешно зарегистрировано под номером " +
-                taskDoc.getCodeEntity() + DUAL_SEPARATOR +
-                "Скоро с вами свяжется наш мастер. Спасибо что обратились к нам";
+                taskDoc.toString(false) + DUAL_SEPARATOR +
+                "Мы обязательно свяжемся с вами в самое ближайшее время!";
     }
 
     public static String getSearchErrors() {
@@ -183,8 +169,9 @@ public abstract class MessageText {
     }
 
     public static String errorWhenEditTask() {
-        return "Введенный вами параметр и\\или текст некорректен, попробуйте еще раз. " +
-                "Для выхода нажмите /exit";
+        return """
+                Введенный вами параметр и\\или текст некорректен, попробуйте еще раз. 
+                Для выхода нажмите /exit""";
     }
 
     public static String getEditTextTask(String nameFields) {
@@ -231,9 +218,9 @@ public abstract class MessageText {
     }
 
     public static String getSuccessfullyRegister(String firstName) {
-        return firstName + ", вы успешно зарегистрировались. " + SEPARATOR +
-                "Для повышения вашего статуса в системе вам необходимо обратиться к нам в офис " +
-                "либо по телефону.";
+        return firstName + """
+                Для повышения вашего статуса в системе вам необходимо обратиться к нам в офис либо по телефону.
+                """;
     }
 
     public static String getErrorToEditUserInfo() {
@@ -241,18 +228,21 @@ public abstract class MessageText {
     }
 
     public static String getToPaySBP(String sbpStatic) {
-        return "Для оплаты по СБП необходимо:" + DUAL_SEPARATOR +
-                "1. перейти по ссылке, указанной ниже;" + SEPARATOR +
-                "2. выбрать банк, через который будете оплачивать;" + SEPARATOR +
-                "3. указать сумму оплаты;" + SEPARATOR +
-                "4. в приложении банка подтвердить оплату;" + DUAL_SEPARATOR +
-                "Деньги поступят на баланс в течение 3 рабочих дней, после этого обновится информация в телеграм боте" + DUAL_SEPARATOR +
-                "Ссылка для оплаты через БСП: " + sbpStatic;
+        return """
+                Для оплаты по СБП необходимо:
+                 1. перейти по ссылке, указанной ниже;
+                 2. выбрать банк, через который будете оплачивать;
+                 3. указать сумму оплаты;
+                 4. в приложении банка подтвердить оплату;
+                 
+                Деньги поступят на баланс в течение 3 рабочих дней, после этого обновится информация в телеграм боте
+                Ссылка для оплаты через БСП: """ + sbpStatic;
     }
 
     public static String getErrorPayBlocked() {
-        return "В данный момент возможность оплаты через телеграм бот заблокирована. " +
-                "Приносим свои извинения";
+        return """
+                В данный момент возможность оплаты через телеграм бот заблокирована. Приносим свои извинения
+                """;
     }
 
     public static String getNotifyNewTask(TaskDoc taskDoc, UserBD user) {

@@ -156,7 +156,6 @@ public class BotCommandsImpl implements BotCommands {
         switch (nameCommand) {
             case "/start" -> comStartBot();
             case "/help" -> comSendHelpText();
-//            case "/send_contact", "Зарегистрироваться" -> comGetContact();
             case "/afterRegistered" -> comAfterRegistered();
             case "/registrationSurvey" -> comRegistrationSurvey();
             case "/getUserByPhone" -> comGetUserByPhone();
@@ -202,10 +201,6 @@ public class BotCommandsImpl implements BotCommands {
 
     private void comSendHelpText() {
         sendMessage(BotCommands.HELP_TEXT);
-    }
-
-    private void comGetContact() {
-        sendMessage(MessageText.getBeforeSendingPhone(), button.getContact());
     }
 
     private void comAfterRegistered() {
@@ -292,11 +287,6 @@ public class BotCommandsImpl implements BotCommands {
         CommandCache command = getCommandCache(message, "getDescription");
         SubCommandInfo info = new SubCommandInfo(this::comCreateAssistance);
         switch (command.getSubCommand()) {
-//            case "getTopic" -> {
-//                info.setStartMessage(MessageText.getStartTopic());
-//                info.setNextSumCommand("getDescription");
-//                subGetTextInfo(command, info);
-//            }
             case "getDescription" -> subGetDescription(command, info, "getPhone");
             case "getPhone" -> subGetPhone(command, info, "getUserName");
             case "getUserName" -> subGetName(command, info, "createTask");
