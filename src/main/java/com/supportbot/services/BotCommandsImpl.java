@@ -160,9 +160,9 @@ public class BotCommandsImpl implements BotCommands {
             case "/registrationSurvey" -> comRegistrationSurvey();
             case "/getUserByPhone" -> comGetUserByPhone();
             case "/getByInn" -> comGetByInn();
-            case "/get_task", "Посмотреть задачи" -> comGetTask();
-            case "/need_help", "Создать обращение" -> comCreateAssistance();
-            case "/create_task", "Создать задачу" -> comCreateTask();
+            case "/get_task", "Активные" -> comGetTask();
+            case "/need_help", "Написать в техподдержку" -> comCreateAssistance();
+            case "/create_task", "Новое обращение" -> comCreateTask();
             case "getTask" -> comTaskPresentation();
             case "descriptor" -> editDescriptionTask();
             case "comment" -> comEditCommentTask();
@@ -171,7 +171,7 @@ public class BotCommandsImpl implements BotCommands {
             case "/get_balance", "Проверить баланс" -> comGetBalance();
             case "pay" -> comPayTask();
             case "/error" -> throw new TelegramApiException();
-            case "/exit", "Отмена" -> comExit();
+            case "/exit", "Отмена" -> subEnd(CommandStatus.INTERRUPTED_BY_USER);
             default -> comSendDefault();
         }
         if (!user.getCommandsCache().isEmpty()) {
@@ -224,7 +224,6 @@ public class BotCommandsImpl implements BotCommands {
             case "getUserName" -> subGetFio(command, info, "getPost");
             case "getPost" -> subGetPost(command, info, "update");
             case "update" -> subUpdateUserInfo();
-            case "end" -> subEnd();
             default -> comSendDefault();
         }
     }
@@ -239,11 +238,8 @@ public class BotCommandsImpl implements BotCommands {
                 String message = isCompleted(response) ?
                         toStringServices.toStringNonNullFields(response, false) :
                         MessageText.getNonFindPhone();
-                sendMessage(message);
-                completeSubCommand(command, "end");
-                comGetUserByPhone();
+                subEnd(message);
             }
-            case "end" -> subEnd();
             default -> comSendDefault();
         }
     }
@@ -260,11 +256,8 @@ public class BotCommandsImpl implements BotCommands {
 //                        toStringServices.toStringNonNullFields(daDataParty, true) :
 //                        MessageText.getNonFindPhone();
                 String message = toStringServices.toStringNonNullFields(partner, false);
-                sendMessage(message);
-                completeSubCommand(command, "end");
-                comGetByInn();
+                subEnd(message);
             }
-            case "end" -> subEnd();
             default -> comSendDefault();
         }
     }
@@ -291,7 +284,6 @@ public class BotCommandsImpl implements BotCommands {
             case "getPhone" -> subGetPhone(command, info, "getUserName");
             case "getUserName" -> subGetName(command, info, "createTask");
             case "createTask" -> subCreateTask();
-            case "end" -> subEnd();
             default -> comSendDefault();
         }
     }
@@ -305,7 +297,6 @@ public class BotCommandsImpl implements BotCommands {
             case "getDepartment" -> subGetDepartment(command, this::comCreateTask);
             case "getDescription" -> subGetDescription(command, info, "createTask");
             case "createTask" -> subCreateTask();
-            case "end" -> subEnd();
             default -> comSendDefault();
         }
     }
@@ -378,13 +369,9 @@ public class BotCommandsImpl implements BotCommands {
         }
     }
 
-    private void comExit() {
-        subEnd(CommandStatus.INTERRUPTED_BY_USER);
-    }
-
     private void comExit(String message) {
         sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
-        comExit();
+        subEnd(CommandStatus.ERROR);
     }
 
     private void comSendDefault() {
@@ -431,7 +418,6 @@ public class BotCommandsImpl implements BotCommands {
                 runHandler(parent);
             }
             case "editTask" -> subEditTask(parent);
-            case "end" -> subEnd();
             default -> {
                 if (command.getSubCommand().equals(subCommand)) {
                     SubCommandInfo info = new SubCommandInfo(message,
@@ -458,7 +444,6 @@ public class BotCommandsImpl implements BotCommands {
                 subGetPay(command, title, explanation);
             }
             case "createPayDoc" -> subCreatePayDoc();
-            case "end" -> subEnd();
             default -> comSendDefault();
         }
     }
@@ -470,6 +455,7 @@ public class BotCommandsImpl implements BotCommands {
     //SubCommand
 
     private void subUpdateUserInfo() {
+
         if (user.getCommandsCache().isEmpty()) {
             comExit(MessageText.getErrorToEditUserInfo());
             return;
@@ -486,13 +472,11 @@ public class BotCommandsImpl implements BotCommands {
         userRepository.save(user);
 
         String message = MessageText.getSuccessfullyRegister(user.getPerson().getFirstName());
-        sendMessage(message);
-
-        completeSubCommand(getCommandCache(), "end");
-        comRegistrationSurvey();
+        subEnd(message);
     }
 
     private void subGetPay(CommandCache command, String title, String explanation) {
+
         String formOfPay = getResultSubCommandFromCache("getFormOfPayment");
         switch (formOfPay) {
             case "SBP_STATIC" -> {
@@ -507,11 +491,12 @@ public class BotCommandsImpl implements BotCommands {
             }
             case "INVOICE" -> {
             }
-            default -> comExit();
+            default -> comSendDefault();
         }
     }
 
     private void subCreateTask() {
+
         if (user.getCommandsCache().isEmpty()) {
             comExit(MessageText.getIncorrectTask());
             return;
@@ -528,10 +513,7 @@ public class BotCommandsImpl implements BotCommands {
         taskDocRepository.save(doc);
         eventPublisher.publishEvent(new EntitySavedEvent(doc, OperationType.CREATE, EventSource.USER, user));
 
-        sendMessage(MessageText.getSuccessfullyCreatingTask(doc));
-
-        completeSubCommand(getCommandCache(), "end");
-        comCreateAssistance();
+        subEnd(MessageText.getSuccessfullyCreatingTask(doc));
     }
 
     private void subGetPhone(CommandCache command, SubCommandInfo info, String nextCommand) {
@@ -593,6 +575,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void updateUserStatus(UserResponse userData) {
+
         List<UserStatus> statuses = userData.getStatusList()
                 .stream()
                 .filter(Objects::nonNull)
@@ -603,6 +586,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subEnd(CommandStatus status) {
+
         if (user.getCommandsCache().isEmpty()) {
             return;
         }
@@ -620,12 +604,14 @@ public class BotCommandsImpl implements BotCommands {
         text = null;
     }
 
-    private void subEnd() {
+    private void subEnd(String message) {
+        completeSubCommand(getCommandCache(), "end");
         subEnd(CommandStatus.COMPLETE);
-        sendMessage("Команда упешно обработана", button.keyboardMarkupDefault(user.getUserType()));
+        sendMessage(message, button.keyboardMarkupDefault(user.getUserType()));
     }
 
     private void subSendTaskList(Map<String, List<TaskDoc>> sortedTask) {
+
         if (sortedTask.isEmpty()) {
             sendMessage(MessageText.getSearchErrors());
             return;
@@ -658,6 +644,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subGetDescription(CommandCache command, SubCommandInfo info, String nextCommand) {
+
         info.setStartMessage(MessageText.getStartDescription());
         info.setErrorMessage(MessageText.getErrorDescription());
         info.setNextSumCommand(nextCommand);
@@ -731,6 +718,7 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void subCreatePayDoc() {
+
         if (user.getCommandsCache().isEmpty() || text == null) {
             comExit(MessageText.getDefaultMessageError(user.getUserName()));
             return;
@@ -760,9 +748,7 @@ public class BotCommandsImpl implements BotCommands {
         cardDocRepository.save(cardDoc);
         eventPublisher.publishEvent(new EntitySavedEvent(cardDoc, OperationType.CREATE, EventSource.USER, user));
 
-        sendMessage(MessageText.getSuccessfullyCreatingCardDoc(cardDoc));
-        completeSubCommand(getCommandCache(), "end");
-        comAddBalance();
+        subEnd(MessageText.getSuccessfullyCreatingCardDoc(cardDoc));
     }
 
     private void subEditTask(Runnable parent) {
@@ -801,9 +787,7 @@ public class BotCommandsImpl implements BotCommands {
         SyncDataResponse createResponse = api1C.updateTask(taskDocConverter.convertToResponse(taskDoc));
         taskDoc.setSyncData(createResponse);
 
-        sendMessage(MessageText.getSuccessfullyEditTask(taskDoc));
-        completeSubCommand(getCommandCache(), "end");
-        runHandler(parent);
+        subEnd(MessageText.getSuccessfullyEditTask(taskDoc));
     }
 
     private TaskDoc subGetTaskDoc(String code) {

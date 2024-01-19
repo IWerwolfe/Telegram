@@ -43,7 +43,7 @@ public class ToStringServices {
                 toStringArray(tab, stringBuilder, value, isNested);
                 continue;
             }
-            boolean isContains = field.getType().getName().startsWith("com.telegrambot.app");
+            boolean isContains = field.getType().getName().startsWith("com.supportbot");
             boolean isDesiredType = !field.getType().isPrimitive() && !field.getType().isEnum();
             if (isDesiredType && isContains && isNested) {
                 toStringObject(tab, stringBuilder, value, isNested);
@@ -57,7 +57,7 @@ public class ToStringServices {
     List<Field> getFieldObject(Object object) {
         Class<?> clazz = object.getClass();
         List<Field> allFields = new ArrayList<Field>();
-        while (clazz != null && clazz.getTypeName().startsWith("com.telegrambot.app")) {
+        while (clazz != null && clazz.getTypeName().startsWith("com.supportbot")) {
             Field[] declaredFields = clazz.getDeclaredFields();
             allFields.addAll(Arrays.asList(declaredFields));
             clazz = clazz.getSuperclass();

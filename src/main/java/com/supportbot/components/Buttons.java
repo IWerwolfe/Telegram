@@ -29,9 +29,9 @@ public class Buttons {
 
     private static final int SIZE_INLINE_BUTTON = 64;
 
-    private static final KeyboardButton NEED_HELP = new KeyboardButton("Создать обращение");
-    private static final KeyboardButton GET_TASKS = new KeyboardButton("Посмотреть задачи");
-    private static final KeyboardButton CREATE_TASK = new KeyboardButton("Создать задачу");
+    private static final KeyboardButton NEED_HELP = new KeyboardButton("Написать в техподдержку");
+    private static final KeyboardButton GET_TASKS = new KeyboardButton("Активные");
+    private static final KeyboardButton CREATE_TASK = new KeyboardButton("Новое обращение");
     private static final KeyboardButton GET_BALANCE = new KeyboardButton("Проверить баланс");
     private static final KeyboardButton SEND_CONTACT = new KeyboardButton("Зарегистрироваться");
     private static final KeyboardButton ADD_BALANCE = new KeyboardButton("Пополнить баланс");
@@ -47,7 +47,6 @@ public class Buttons {
     private static final InlineKeyboardButton PAY_TASK = new InlineKeyboardButton("Оплатить");
     private static final InlineKeyboardButton EDIT_COMMENT_TASK = new InlineKeyboardButton("Редактировать комментарий");
     private static final InlineKeyboardButton EDIT_DESCRIPTION_TASK = new InlineKeyboardButton("Редактировать описание");
-
 
     public static void init() {
 

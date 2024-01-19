@@ -9,7 +9,7 @@ public enum UserType {
     UNAUTHORIZED("Неавторизованный"),
     USER("Пользователь"),
     ADMINISTRATOR("Администратор"),
-    DIRECTOR("Владелец");
+    DIRECTOR("Руководитель");
 
     private String label;
 

@@ -112,6 +112,6 @@ public class TaskDoc extends SalesDoc {
 
     @Override
     protected String getDescriptor() {
-        return "Задача";
+        return "Обращение";
     }
 }

@@ -45,13 +45,15 @@ public abstract class MessageText {
 
     public static String getBeforeSurvey() {
         return """
-                У нас не удалось найти информацию, соответствующую вашему номеру телефона в базе данных.
-                Пожалуйста, укажите актуальную информацию, чтобы зарегистрироваться и получить доступ к нашим услугам""";
+                У не удалось найти информацию по вашему телефону.                
+                Вам необходимо ответить на несколько вопросов для уточнения данных""";
     }
 
     public static String getUnCorrectINN() {
-        return "ИНН некорректен. Ваш ИНН можно узнать с любого чека с кассы. " +
-                "Если нет возможности посмотреть отложите регистрацию, для этого нажмите /exit";
+        return """
+                ИНН некорректен. 
+                Ваш ИНН можно узнать с любого чека с кассы. 
+                Если нет возможности посмотреть отложите регистрацию, для этого нажмите /exit""";
     }
 
     public static String getStartINN() {
@@ -86,13 +88,13 @@ public abstract class MessageText {
 
         StringBuilder message = new StringBuilder();
         message.append(name)
-                .append(", вы закреплены за следующими организациями: ")
-                .append(SEPARATOR);
+                .append(", вы закреплены за следующими организациями: ");
 
         for (UserStatus status : userStatus) {
-            message.append(SEPARATOR)
+            message.append(DUAL_SEPARATOR)
                     .append(TextUtils.getNameRef(status.getLegal()))
-                    .append(", ваш статус: ")
+                    .append(SEPARATOR)
+                    .append("ваш статус: ")
                     .append(status.getUserType().getLabel());
         }
         return message.toString();
@@ -108,13 +110,17 @@ public abstract class MessageText {
 
     public static String getStartDescription() {
         return """
-                Введите текст вашего обращения или подробное описание проблемы. 
-                Укажите все важные детали, чтобы мы могли более точно понять ситуацию и предложить соответствующие решения.
+                1. Опишите в сообщении (как можно подробнее!) вашу проблему, что именно не работает или не включается.
+                2. Постарайтесь указать модель кассы или оборудования (как правило, написано на наклейке).
+                                
+                Пожалуйста, не дублируйте обращения, мы обязательно с вами свяжемся!
                 """;
     }
 
     public static String getErrorDescription() {
-        return "Сообщение не корректно, опишите подробно что у вас случилось. Я не могу обрабатывать видео, фото и голосовые сообщения ";
+        return """
+                Сообщение не корректно, опишите подробно что у вас случилось. 
+                Я НЕ могу обрабатывать видео, фото и голосовые сообщения.""";
     }
 
     public static String getStartName() {
@@ -127,50 +133,45 @@ public abstract class MessageText {
 
     public static String getStartCreateAssistance(String name) {
         return "Рады помочь, " + name + """
-                 :
-                                
-                1. Опишите в сообщении (как можно подробнее!) вашу проблему, что именно не работает или не включается.
-                2. Постарайтесь указать модель кассы или оборудования (как правило, написано на наклейке).
-                                
-                Пожалуйста, не дублируйте заявки, мы обязательно с вами свяжемся!
-                """;
+                !
+                Следуйте инструкциям ниже""";
     }
 
     public static String getExitCommand(String command) {
-        return "Выполнение команды " + command + " успешно завершено";
+        return "Выполнение команды " + command + " успешно завершено.";
     }
 
     public static String getExitToErrors() {
         return """
-                Произошла ошибка при выполнении команды и мы уже разбираемся как ее устранить, попробуйте пожалуйста немного позже
+                Произошла ошибка при выполнении команды и мы уже разбираемся как ее устранить, попробуйте немного позже.
                 """;
     }
 
     public static String getIncorrectTask() {
-        return "Произошла ошибка при создании обращения, попробуйте пожалуйста немного позже";
+        return "Произошла ошибка, попробуйте немного позже.";
     }
 
     public static String getSuccessfullyCreatingTask(TaskDoc taskDoc) {
         return "Ваше обращение успешно зарегистрировано под номером " +
-                taskDoc.toString(false) + DUAL_SEPARATOR +
-                "Мы обязательно свяжемся с вами в самое ближайшее время!";
+                taskDoc.getCodeEntity() + DUAL_SEPARATOR +
+                "Мы обязательно свяжемся с вами в ближайшее время!";
     }
 
     public static String getSearchErrors() {
-        return "Активных задач по вашему запросу не найдено";
+        return "Активных обращений не найдено.";
     }
 
     public static String getSearchGrouping(String sortName, int count) {
-        return count + " задач: " + (sortName == null ? "" : sortName);
+        return count + " обращений: " + (sortName == null ? "" : sortName);
     }
 
     public static String getSearch(String nameCompany, int count) {
-        return "На " + nameCompany + " зарегистрировано " + count + " задач: ";
+        return "На " + nameCompany + " зарегистрировано " + count + " обращений: ";
     }
 
     public static String errorWhenEditTask() {
         return """
-                Введенный вами параметр и\\или текст некорректен, попробуйте еще раз. 
+                Введенный вами данные и\\или текст некорректен, попробуйте еще раз. 
                 Для выхода нажмите /exit""";
     }
 
@@ -179,11 +180,11 @@ public abstract class MessageText {
     }
 
     public static String getWhenCancelTask() {
-        return "Укажите причину отмены задачи";
+        return "Укажите причину для отмены обращения";
     }
 
     public static String getFormOfPayment() {
-        return "Выберите форму оплаты из списка";
+        return "Выберите форму оплаты из списка:";
     }
 
     public static String getInputSum() {
@@ -206,25 +207,25 @@ public abstract class MessageText {
     }
 
     public static String getPartnersByList() {
-        return "Выберите организацию из списка";
+        return "Выберите организацию из списка:";
     }
 
     public static String getDepartmentsByList() {
-        return "Выберите торговую точку из списка";
+        return "Выберите торговую точку из списка:";
     }
 
     public static String getSuccessfullyEditTask(TaskDoc taskDoc) {
-        return "Задача № " + taskDoc.getCodeEntity() + " успешно отредактирована";
+        return "Обращение № " + taskDoc.getCodeEntity() + " успешно отредактировано.";
     }
 
     public static String getSuccessfullyRegister(String firstName) {
-        return firstName + """
-                Для повышения вашего статуса в системе вам необходимо обратиться к нам в офис либо по телефону.
+        return firstName + """ 
+                , вы успешно зарегистрировались.
                 """;
     }
 
     public static String getErrorToEditUserInfo() {
-        return "Произошла ошибка при редактировании информации, попробуйте повторить позже";
+        return "Произошла ошибка при редактировании информации, попробуйте повторить позже.";
     }
 
     public static String getToPaySBP(String sbpStatic) {
@@ -241,7 +242,7 @@ public abstract class MessageText {
 
     public static String getErrorPayBlocked() {
         return """
-                В данный момент возможность оплаты через телеграм бот заблокирована. Приносим свои извинения
+                В данный момент возможность оплаты через телеграм бот заблокирована. Приносим свои извинения.
                 """;
     }
 
@@ -264,9 +265,9 @@ public abstract class MessageText {
     }
 
     public static String getSystemNotifyOfUserClosure(TaskDoc taskDoc, UserBD user) {
-        return "Задача №"
+        return "Обращение №"
                 + taskDoc.getCodeEntity() +
-                " была закрыта пользоватем "
+                " было закрыто пользоватем "
                 + (user != null ? user.getNamePresentation() : "")
                 + DUAL_SEPARATOR
                 + taskDoc.getDescription() + DUAL_SEPARATOR
@@ -276,13 +277,13 @@ public abstract class MessageText {
     }
 
     public static String getIncorrectTaskStatus() {
-        return "Запрещено редактировать завершенные обращения";
+        return "Закрытые обращения запрещено редактировать.";
     }
 
     public static String getSystemNotifyClosed(TaskDoc taskDoc) {
-        return "Задача №"
+        return "Обращение №"
                 + taskDoc.getCodeEntity() +
-                " была закрыта"
+                " было закрыто"
                 + DUAL_SEPARATOR +
                 taskDoc.getDescription()
                 + "Решение: "
@@ -294,7 +295,7 @@ public abstract class MessageText {
         return "От организации "
                 + (taskDoc.isBilling() ? "на обслуживании " : "") +
                 taskDoc.getPartner() +
-                " поступила новая задача №"
+                " поступило новое обращение №"
                 + taskDoc.getCodeEntity() + DUAL_SEPARATOR +
                 "Описание: " + SEPARATOR +
                 taskDoc.getDescription() + DUAL_SEPARATOR +
@@ -311,7 +312,7 @@ public abstract class MessageText {
     }
 
     public static String getSkippingMessageFromGroup() {
-        return "Обработка сообщения из общей группы пропущено";
+        return "Обработка сообщения из общей группы пропущено.";
     }
 
     public static String getSkippingMessageFromUnknownUser(String messageText) {

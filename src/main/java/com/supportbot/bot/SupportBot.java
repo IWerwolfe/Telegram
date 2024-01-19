@@ -27,6 +27,7 @@ import org.telegram.telegrambots.meta.api.objects.payments.SuccessfulPayment;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -44,7 +45,6 @@ public class SupportBot extends TelegramLongPollingBot {
     private final TextUtils textUtils;
     private Update update;
     private UserBD user;
-    private boolean isCommand = false;
 
     public void onUpdateReceived(Update update) {
 
@@ -111,11 +111,15 @@ public class SupportBot extends TelegramLongPollingBot {
         }
 
         if (update.hasMessage() && update.getMessage().hasContact()) {
-            updateUserProfile(update.getMessage().getContact(), user);
-            return;
+
+            Contact contact = update.getMessage().getContact();
+
+            if (Objects.equals(user.getId(), contact.getUserId())) {
+                updateUserProfile(contact, user);
+                return;
+            }
         }
 
-        isCommand = true;
         botCommands.botAnswerUtils(getReceivedMessage(), getChatId(), user);
     }
 

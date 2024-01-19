@@ -62,6 +62,11 @@ public class SenderService {
     }
 
     private SendMessage createMessage(long chatId, String text, ReplyKeyboard keyboard) {
+
+        if (text.length() > 4095) {
+            text = text.substring(0, 4092) + "...";
+        }
+
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText(text);
