@@ -71,8 +71,8 @@ Client data is represented in the following format:
     - Department
       - Contact person
      
-Tickets can be submitted with or without linking to a storefront.    
-The situation is considered where one person has multiple organizations, in which case the bot will offer a choice from the list. The same process occurs when an organization has multiple storefronts.
+Tickets can be submitted with or without linking to a department.    
+The situation is considered where one person has multiple organizations, in which case the bot will offer a choice from the list. The same process occurs when an organization has multiple departments.
 
 ## Settings File Description
 The application-production.yml file contains configurable parameters for our application:
