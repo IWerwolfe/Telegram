@@ -1,6 +1,7 @@
 package com.supportbot.model.documents.docdata;
 
 import com.supportbot.DTO.types.Gender;
+import com.supportbot.utils.TextUtils;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -34,44 +35,22 @@ public class PersonData {
 
     @Override
     public String toString() {
-        StringBuilder string = new StringBuilder();
-        if (firstName != null && !firstName.isEmpty()) {
-            string.append(firstName);
-        }
-        if (fatherName != null && !fatherName.isEmpty()) {
-            string.append(" ")
-                    .append(fatherName);
-        }
-        if (lastName != null && !lastName.isEmpty()) {
-            string.append(" ")
-                    .append(lastName);
-        }
-        return string.toString();
+
+        return TextUtils.assembleString(firstName,
+                lastName);
     }
 
     public String toStringFull() {
-        StringBuilder string = new StringBuilder();
-        if (firstName != null && !firstName.isEmpty()) {
-            string.append(firstName);
-        }
-        if (fatherName != null && !fatherName.isEmpty()) {
-            string.append(" ")
-                    .append(fatherName);
-        }
-        if (lastName != null && !lastName.isEmpty()) {
-            string.append(" ")
-                    .append(lastName);
-        }
-        if (birthday != null) {
-            string.append(", ")
-                    .append(birthday)
-                    .append(" года рождения");
-        }
-        if (gender != null) {
-            string.append(", ")
-                    .append("пол ")
-                    .append(gender.getLabel());
-        }
-        return string.toString();
+
+        String birthdayText = (birthday == null || birthday.getYear() < 1900) ?
+                "" : String.format(", %s года рождения", birthday.format(TextUtils.DATE_FORMATTER));
+        String genderText = (gender == null) ?
+                "" : String.format(", пол %s", gender);
+
+        return TextUtils.assembleString(firstName,
+                fatherName,
+                lastName,
+                birthdayText,
+                genderText);
     }
 }

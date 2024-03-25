@@ -106,7 +106,7 @@ public class BotCommandsImpl implements BotCommands {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
     private final String REGEX_INN = "^[0-9]{10}|[0-9]{12}$";
     private final String REGEX_FIO = "^(?:[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\\s+){1,2}[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?$";
-    private final String REGEX_PHONE = "^79[0-9]{9}$";
+    private final String REGEX_PHONE = "^(7|8|\\+7)9[0-9]{9,10}$";
     private static final String SEPARATOR = System.lineSeparator();
     private SupportBot parent;
     private String text;
@@ -161,8 +161,8 @@ public class BotCommandsImpl implements BotCommands {
             case "/getUserByPhone" -> comGetUserByPhone();
             case "/getByInn" -> comGetByInn();
             case "/get_task", "Активные" -> comGetTask();
-            case "/need_help", "Написать в техподдержку" -> comCreateAssistance();
-            case "/create_task", "Новое обращение" -> comCreateTask();
+            case "/need_help", "Новое обращение", "/create_task" -> comCreateAssistance();
+//            case "/create_task", "Новое обращение" -> comCreateTask();
             case "getTask" -> comTaskPresentation();
             case "descriptor" -> editDescriptionTask();
             case "comment" -> comEditCommentTask();
@@ -171,6 +171,7 @@ public class BotCommandsImpl implements BotCommands {
             case "/get_balance", "Проверить баланс" -> comGetBalance();
             case "pay" -> comPayTask();
             case "/error" -> throw new TelegramApiException();
+            case "/getAboutMe" -> comGetAboutMe();
             case "/exit", "Отмена" -> subEnd(CommandStatus.INTERRUPTED_BY_USER);
             default -> comSendDefault();
         }
@@ -181,6 +182,13 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     //Command
+
+    private void comGetAboutMe() {
+
+        String message = user.getNamePresentation();
+        sendMessage(message);
+    }
+
     private void comStartBot() {
 
         boolean phoneFilled = (user.getPhone() != null && !user.getPhone().isEmpty());
@@ -276,15 +284,29 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comCreateAssistance() {
+
         String message = MessageText.getStartCreateAssistance(user.getPerson().getFirstName());
-        CommandCache command = getCommandCache(message, "getDescription");
+        CommandCache command;
         SubCommandInfo info = new SubCommandInfo(this::comCreateAssistance);
-        switch (command.getSubCommand()) {
-            case "getDescription" -> subGetDescription(command, info, "getPhone");
-            case "getPhone" -> subGetPhone(command, info, "getUserName");
-            case "getUserName" -> subGetName(command, info, "createTask");
-            case "createTask" -> subCreateTask();
-            default -> comSendDefault();
+
+        if (user.getUserType() == UserType.UNAUTHORIZED) {
+            command = getCommandCache(message, "getDescription");
+            switch (command.getSubCommand()) {
+                case "getDescription" -> subGetDescription(command, info, "getPhone");
+                case "getPhone" -> subGetPhone(command, info, "createTask");
+//                case "getUserName" -> subGetName(command, info, "createTask");
+                case "createTask" -> subCreateTask();
+                default -> comSendDefault();
+            }
+        } else {
+            command = getCommandCache(message, "getPartner");
+            switch (command.getSubCommand()) {
+                case "getPartner" -> subGetPartner(command, this::comCreateTask);
+                case "getDepartment" -> subGetDepartment(command, this::comCreateTask);
+                case "getDescription" -> subGetDescription(command, info, "createTask");
+                case "createTask" -> subCreateTask();
+                default -> comSendDefault();
+            }
         }
     }
 

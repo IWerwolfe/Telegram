@@ -29,7 +29,7 @@ public class Buttons {
 
     private static final int SIZE_INLINE_BUTTON = 64;
 
-    private static final KeyboardButton NEED_HELP = new KeyboardButton("Написать в техподдержку");
+    private static final KeyboardButton NEED_HELP = new KeyboardButton("Новое обращение");
     private static final KeyboardButton GET_TASKS = new KeyboardButton("Активные");
     private static final KeyboardButton CREATE_TASK = new KeyboardButton("Новое обращение");
     private static final KeyboardButton GET_BALANCE = new KeyboardButton("Проверить баланс");
@@ -48,7 +48,7 @@ public class Buttons {
     private static final InlineKeyboardButton EDIT_COMMENT_TASK = new InlineKeyboardButton("Редактировать комментарий");
     private static final InlineKeyboardButton EDIT_DESCRIPTION_TASK = new InlineKeyboardButton("Редактировать описание");
 
-    public static void init() {
+    static {
 
         BUY.setCallbackData("/buy");
         START_BUTTON.setCallbackData("/start");

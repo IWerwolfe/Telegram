@@ -3,7 +3,6 @@ package com.supportbot.services;
 import com.supportbot.DTO.api.other.DefaultDataResponse;
 import com.supportbot.DTO.types.TaskType;
 import com.supportbot.client.ApiClient;
-import com.supportbot.components.Buttons;
 import com.supportbot.model.DefaultDocParam;
 import com.supportbot.model.reference.*;
 import com.supportbot.model.reference.legalentity.Company;
@@ -61,7 +60,6 @@ public class DefaultDataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        Buttons.init();
         DefaultDataResponse data = null;
         try {
             data = api1C.getDefaultData();

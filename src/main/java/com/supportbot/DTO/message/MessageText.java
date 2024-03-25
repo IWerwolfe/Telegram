@@ -281,14 +281,18 @@ public abstract class MessageText {
     }
 
     public static String getSystemNotifyClosed(TaskDoc taskDoc) {
-        return "Обращение №"
-                + taskDoc.getCodeEntity() +
-                " было закрыто"
-                + DUAL_SEPARATOR +
-                taskDoc.getDescription()
-                + "Решение: "
-                + DUAL_SEPARATOR
-                + taskDoc.getDecision();
+        String text = """
+                Обращение № %s было закрыто
+                                
+                %s
+                                
+                Решение:
+                %s
+                """;
+        return String.format(text,
+                taskDoc.getCodeEntity(),
+                taskDoc.getDescription(),
+                taskDoc.getDecision());
     }
 
     public static String getSystemNotifyNewTask(TaskDoc taskDoc, UserBD user) {
@@ -308,7 +312,11 @@ public abstract class MessageText {
     }
 
     private static String getUserPresentation(UserBD user) {
-        return user != null ? "от " + user.getNamePresentation() : "";
+        if (user == null) {
+            return "";
+        }
+        String phone = user.getPhone() == null ? "" : ", тел: " + user.getPhone();
+        return "от " + user.getNamePresentation() + phone;
     }
 
     public static String getSkippingMessageFromGroup() {
