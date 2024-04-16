@@ -25,10 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class Buttons {
 
-    private final PaySetting paySetting;
-
     private static final int SIZE_INLINE_BUTTON = 64;
-
     private static final KeyboardButton NEED_HELP = new KeyboardButton("Новое обращение");
     private static final KeyboardButton GET_TASKS = new KeyboardButton("Активные");
     private static final KeyboardButton CREATE_TASK = new KeyboardButton("Новое обращение");
@@ -36,8 +33,6 @@ public class Buttons {
     private static final KeyboardButton SEND_CONTACT = new KeyboardButton("Зарегистрироваться");
     private static final KeyboardButton ADD_BALANCE = new KeyboardButton("Пополнить баланс");
     private static final KeyboardButton EXIT = new KeyboardButton("Отмена");
-
-
     private static final InlineKeyboardButton START_BUTTON = new InlineKeyboardButton("Start");
     private static final InlineKeyboardButton HELP_BUTTON = new InlineKeyboardButton("Справка");
     private static final InlineKeyboardButton BUY = new InlineKeyboardButton("Купить");
@@ -53,6 +48,22 @@ public class Buttons {
         BUY.setCallbackData("/buy");
         START_BUTTON.setCallbackData("/start");
         HELP_BUTTON.setCallbackData("/help");
+    }
+
+    private final PaySetting paySetting;
+
+    public static ReplyKeyboardMarkup keyboardMarkupCommands() {
+        KeyboardRow row = new KeyboardRow();
+        row.add(EXIT);
+        return createReplyKeyboardMarkup(List.of(row), false);
+    }
+
+    private static ReplyKeyboardMarkup createReplyKeyboardMarkup(List<KeyboardRow> rows, boolean oneTimeKeyboard) {
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
+        keyboardMarkup.setOneTimeKeyboard(oneTimeKeyboard);
+        keyboardMarkup.setKeyboard(rows);
+        return keyboardMarkup;
     }
 
     public ReplyKeyboardMarkup keyboardMarkupDefault(UserType userType) {
@@ -96,20 +107,6 @@ public class Buttons {
         }
     }
 
-    public static ReplyKeyboardMarkup keyboardMarkupCommands() {
-        KeyboardRow row = new KeyboardRow();
-        row.add(EXIT);
-        return createReplyKeyboardMarkup(List.of(row), false);
-    }
-
-    private static ReplyKeyboardMarkup createReplyKeyboardMarkup(List<KeyboardRow> rows, boolean oneTimeKeyboard) {
-        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-        keyboardMarkup.setResizeKeyboard(true);
-        keyboardMarkup.setOneTimeKeyboard(oneTimeKeyboard);
-        keyboardMarkup.setKeyboard(rows);
-        return keyboardMarkup;
-    }
-
     private ReplyKeyboardMarkup createReplyKeyboardMarkup(List<KeyboardRow> rows) {
         return createReplyKeyboardMarkup(rows, true);
     }
@@ -119,32 +116,49 @@ public class Buttons {
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
         if (paySetting.isCard()) {
-            rows.add(getInlineKeyboardButton(FormOfPayment.CARD.getLabel(), command + ":" + FormOfPayment.CARD.name()));
+            rows.add(getInlineKeyboardButtons(FormOfPayment.CARD.getLabel(), command, FormOfPayment.CARD.name()));
         }
 
         if (paySetting.isBank()) {
-            rows.add(getInlineKeyboardButton(FormOfPayment.INVOICE.getLabel(), command + ":" + FormOfPayment.INVOICE.name()));
+            rows.add(getInlineKeyboardButtons(FormOfPayment.INVOICE.getLabel(), command, FormOfPayment.INVOICE.name()));
         }
 
         if (paySetting.isSBPStatic()) {
-            rows.add(getInlineKeyboardButton(FormOfPayment.SBP_STATIC.getLabel(), command + ":" + FormOfPayment.SBP_STATIC.name()));
+            rows.add(getInlineKeyboardButtons(FormOfPayment.SBP_STATIC.getLabel(), command, FormOfPayment.SBP_STATIC.name()));
         }
 
         if (paySetting.isSBP()) {
-            rows.add(getInlineKeyboardButton(FormOfPayment.SBP.getLabel(), command + ":" + FormOfPayment.SBP.name()));
+            rows.add(getInlineKeyboardButtons(FormOfPayment.SBP.getLabel(), command, FormOfPayment.SBP.name()));
         }
 
         if (paySetting.isCrypto()) {
-            rows.add(getInlineKeyboardButton(FormOfPayment.CRYPTO.getLabel(), command + ":" + FormOfPayment.CRYPTO.name()));
+            rows.add(getInlineKeyboardButtons(FormOfPayment.CRYPTO.getLabel(), command, FormOfPayment.CRYPTO.name()));
         }
 
         return getInlineKeyboardMarkup(rows);
     }
 
-    public <E extends Reference> InlineKeyboardMarkup getInlineByRef(String command, List<E> list) {
+    public InlineKeyboardMarkup getInlineConfirmConsent(String command) {
+
+        InlineKeyboardButton yes = getInlineKeyboardButton("Да", command, "yes");
+        InlineKeyboardButton no = getInlineKeyboardButton("Нет", command, "no");
+
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        rows.add(List.of(yes, no));
+
+        return getInlineKeyboardMarkup(rows);
+    }
+
+    public <E extends Reference> InlineKeyboardMarkup getInlineByRef(String command, List<E> list, boolean addEmpty) {
+
         List<List<InlineKeyboardButton>> rowsInLine = list.stream()
-                .map(field -> getInlineKeyboardButton(field, command))
+                .map(field -> getInlineKeyboardButtons(field, command))
                 .collect(Collectors.toList());
+
+        if (addEmpty) {
+            rowsInLine.add(getInlineKeyboardButtons("Пропустить", command, ""));
+        }
+
         return getInlineKeyboardMarkup(rowsInLine);
     }
 
@@ -175,23 +189,37 @@ public class Buttons {
 
     public InlineKeyboardMarkup getInlineMarkupByTasks(List<TaskDoc> taskDocs) {
         List<List<InlineKeyboardButton>> rowsInLine = taskDocs.stream()
-                .map(taskDoc -> {
-                    String name = getDescriptorToInline(taskDoc);
-                    String command = "getTask:" + taskDoc.getId();
-                    return getInlineKeyboardButton(name, command);
-                })
+                .map(taskDoc ->
+                        getInlineKeyboardButtons(
+                                getDescriptorToInline(taskDoc),
+                                "getTask",
+                                String.valueOf(taskDoc.getId())))
                 .toList();
         return getInlineKeyboardMarkup(rowsInLine);
     }
 
-    private List<InlineKeyboardButton> getInlineKeyboardButton(String label, String command) {
-        InlineKeyboardButton taskButton = new InlineKeyboardButton(label);
-        taskButton.setCallbackData(command);
-        return List.of(taskButton);
+    private List<InlineKeyboardButton> getInlineKeyboardButtons(String label, String command) {
+        return List.of(getInlineKeyboardButton(label, command));
     }
 
-    private List<InlineKeyboardButton> getInlineKeyboardButton(Reference ref, String command) {
-        return getInlineKeyboardButton(ref.getName(), command + ":" + ref.getId());
+    private List<InlineKeyboardButton> getInlineKeyboardButtons(String label, String commandName, String result) {
+        return List.of(getInlineKeyboardButton(label, commandName, result));
+    }
+
+    private List<InlineKeyboardButton> getInlineKeyboardButtons(Reference ref, String command) {
+        return getInlineKeyboardButtons(ref.getName(), command, String.valueOf(ref.getId()));
+    }
+
+    private InlineKeyboardButton getInlineKeyboardButton(String label, String command) {
+        InlineKeyboardButton taskButton = new InlineKeyboardButton(label);
+        taskButton.setCallbackData(command);
+        return taskButton;
+    }
+
+    private InlineKeyboardButton getInlineKeyboardButton(String label, String commandName, String result) {
+        InlineKeyboardButton taskButton = new InlineKeyboardButton(label);
+        taskButton.setCallbackData(commandName + ":" + result);
+        return taskButton;
     }
 
     public String getDescriptorToInline(TaskDoc taskDoc) {

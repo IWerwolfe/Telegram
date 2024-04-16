@@ -22,13 +22,7 @@ public abstract class MessageText {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault());
 
     public static String getWelcomeMessage() {
-        return """
-                Добро пожаловать в  СЦ «КассаКом»!
-                                
-                Принимаем и выполняем заявки по устранению проблем с:
-                  • кассовым и торговым оборудованием,
-                  • программным обеспечением,
-                  • настройкой 1С.
+        return getShotWelcomeMessage() + """             
                                 
                 Для начала работы нажмите «Зарегистрироваться».""";
     }
@@ -40,7 +34,8 @@ public abstract class MessageText {
                 Принимаем и выполняем заявки по устранению проблем с:
                   • кассовым и торговым оборудованием,
                   • программным обеспечением,
-                  • настройкой 1С.""";
+                  • настройкой 1С.
+                  """;
     }
 
     public static String getBeforeSurvey() {
@@ -123,6 +118,11 @@ public abstract class MessageText {
                 Я НЕ могу обрабатывать видео, фото и голосовые сообщения.""";
     }
 
+    public static String getConfirmConsent() {
+        return """
+                Вы хотите создать новое обращение ?""";
+    }
+
     public static String getStartName() {
         return "Как к вам можно обращаться?";
     }
@@ -138,7 +138,7 @@ public abstract class MessageText {
     }
 
     public static String getExitCommand(String command) {
-        return "Выполнение команды " + command + " успешно завершено.";
+        return "Выполнение команды успешно завершено.";
     }
 
     public static String getExitToErrors() {

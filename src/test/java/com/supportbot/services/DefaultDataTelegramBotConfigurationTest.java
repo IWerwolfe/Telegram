@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class DefaultDataInitializerTest {
+class DefaultDataTelegramBotConfigurationTest {
 
     @Mock
     private ApiClient api1C;

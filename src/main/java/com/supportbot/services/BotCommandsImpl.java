@@ -73,6 +73,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BotCommandsImpl implements BotCommands {
 
+    private static final String SEPARATOR = System.lineSeparator();
     private final PartnerBalanceRepository partnerBalanceRepository;
     private final CardDocRepository cardDocRepository;
     private final TaskDocRepository taskDocRepository;
@@ -84,9 +85,7 @@ public class BotCommandsImpl implements BotCommands {
     private final CommandRepository commandRepository;
     private final ApiClient api1C;
     private final DaDataClient daDataClient;
-
     private final ApplicationEventPublisher eventPublisher;
-
     private final CardDocConverter cardDocConverter;
     private final PartnerConverter partnerConverter;
     private final DepartmentConverter departmentConverter;
@@ -94,25 +93,25 @@ public class BotCommandsImpl implements BotCommands {
     private final UserBDConverter userConverter;
     private final TaskDocConverter taskDocConverter;
     private final ToStringServices toStringServices;
-
     private final BalanceService balanceService;
     private final EntityDefaults entityDefaults;
     private final Buttons button;
     private final SenderService senderService;
-
     private final BotConfig bot;
     private final PaySetting paySetting;
-
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
     private final String REGEX_INN = "^[0-9]{10}|[0-9]{12}$";
     private final String REGEX_FIO = "^(?:[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\\s+){1,2}[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?$";
     private final String REGEX_PHONE = "^(7|8|\\+7)9[0-9]{9,10}$";
-    private static final String SEPARATOR = System.lineSeparator();
     private SupportBot parent;
     private String text;
     private String nameCommand;
     private long chatId;
     private UserBD user;
+
+    private static <R extends DataResponse> boolean isCompleted(R response) {
+        return response != null && response.isResult();
+    }
 
     public void botAnswerUtils(String receivedMessage, long chatId, UserBD userBD) throws Exception {
 
@@ -143,6 +142,8 @@ public class BotCommandsImpl implements BotCommands {
         }
     }
 
+    //Command
+
     public void botAnswerUtils() throws Exception {
 
         if (nameCommand == null) {
@@ -161,8 +162,8 @@ public class BotCommandsImpl implements BotCommands {
             case "/getUserByPhone" -> comGetUserByPhone();
             case "/getByInn" -> comGetByInn();
             case "/get_task", "Активные" -> comGetTask();
-            case "/need_help", "Новое обращение", "/create_task" -> comCreateAssistance();
-//            case "/create_task", "Новое обращение" -> comCreateTask();
+            case "/need_help", "Новое обращение", "/create_task", "Написать в техподдержку" -> comCreateAssistance();
+            case "createAssistance" -> comCreateTask();
             case "getTask" -> comTaskPresentation();
             case "descriptor" -> editDescriptionTask();
             case "comment" -> comEditCommentTask();
@@ -173,15 +174,23 @@ public class BotCommandsImpl implements BotCommands {
             case "/error" -> throw new TelegramApiException();
             case "/getAboutMe" -> comGetAboutMe();
             case "/exit", "Отмена" -> subEnd(CommandStatus.INTERRUPTED_BY_USER);
-            default -> comSendDefault();
+            default -> {
+                if (nameCommand.matches(".{10,}")) {
+                    text = nameCommand;
+                    nameCommand = "createAssistance";
+                    CommandCache command = getCommandCache("getDescription");
+                    completeSubCommand(command, "question", text);
+                    comCreateTask();
+                } else {
+                    comSendDefault();
+                }
+            }
         }
         if (!user.getCommandsCache().isEmpty()) {
             commandCacheRepository.saveAll(user.getCommandsCache());
         }
         text = null;
     }
-
-    //Command
 
     private void comGetAboutMe() {
 
@@ -286,24 +295,28 @@ public class BotCommandsImpl implements BotCommands {
     private void comCreateAssistance() {
 
         String message = MessageText.getStartCreateAssistance(user.getPerson().getFirstName());
-        CommandCache command;
+        CommandCache command = getCommandCache(message, "getDescription");
         SubCommandInfo info = new SubCommandInfo(this::comCreateAssistance);
 
         if (user.getUserType() == UserType.UNAUTHORIZED) {
-            command = getCommandCache(message, "getDescription");
             switch (command.getSubCommand()) {
                 case "getDescription" -> subGetDescription(command, info, "getPhone");
-                case "getPhone" -> subGetPhone(command, info, "createTask");
+                case "getPhone" -> {
+                    if (user.getPhone() == null) {
+                        subGetPhone(command, info, "createTask");
+                    } else {
+                        completeSubCommand(command, "createTask", user.getPhone());
+                    }
+                }
 //                case "getUserName" -> subGetName(command, info, "createTask");
                 case "createTask" -> subCreateTask();
                 default -> comSendDefault();
             }
         } else {
-            command = getCommandCache(message, "getPartner");
             switch (command.getSubCommand()) {
-                case "getPartner" -> subGetPartner(command, this::comCreateTask);
-                case "getDepartment" -> subGetDepartment(command, this::comCreateTask);
-                case "getDescription" -> subGetDescription(command, info, "createTask");
+                case "getDescription" -> subGetDescription(command, info, "getPartner");
+                case "getPartner" -> subGetPartner(command, this::comCreateAssistance, "getDepartment");
+                case "getDepartment" -> subGetDepartment(command, this::comCreateAssistance, "createTask");
                 case "createTask" -> subCreateTask();
                 default -> comSendDefault();
             }
@@ -311,15 +324,28 @@ public class BotCommandsImpl implements BotCommands {
     }
 
     private void comCreateTask() {
-        String message = MessageText.getStartCreateAssistance(user.getPerson().getFirstName());
-        CommandCache command = getCommandCache(message, "getPartner");
-        SubCommandInfo info = new SubCommandInfo(this::comCreateTask);
+
+        CommandCache command = getCommandCache("question");
+
         switch (command.getSubCommand()) {
-            case "getPartner" -> subGetPartner(command, this::comCreateTask);
-            case "getDepartment" -> subGetDepartment(command, this::comCreateTask);
-            case "getDescription" -> subGetDescription(command, info, "createTask");
-            case "createTask" -> subCreateTask();
-            default -> comSendDefault();
+            case "question" -> {
+                SubCommandInfo info = new SubCommandInfo(this::comCreateTask);
+                info.setNextSumCommand("confirmConsent");
+                info.setStartMessage(MessageText.getConfirmConsent());
+                info.setErrorMessage(MessageText.getDefaultMessageError(user.getUserName()));
+                info.setKeyboard(button.getInlineConfirmConsent("createAssistance"));
+                subGetTextInfo(command, info);
+            }
+            case "confirmConsent" -> {
+                if (getResultSubCommandFromCache("question").equals("yes")) {
+                    String next = user.getUserType() == UserType.UNAUTHORIZED ? "getPhone" : "getPartner";
+                    completeSubCommand(command, next);
+                    comCreateAssistance();
+                } else {
+                    subEnd(MessageText.getExitCommand("createAssistance"));
+                }
+            }
+            default -> comCreateAssistance();
         }
     }
 
@@ -470,11 +496,11 @@ public class BotCommandsImpl implements BotCommands {
         }
     }
 
+    //SubCommand
+
     private void editDescriptionTask() {
         editTask(MessageText.getEditTextTask("описание"), "descriptor", this::editDescriptionTask);
     }
-
-    //SubCommand
 
     private void subUpdateUserInfo() {
 
@@ -674,16 +700,16 @@ public class BotCommandsImpl implements BotCommands {
         subGetTextInfo(command, info);
     }
 
-    private void subGetPartner(CommandCache command, Runnable parent) {
+    private void subGetPartner(CommandCache command, Runnable parent, String nextCommand) {
 
         List<Partner> partners = getPartnerByUserStatus();
 
         if (partners.size() > 1) {
             SubCommandInfo info = new SubCommandInfo(parent);
-            info.setNextSumCommand("getDepartment");
+            info.setNextSumCommand(nextCommand);
             info.setStartMessage(MessageText.getPartnersByList());
             info.setErrorMessage(MessageText.errorWhenEditTask());
-            info.setKeyboard(button.getInlineByRef("getPartner", partners));
+            info.setKeyboard(button.getInlineByRef("getPartner", partners, false));
             subGetTextInfo(command, info);
             return;
         }
@@ -693,7 +719,7 @@ public class BotCommandsImpl implements BotCommands {
         runHandler(parent);
     }
 
-    private void subGetDepartment(CommandCache command, Runnable parent) {
+    private void subGetDepartment(CommandCache command, Runnable parent, String nextCommand) {
 
         String result = getResultSubCommandFromCache("getPartner");
         Optional<Partner> optional = partnerRepository.findById(Long.parseLong(result));
@@ -712,10 +738,10 @@ public class BotCommandsImpl implements BotCommands {
             value = String.valueOf(departments.get(0).getId());
         } else {
             SubCommandInfo info = new SubCommandInfo(parent);
-            info.setNextSumCommand("getDescription");
+            info.setNextSumCommand(nextCommand);
             info.setStartMessage(MessageText.getDepartmentsByList());
             info.setErrorMessage(MessageText.errorWhenEditTask());
-            info.setKeyboard(button.getInlineByRef("getDepartment", departments));
+            info.setKeyboard(button.getInlineByRef("getDepartment", departments, true));
             subGetTextInfo(command, info);
             return;
         }
@@ -1143,10 +1169,6 @@ public class BotCommandsImpl implements BotCommands {
                 .filter(Objects::nonNull)
                 .map(balanceService::updateLegalBalance)
                 .collect(Collectors.toList());
-    }
-
-    private static <R extends DataResponse> boolean isCompleted(R response) {
-        return response != null && response.isResult();
     }
 
     public void setParent(SupportBot parent) {
