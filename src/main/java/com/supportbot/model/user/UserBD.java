@@ -7,22 +7,23 @@ import com.supportbot.model.command.CommandCache;
 import com.supportbot.model.documents.docdata.PersonData;
 import com.supportbot.model.documents.docdata.SyncData;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.BeanUtils;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 @NoArgsConstructor
 public class UserBD {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Boolean isBot;
     private String userName;

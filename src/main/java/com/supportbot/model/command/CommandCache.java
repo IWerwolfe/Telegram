@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.TimeZone;
+
 @Data
 @Entity
 @Table(name = "commands_cache")
@@ -23,6 +26,7 @@ public class CommandCache {
     @JoinColumn(name = "user_id")
     private UserBD userBD;
     private Long countStep;
+    private LocalDateTime date;
 
     public CommandCache(String command, String subCommand, UserBD userBD, String result) {
         this(command, subCommand, userBD);
@@ -34,6 +38,7 @@ public class CommandCache {
         this.subCommand = subCommand;
         this.userBD = userBD;
         this.countStep = 0L;
+        this.date = LocalDateTime.now(TimeZone.getDefault().toZoneId());
     }
 
     public CommandCache(String command, UserBD userBD) {

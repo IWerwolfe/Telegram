@@ -113,7 +113,7 @@ public class BotCommandsImpl implements BotCommands {
         return response != null && response.isResult();
     }
 
-    public void botAnswerUtils(String receivedMessage, long chatId, UserBD userBD) throws Exception {
+    public void botAnswerUtils(String receivedMessage, long chatId, UserBD userBD) {
 
         this.chatId = chatId;
         this.user = userBD;
