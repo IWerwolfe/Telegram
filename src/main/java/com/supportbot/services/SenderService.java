@@ -3,7 +3,7 @@ package com.supportbot.services;
 import com.supportbot.bot.SupportBot;
 import com.supportbot.model.transaction.TransactionType;
 import com.supportbot.model.user.UserBD;
-import com.supportbot.repositories.transaction.TransactionRepository;
+import com.supportbot.utils.TextUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +13,8 @@ import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethodBool
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethodMessage;
 import org.telegram.telegrambots.meta.api.methods.invoices.SendInvoice;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -24,7 +26,11 @@ import java.io.Serializable;
 @Setter
 public class SenderService {
 
-    private final TransactionRepository transactionRepository;
+    private final TextUtils textUtils;
+
+    public void sendBotMessage(SupportBot absSender, SendMessage message) {
+        int id = sendMessage(absSender, message);
+    }
 
     public void sendBotMessage(SupportBot absSender, SendMessage message, UserBD user) {
         int id = sendMessage(absSender, message);
@@ -51,25 +57,42 @@ public class SenderService {
         absSender.saveTransaction("Подтверждение оплаты", 0, TransactionType.BOT_MESSAGE, user);
     }
 
-    public void sendBotMessage(SupportBot absSender, String message, ReplyKeyboard keyboard, long chatId, UserBD user) {
+    public void sendBotMessage(SupportBot absSender, String message, ReplyKeyboard keyboard, long chatId) {
+        SendMessage sendMessage = createMessage(chatId, message, keyboard);
+        sendBotMessage(absSender, sendMessage);
+    }
 
-        if (message != null && message.trim().isEmpty()) {
-            log.error("Attempt to send an empty message from a user with an ID {}", chatId);
-            return;
-        }
+    public void sendBotMessage(SupportBot absSender, String message, long chatId) {
+        SendMessage sendMessage = createMessage(chatId, message, null);
+        sendBotMessage(absSender, sendMessage);
+    }
+
+    public void sendBotMessage(SupportBot absSender, String message, ReplyKeyboard keyboard, long chatId, UserBD user) {
         SendMessage sendMessage = createMessage(chatId, message, keyboard);
         sendBotMessage(absSender, sendMessage, user);
     }
 
-    private SendMessage createMessage(long chatId, String text, ReplyKeyboard keyboard) {
+    public void sendBotEditMessage(SupportBot absSender, String message, InlineKeyboardMarkup keyboard, long chatId, int messageId) {
+        BotApiMethod<? extends Serializable> sendMessage = messageId == 0 ?
+                createMessage(chatId, message, keyboard) : createEditMessage(chatId, message, keyboard, messageId);
+        sendMessage(absSender, sendMessage);
+    }
 
-        if (text.length() > 4095) {
-            text = text.substring(0, 4092) + "...";
-        }
+    private EditMessageText createEditMessage(long chatId, String text, InlineKeyboardMarkup keyboard, int messageId) {
+
+        EditMessageText message = new EditMessageText();
+        message.setChatId(chatId);
+        message.setText(textUtils.shortenText(text, 4095));
+        message.setMessageId(messageId);
+        message.setReplyMarkup(keyboard);
+        return message;
+    }
+
+    private SendMessage createMessage(long chatId, String text, ReplyKeyboard keyboard) {
 
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
-        message.setText(text);
+        message.setText(textUtils.shortenText(text, 4095));
         message.setReplyMarkup(keyboard);
         return message;
     }

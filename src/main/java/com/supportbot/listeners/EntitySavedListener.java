@@ -1,4 +1,4 @@
-package com.supportbot.services;
+package com.supportbot.listeners;
 
 import com.supportbot.DTO.message.MessageText;
 import com.supportbot.DTO.types.EventSource;
@@ -15,6 +15,8 @@ import com.supportbot.model.types.Document;
 import com.supportbot.model.user.UserBD;
 import com.supportbot.model.user.UserStatus;
 import com.supportbot.repositories.user.UserStatusRepository;
+import com.supportbot.services.BalanceService;
+import com.supportbot.services.SenderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

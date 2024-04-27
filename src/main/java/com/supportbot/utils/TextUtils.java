@@ -43,6 +43,17 @@ public class TextUtils {
         }
     }
 
+    public String shortenText(String text, int size) {
+
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+
+        return text.length() < size ?
+                text :
+                text.substring(0, size - 3) + "...";
+    }
+
     public static <R extends Reference> String getNameRef(R ref) {
         if (ref == null) {
             return "Unknown";

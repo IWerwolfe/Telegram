@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -90,6 +91,20 @@ public class UserBD {
         if (syncData == null) {
             this.syncData = new SyncData(guid);
         }
+    }
+
+    public void addCommand(CommandCache command) {
+        if (this.commandsCache == null) {
+            this.commandsCache = new ArrayList<>();
+        }
+        commandsCache.add(command);
+    }
+
+    public CommandCache getLatestCommand() {
+        if (commandsCache.isEmpty()) {
+            return null;
+        }
+        return commandsCache.get(commandsCache.size() - 1);
     }
 
     public String getNamePresentation() {

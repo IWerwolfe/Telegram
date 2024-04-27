@@ -1,4 +1,4 @@
-package com.supportbot.services;
+package com.supportbot.listeners;
 
 import com.supportbot.model.EntitySavedEvent;
 import lombok.RequiredArgsConstructor;

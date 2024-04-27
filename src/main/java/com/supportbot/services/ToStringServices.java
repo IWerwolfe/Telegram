@@ -81,7 +81,7 @@ public class ToStringServices {
         }
     }
 
-    String toStringIterableNonNull(Iterable<?> value, boolean isNested) {
+    public String toStringIterableNonNull(Iterable<?> value, boolean isNested) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[");
         toStringIterable("", stringBuilder, value, isNested);

@@ -13,6 +13,10 @@ import java.time.LocalDateTime;
 @Table(name = "users_status")
 @NoArgsConstructor
 public class UserStatus {
+
+    private static String REGEX_DIRECTOR = ".*\\b(президент|директор|ректор|глава|председатель|предприниматель|управляющий|ип)\\b";
+    private static String REGEX_ADMIN = ".*\\b(бухгалтер|администратор)\\b.*";
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -52,15 +56,13 @@ public class UserStatus {
         this.post = post;
     }
 
-    public UserType getUserTypeByPost(String post) {
-        String REGEX_DiRECTOR = ".*\\B(президент|директор|ректор|глава|председатель|предприниматель|управляющий)\\B.*|\\Bип\s+\\B.*|ип";
-        String REGEX_ADMIN = ".*\\B(бухгалтер|администратор)\\B.*";
+    private UserType getUserTypeByPost(String post) {
 
         if (post == null) {
             return UserType.USER;
         }
-        post = post.toLowerCase();
-        if (post.matches(REGEX_DiRECTOR)) {
+        post = post.trim().toLowerCase();
+        if (post.matches(REGEX_DIRECTOR)) {
             return UserType.DIRECTOR;
         }
         if (post.matches(REGEX_ADMIN)) {

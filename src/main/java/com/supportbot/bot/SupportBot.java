@@ -13,13 +13,13 @@ import com.supportbot.repositories.user.UserRepository;
 import com.supportbot.services.BotCommandsImpl;
 import com.supportbot.services.SenderService;
 import com.supportbot.utils.TextUtils;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
 import org.telegram.telegrambots.meta.api.methods.AnswerPreCheckoutQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Contact;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.payments.PreCheckoutQuery;
@@ -32,8 +32,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
-public class SupportBot extends TelegramLongPollingBot {
+public class SupportBot extends TelegramCommandBot {
 
     private final BotConfig botConfig;
     private final BugNotifications bugNotifications;
@@ -43,8 +42,32 @@ public class SupportBot extends TelegramLongPollingBot {
     private final TransactionRepository transactionRepository;
     private final SenderService senderService;
     private final TextUtils textUtils;
+
     private Update update;
     private UserBD user;
+
+    public SupportBot(List<IBotCommand> commandList,
+                      BotConfig botConfig,
+                      BugNotifications bugNotifications,
+                      BotCommandsImpl botCommands,
+                      UserActivityRepository activityRepository,
+                      UserRepository userRepository,
+                      TransactionRepository transactionRepository,
+                      SenderService senderService,
+                      TextUtils textUtils) {
+
+        super(botConfig.getToken());
+        this.botConfig = botConfig;
+        this.bugNotifications = bugNotifications;
+        this.botCommands = botCommands;
+        this.activityRepository = activityRepository;
+        this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
+        this.senderService = senderService;
+        this.textUtils = textUtils;
+
+        commandList.forEach(this::register);
+    }
 
     public void onUpdateReceived(Update update) {
 
@@ -53,6 +76,17 @@ public class SupportBot extends TelegramLongPollingBot {
         botCommands.setParent(this);
 
         updateLastActivity();
+
+        if (update.hasMessage()) {
+            Message message = update.getMessage();
+            if (message.isCommand() && !this.filter(message)) {
+                if (!this.executeCommand(message)) {
+                    this.processInvalidCommandUpdate(update);
+                }
+
+                return;
+            }
+        }
 
         if (update.hasMyChatMember()) {
 
@@ -137,11 +171,6 @@ public class SupportBot extends TelegramLongPollingBot {
     @Override
     public String getBotUsername() {
         return botConfig.getBotName();
-    }
-
-    @Override
-    public String getBotToken() {
-        return botConfig.getToken();
     }
 
     @Override
@@ -310,5 +339,10 @@ public class SupportBot extends TelegramLongPollingBot {
         return bugNotifications.isUse() &&
                 bugNotifications.getIdTelegramUser() != null &&
                 !bugNotifications.getIdTelegramUser().isEmpty();
+    }
+
+    @Override
+    public void processNonCommandUpdate(Update update) {
+
     }
 }
